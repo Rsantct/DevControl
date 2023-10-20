@@ -1,10 +1,6 @@
-# wakeonlan_web
-a web page to wake-on-lan some stuff
+# A wake-on-lan web
 
-## A wake-on-lan web
-
-If you have a 24x7 Raspberry Pi kind of Linux based micro PC running at home, you may want to use it as a WOL server.
-
+If you have a 24x7 Raspberry Pi kind of Linux based micro PC running at home, you may want to use it as a WOL server to power on some local machines.
 
 On your 24x7 micro PC you'll need:
 
