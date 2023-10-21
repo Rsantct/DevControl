@@ -9,7 +9,7 @@
 
     -v    :    verbose debug info printout
     stop  :    self kill the server
-    
+
 """
 
 import socket
@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
     # Loading configured machines
     try:
-        with open(f'{MY_DIR}/wolservice/wolservice.cfg', 'r') as f:
+        with open(f'{MY_DIR}/wolserver/wolservice.cfg', 'r') as f:
             CONFIG = yaml.safe_load(f)
             addr = CONFIG["server_addr"]
             port = CONFIG["server_port"]
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         verbose = False
 
     # Adding the path where to look for importing the service module
-    sys.path.append( f'{MY_DIR}/wolservice' )
+    sys.path.append( f'{MY_DIR}/wolserver' )
 
     # Importing the service module
     # https://python-reference.readthedocs.io/en/latest/docs/functions/__import__.html
