@@ -5,9 +5,11 @@
 """
     An auxiliary server for Wake On Lan other machines
 
-    Usage:   wolserver.py [-v]
+    Usage:   wolserver.py [-v | stop]
 
-    (use -v for verbose debug info printout)
+    -v    :    verbose debug info printout
+    stop  :    self kill the server
+    
 """
 
 import socket
