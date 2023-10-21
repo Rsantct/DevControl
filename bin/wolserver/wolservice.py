@@ -21,7 +21,7 @@ def init():
     global CONFIG, LOGFNAME
 
     # Command log file
-    LOGFNAME = f'{UHOME}/wolservice.log'
+    LOGFNAME = f'{MY_DIR}/wolservice.log'
     if os.path.exists(LOGFNAME) and os.path.getsize(LOGFNAME) > 10e6:
         print ( f"(wolservice) log file exceeds ~ 10 MB '{LOGFNAME}'" )
     print ( f"(wolservice) logging commands in '{LOGFNAME}'" )
