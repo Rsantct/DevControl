@@ -2,19 +2,17 @@
 
     /*
     Copyright (c) Rafael Sánchez
-    This file is part of 'pe.audio.sys'
-    'pe.audio.sys', a PC based personal audio system.
     */
 
     $UHOME = get_home();
-    $CFGPATH = $UHOME."/pe.audio.sys/share/plugins/wolservice/wolservice.cfg";
+    $CFGPATH = $UHOME."/bin/wolserver/wolservice.cfg";
 
     // echo "UHOME: ".$UHOME."\n"; // cmdline debugging
 
-    // Gets the base folder where php code and pe.audio.sys are located
+    // Gets the HOME folder assuming this php code is placed under ~/bin/
     function get_home() {
         $phpdir = getcwd();
-        $pos = strpos($phpdir, 'pe.audio.sys');
+        $pos = strpos($phpdir, 'bin/wolserver');
         $uhome= substr($phpdir, 0, $pos-1);
         return $uhome;
     }
