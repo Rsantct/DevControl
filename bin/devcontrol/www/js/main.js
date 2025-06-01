@@ -6,6 +6,7 @@
 
 import * as mc from "./miscel.js";
 
+const REFRESH_INTERVAL = 3000;
 
 // WOL PCs
 
@@ -152,6 +153,23 @@ function fill_in_scripts_buttons(scripts) {
 }
 
 
+function plugs_refresh(){
+
+    for (const plug in devices.plugs) {
+
+        const btn = document.getElementById('bt_' + plug);
+
+        // Display current status
+        const onoff = mc.send_cmd('plug ' + plug + ' status');
+        if (onoff == 'on'){
+            btn.style.borderColor = 'green';
+        }else{
+            btn.style.borderColor = 'darkred';
+        }
+    }
+}
+
+
 // MAIN
 
 const devices = mc.send_cmd('get_config devices');
@@ -162,4 +180,7 @@ fill_in_wol_buttons(devices.wol);
 fill_in_plug_buttons(devices.plugs);
 
 fill_in_scripts_buttons(scripts);
+
+// SCHEDULING PLUGS REFRESH
+setInterval( plugs_refresh, REFRESH_INTERVAL );
 
