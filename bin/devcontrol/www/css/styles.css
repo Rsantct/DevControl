@@ -42,6 +42,8 @@ table#main_wol_table { border-style: none; }
 
 table#main_plugs_table { border-style: none; }
 
+table#main_scripts_table { border-style: none; }
+
 .device_cell {
     border-style: none; width:30%;
 }
