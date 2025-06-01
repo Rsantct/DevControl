@@ -154,11 +154,12 @@ function fill_in_scripts_buttons(scripts) {
 
 // MAIN
 
-const devices = mc.send_cmd('get_devices');
+const devices = mc.send_cmd('get_config devices');
+const scripts = mc.send_cmd('get_config scripts');
 
 fill_in_wol_buttons(devices.wol);
 
 fill_in_plug_buttons(devices.plugs);
 
-fill_in_scripts_buttons(devices.scripts);
+fill_in_scripts_buttons(scripts);
 
