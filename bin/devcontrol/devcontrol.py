@@ -10,30 +10,45 @@
 
 import  os
 import  subprocess as sp
-from    time            import  strftime
+from    time            import  strftime, sleep
 import  yaml
 import  json
 import  requests
 from    requests.auth   import HTTPDigestAuth
+import  threading
 
 MY_DIR      = os.path.dirname(__file__)
 
 
-def cmd_to_plug(ip, plug_cmd):
+def cmd_to_plug(ip, plug_cmd, delay=0):
 
-    u = 'admin'
-    p = read_config()['plugs_pass']
+    def send(url, delay=delay):
 
-    url = f'http://{ip}/{plug_cmd}'
-    ans = ''
+        sleep(delay)
 
-    try:
         response = requests.get(url, auth=HTTPDigestAuth(u, p))
 
         # Lanza una excepción para códigos de estado HTTP erróneos (4xx o 5xx)
         response.raise_for_status()
 
-        ans = response.text
+        return response.text
+
+
+    u = 'admin'
+    p = read_config()['plugs_pass']
+
+    url_command = f'http://{ip}/{plug_cmd}'
+    ans = ''
+
+    try:
+
+        if not delay:
+            ans = send(url_command)
+
+        else:
+            job = threading.Thread(target=send, args=(url_command, delay))
+            job.start()
+            ans = 'ordered'
 
     except requests.exceptions.RequestException as e:
         print(f"Error al realizar la petición GET: {e}")
@@ -85,7 +100,7 @@ def wol(wol_id):
     return result
 
 
-def manage_plug(plug_id, mode):
+def manage_plug(plug_id, mode, delay=0):
     """
         plug_id:    as per the cfg file
         mode:       on | off | toggle | status
@@ -112,15 +127,19 @@ def manage_plug(plug_id, mode):
     elif mode == 'off':
         plug_cmd = 'rpc/Switch.Set?id=0&on=false'
 
+    ans = ''
     if mode != 'status':
-        cmd_to_plug(ip, plug_cmd)
+        ans = cmd_to_plug(ip, plug_cmd, delay)
 
-    ans = cmd_to_plug(ip, 'rpc/Switch.GetStatus?id=0')
+    if ans != 'ordered':
+        ans = cmd_to_plug(ip, 'rpc/Switch.GetStatus?id=0')
 
-    if json.loads(ans)["output"]:
-        res = 'on'
+        if json.loads(ans)["output"]:
+            res = 'on'
+        else:
+            res = 'off'
     else:
-        res = 'off'
+        res = ans
 
     return res
 
@@ -159,6 +178,7 @@ def process_cmd( cmd_phrase ):
     """
 
     cmd = arg = mode = ''
+    delay = 0
     result = 'NACK'
 
     try:
@@ -172,6 +192,10 @@ def process_cmd( cmd_phrase ):
         if chunks[2:]:
             mode = chunks[2]
 
+        if chunks[3:]:
+            if chunks[3].isdigit():
+                delay = int(chunks[3])
+
     except:
         return 'Error'
 
@@ -180,7 +204,7 @@ def process_cmd( cmd_phrase ):
         result = wol(arg)
 
     elif cmd == 'plug':
-        result = manage_plug(arg, mode)
+        result = manage_plug(arg, mode, delay)
 
     elif cmd == 'get_config':
         result = get_config(arg)
