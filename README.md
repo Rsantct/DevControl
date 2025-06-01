@@ -5,6 +5,7 @@ If you have a 24x7 Raspberry Pi kind of Linux based micro PC running at home, yo
 Features
 - WOL sender to power on some PCs
 - Smart Plugs controller
+- Scripts
 
 On your 24x7 micro PC you'll need:
 
