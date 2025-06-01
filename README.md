@@ -1,4 +1,4 @@
-# a very simple Home Automation app
+# A very simple Home Automation app
 
 If you have a 24x7 Raspberry Pi kind of Linux based micro PC running at home, you may want to use it as a Home Automation server.
 
@@ -14,13 +14,13 @@ On your 24x7 micro PC you'll need:
 - git clone this repo, for example under your `Downloads` folder, then copy all the repo `bin/*` stuff inside your `~/bin/` folder
 
         cd Downloads
-        git clone https://github.com/Rsantct/wakeonlan_web.git
+        git clone https://github.com/Rsantct/DevControl.git
         cd
-        cp -r  Downloads/wakeonlan_web/bin/*  bin/
+        cp -r  Downloads/DevControl/bin/*  bin/
 
 - Adjust the apache conf file to point to your USER HOME
 
-        sudo cp Downloads/wakeonlan_web/bin/devcontrol/apache-site/devcontrol.conf /etc/apache2/sites-available/
+        sudo cp Downloads/DevControl/bin/devcontrol/apache-site/devcontrol.conf /etc/apache2/sites-available/
         sudo nano /etc/apache2/sites-available/devcontrol.conf
 
 
@@ -29,7 +29,7 @@ On your 24x7 micro PC you'll need:
         sudo a2ensite devcontrol.conf
         sudo service  apache2 reload
 
-- Configure the MAC address of your devices
+- Configure the MAC address of your WOL devices and other stuff
 
         nano ~/bin/devcontrol/devcontrol.cfg
 
