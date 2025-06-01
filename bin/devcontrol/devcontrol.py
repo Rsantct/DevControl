@@ -22,7 +22,7 @@ MY_DIR      = os.path.dirname(__file__)
 def cmd_to_plug(ip, plug_cmd):
 
     u = 'admin'
-    p = get_config()['plugs_pass']
+    p = read_config()['plugs_pass']
 
     url = f'http://{ip}/{plug_cmd}'
     ans = ''
@@ -55,7 +55,7 @@ def init():
     print ( f"(devcontrol) logging commands in '{LOGPATH}'" )
 
 
-def get_config():
+def read_config():
     config = {}
     try:
         with open(f'{MY_DIR}/devcontrol.cfg', 'r') as f:
@@ -69,7 +69,7 @@ def wol(wol_id):
     """ wol_id: as per the cfg file
     """
 
-    config = get_config()
+    config = read_config()
 
     if not wol_id in config["devices"]["wol"]:
         return f'\'{wol_id}\' not configured'
@@ -96,7 +96,7 @@ def manage_plug(plug_id, mode):
 
     res = 'NACK'
 
-    config = get_config()
+    config = read_config()
 
     if not plug_id in config["devices"]["plugs"]:
         return f'\'{plug_id}\' not configured'
@@ -127,12 +127,12 @@ def manage_plug(plug_id, mode):
 
 def script(script_id):
 
-    config = get_config()
+    config = read_config()
 
-    if not script_id in config["devices"]["scripts"]:
+    if not script_id in config["scripts"]:
         return f'\'{script_id}\' not configured'
 
-    cmd  = config["devices"]["scripts"][ script_id ]
+    cmd  = config["scripts"][ script_id ]
 
     try:
         result = sp.check_output(cmd, shell=True) \
@@ -143,8 +143,12 @@ def script(script_id):
     return result
 
 
-def get_devices():
-    return json.dumps( get_config()["devices"] )
+def get_config(what):
+
+    if not what in ['devices', 'scripts']:
+        return 'NACK'
+
+    return json.dumps( read_config()[what] )
 
 
 def process_cmd( cmd_phrase ):
@@ -178,8 +182,8 @@ def process_cmd( cmd_phrase ):
     elif cmd == 'plug':
         result = manage_plug(arg, mode)
 
-    elif cmd == 'get_devices':
-        result = get_devices()
+    elif cmd == 'get_config':
+        result = get_config(arg)
 
     elif cmd == 'script':
         result = script(arg)
