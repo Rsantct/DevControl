@@ -19,3 +19,8 @@ devices:
         # id:       ip
         Amplifier:     192.168.1.199
 
+    # Scripts
+    scripts:
+
+        DynBM6:         "echo 'amp_switch on' | nc -N localhost 9991"
+
