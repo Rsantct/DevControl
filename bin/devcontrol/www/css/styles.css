@@ -1,0 +1,68 @@
+/*
+    Copyright (c) Rafael Sánchez
+    This file is part of 'DevControl'
+    a very simple Home Automation app.
+*/
+
+/* GLOBAL THEME */
+body    {   color:white;
+            background-color: rgb(38, 38, 38);
+            font-family: Verdana, Helvetica, Arial;
+            font-weight:bold;
+        }
+
+/* GLOBAL BUTTONS STYLE */
+button  {   background-color: rgb(100, 100, 100);
+            border-radius: 5px/5px;
+            border:2px solid rgb(120,120,120);
+            /* Text inside buttons: */
+            color: white;
+            font-weight:bold;
+            font-size:0.95em;
+        }
+
+/* GLOBAL TABLES behavior */
+table   {   width: 90%;
+            margin-top: 1.5em;;
+            margin-bottom: auto;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 5px/5px;
+            border:2px solid rgb(120,120,120);
+        }
+
+
+/* GLOBAL TABLES CELLS behavior */
+th, td  {   padding: 5px;
+            text-align: center;
+            font-size:1.0em;
+        }
+
+table#main_wol_table { border-style: none; }
+
+table#main_plugs_table { border-style: none; }
+
+.device_cell {
+    border-style: none; width:30%;
+}
+.device_button {
+    width: 100%;
+    height: 2.5em;
+    box-shadow: 0 5px 10px 0 rgba(200,200,200,0.3), 0 3px 10px 0 rgba(0,0,0,0.1);
+    border:4px solid rgb(120,120,120);
+    border-radius: 10px/10px;
+    /* below is for text inside button: */
+    font-size:1.5em;
+    display: inline;
+}
+.device_button_highlighted  {
+    width: 100%;
+    height: 2.5em;
+    box-shadow: 0 5px 10px 0 rgba(200,200,200,0.3), 0 3px 10px 0 rgba(0,0,0,0.1);
+    border:5px solid rgb(200,200,200);
+    border-radius: 10px/10px;
+    background-color: rgb(140, 140, 140);
+    /* below is for text inside button: */
+    font-size:1.5em;
+    display: inline;
+}

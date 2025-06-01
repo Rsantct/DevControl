@@ -1,6 +1,6 @@
 {
-    "name":         "Wake On LAN",
-    "short_name":   "WakeOnLAN",
+    "name":         "DevControl",
+    "short_name":   "DevControl",
     "icons":[
         {   "src":      "/site-icons/android-chrome-192x192.png",
             "sizes":    "192x192",

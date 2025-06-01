@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 # Copyright (c) Rafael Sánchez
+# This file is part of 'DevControl'
+# a very simple Home Automation app.
 
 """
-    An auxiliary server for Wake On Lan other machines
+    A backend server for the DevControl project
 
-    Usage:   wolserver.py [-v | stop]
+    Usage:   devcontrol.py [-v | stop]
 
     -v    :    verbose debug info printout
     stop  :    self kill the server
@@ -59,13 +61,13 @@ def run_server(host, port, verbose=False):
             # Receiving a command phrase
             cmd = con.recv(1024).decode()
             if verbose:
-                print( f'(wolserver) Rx: {cmd.strip()}' )
+                print( f'(devcontrol) Rx: {cmd.strip()}' )
             # PROCESSING the command through by the plugged MODULE:
             result = MODULE.do( cmd.strip() )
             # Sending back the command processing result:
             con.sendall( result.encode() )
             if verbose:
-                print( f'(wolserver) Tx: {result}' )
+                print( f'(devcontrol) Tx: {result}' )
 
 
 if __name__ == "__main__":
@@ -73,17 +75,17 @@ if __name__ == "__main__":
     # command line
     for opc in sys.argv[1:]:
         if opc == 'stop':
-            Popen( ['pkill', '-f', '-KILL', 'wolserver.py start'] )
+            Popen( ['pkill', '-f', '-KILL', 'devcontrol.py start'] )
             sys.exit()
 
     # Loading configured machines
     try:
-        with open(f'{MY_DIR}/wolserver/wolservice.cfg', 'r') as f:
+        with open(f'{MY_DIR}/devcontrol/devcontrol.cfg', 'r') as f:
             CONFIG = yaml.safe_load(f)
             addr = CONFIG["server_addr"]
             port = CONFIG["server_port"]
     except:
-        print(f'(wolservice) UNABLE to read wolservice.cfg')
+        print(f'(devcontrol) UNABLE to read devcontrol.cfg')
         sys.exit()
 
     # Optional -v for verbose printing out (debug)
@@ -93,12 +95,12 @@ if __name__ == "__main__":
         verbose = False
 
     # Adding the path where to look for importing the service module
-    sys.path.append( f'{MY_DIR}/wolserver' )
+    sys.path.append( f'{MY_DIR}/devcontrol' )
 
     # Importing the service module
     # https://python-reference.readthedocs.io/en/latest/docs/functions/__import__.html
-    MODULE = __import__('wolservice')
-    print( f'(wolserver) will run \'wolservice\' module at {addr}:{port} ...' )
+    MODULE = __import__('devcontrol')
+    print( f'(devcontrol) will run \'devcontrol\' module at {addr}:{port} ...' )
 
     # Runing the server with the MODULE.do() interface
     run_server( host=addr, port=int(port), verbose=verbose )

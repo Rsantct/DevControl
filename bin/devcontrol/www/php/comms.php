@@ -2,22 +2,24 @@
 
     /*
     Copyright (c) Rafael Sánchez
+    This file is part of 'DevControl'
+    a very simple Home Automation app.
     */
 
     $UHOME = get_home();
-    $CFGPATH = $UHOME."/bin/wolserver/wolservice.cfg";
+    $CFGPATH = $UHOME."/bin/devcontrol/devcontrol.cfg";
 
     // echo "UHOME: ".$UHOME."\n"; // cmdline debugging
 
     // Gets the HOME folder assuming this php code is placed under ~/bin/
     function get_home() {
         $phpdir = getcwd();
-        $pos = strpos($phpdir, 'bin/wolserver');
+        $pos = strpos($phpdir, 'bin/devcontrol');
         $uhome= substr($phpdir, 0, $pos-1);
         return $uhome;
     }
 
-    // Gets single line configured items from the 'wolservice.cfg' YAML file
+    // Gets single line configured items from the 'devcontrol.cfg' YAML file
     function get_config($item) {
 
         // Needed to have access to variables from outside
