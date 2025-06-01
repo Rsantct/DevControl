@@ -9,7 +9,7 @@
 """
 
 import  os
-from    subprocess      import  check_output
+import  subprocess as sp
 from    time            import  strftime
 import  yaml
 import  json
@@ -77,7 +77,7 @@ def wol(wol_id):
     mac  = config["devices"]["wol"][ wol_id ]
 
     try:
-        result = check_output(f'wakeonlan {mac}', shell=True) \
+        result = sp.check_output(f'wakeonlan {mac}', shell=True) \
                 .decode().strip()
     except:
         result = 'Error with WOL'
@@ -125,6 +125,24 @@ def manage_plug(plug_id, mode):
     return res
 
 
+def script(script_id):
+
+    config = get_config()
+
+    if not script_id in config["devices"]["scripts"]:
+        return f'\'{script_id}\' not configured'
+
+    cmd  = config["devices"]["scripts"][ script_id ]
+
+    try:
+        result = sp.check_output(cmd, shell=True) \
+                .decode().strip()
+    except:
+        result = 'Error with script'
+
+    return result
+
+
 def get_devices():
     return json.dumps( get_config()["devices"] )
 
@@ -162,6 +180,9 @@ def process_cmd( cmd_phrase ):
 
     elif cmd == 'get_devices':
         result = get_devices()
+
+    elif cmd == 'script':
+        result = script(arg)
 
 
     return result
