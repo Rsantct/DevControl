@@ -110,6 +110,47 @@ function fill_in_plug_buttons(plugs) {
     }
 }
 
+// SCRIPTS
+
+function do_script(event){
+
+    const btn = event.target;
+
+    // example 'bt_Amplifier'
+    const script_id = btn.id.slice(3,);
+
+    mc.send_cmd('script ' + script_id);
+
+    // Highlights the button for a second
+    btn.className = 'device_button_highlighted';
+    setTimeout(function(){
+            btn.className = 'device_button';
+        }, 1000);
+}
+
+
+function fill_in_scripts_buttons(scripts) {
+
+    var table = document.getElementById("main_scripts_table");
+
+    for (const script in scripts) {
+
+        var row = table.insertRow();
+        var cell = row.insertCell();
+        cell.className = 'device_cell';
+
+        var btn = document.createElement('button');
+        btn.type = "button";
+        btn.className = "device_button";
+        // example 'Amplifier'
+        btn.id = 'bt_' + script;
+        btn.innerHTML = script;
+        btn.addEventListener('click', do_script);
+
+        cell.appendChild(btn);
+    }
+}
+
 
 // MAIN
 
@@ -118,3 +159,6 @@ const devices = mc.send_cmd('get_devices');
 fill_in_wol_buttons(devices.wol);
 
 fill_in_plug_buttons(devices.plugs);
+
+fill_in_scripts_buttons(devices.scripts);
+
