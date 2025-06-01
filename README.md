@@ -40,4 +40,4 @@ On your 24x7 micro PC you'll need:
 
 Then, simply bookmark `http://microPC_IP:8081` on your favourite smartphone or tablet web browser.
 
-<a href="url"><img src="bin/devcontrol/img/devcontrol_web.png" align="center" width="480" ></a>
+<a href="url"><img src="bin/devcontrol/img/DevControl_web.png" align="center" width="480" ></a>
