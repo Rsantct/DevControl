@@ -33,7 +33,7 @@ export function send_cmd( cmd ) {
     }catch{
 
         if( respuTxt.toLowerCase().includes('connection refused') ){
-            respuTxt = 'error de conexión';
+            respuTxt = 'server connection error';
         }
 
         // alert(respuTxt);
