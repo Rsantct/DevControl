@@ -123,10 +123,19 @@ function plugs_refresh(){
         // Display current status
         const onoff = mc.send_cmd( 'plug {"target": "' + plug + '", "mode": "status"}' );
 
-        if (onoff == 'on'){
+        //console.log(plug, onoff)
+
+        if ( onoff == 'on' ) {
+            btn.style = 'initial';
             btn.style.borderColor = 'green';
-        }else{
+
+        }else if (onoff == 'off') {
+            btn.style = 'initial';
             btn.style.borderColor = 'darkred';
+
+        }else{
+            btn.style.borderColor = 'darkgrey';
+            btn.style.color = 'darkgrey';
         }
     }
 }
