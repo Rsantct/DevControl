@@ -10,17 +10,18 @@ devices:
 
     # PCs to sent wake on lan magic packets
     wol:
-        # id:       mac
-        Media_PC:      90:2b:34:5c:12:34
-        Audio_PC:      90:2b:34:5c:56:78
+        # id:        mac
+        Media PC:    90:2b:34:5c:12:34
+        Audio PC:    90:2b:34:5c:56:78
 
     # Smart plugs to switch on/off
     plugs:
-        # id:       ip
-        Amplifier:     192.168.1.199
+        # id:        ip
+        Amplifier:   192.168.1.198
+        Fan 1:       192.168.1.199
 
 # Scripts
 scripts:
 
-    DynBM6:         "echo 'amp_switch on' | nc -N localhost 9991"
+    Dyn BM6:         "echo 'amp_switch on' | nc -N localhost 9991"
 
