@@ -80,11 +80,18 @@ def read_config():
     return config
 
 
-def wol(wol_id):
-    """ wol_id: as per the cfg file
+def wol(args):
     """
+        {'target': xxxxx }
+    """
+    result = 'NACK'
+
+    if not 'target' in args:
+        return result
 
     config = read_config()
+
+    wol_id = args["target"]
 
     if not wol_id in config["devices"]["wol"]:
         return f'\'{wol_id}\' not configured'
@@ -100,16 +107,28 @@ def wol(wol_id):
     return result
 
 
-def manage_plug(plug_id, mode, delay=0):
+def manage_plug(args):
     """
-        plug_id:    as per the cfg file
-        mode:       on | off | toggle | status
+        {   'target':   xxxx
+            'mode':     on | off | toggle | status
+            'delay':    N  (seconds)
+        }
     """
-
-    if not mode:
-        mode = 'status'
 
     res = 'NACK'
+
+    if not 'target' in args:
+        return res
+
+    if not 'mode' in args:
+        args["mode"] = 'status'
+
+    if not 'delay' in args:
+        args['delay'] = 0
+
+    plug_id = args["target"]
+    mode    = args["mode"]
+    delay   = args["delay"]
 
     config = read_config()
 
@@ -126,6 +145,12 @@ def manage_plug(plug_id, mode, delay=0):
 
     elif mode == 'off':
         plug_cmd = 'rpc/Switch.Set?id=0&on=false'
+
+    elif mode == 'status':
+        pass
+
+    else:
+        return res
 
     ans = ''
     if mode != 'status':
@@ -144,9 +169,18 @@ def manage_plug(plug_id, mode, delay=0):
     return res
 
 
-def script(script_id):
+def script(args):
+    """
+        {'target': xxxxx }
+    """
+    result = 'NACK'
+
+    if not 'target' in args:
+        return result
 
     config = read_config()
+
+    script_id = args["target"]
 
     if not script_id in config["scripts"]:
         return f'\'{script_id}\' not configured'
@@ -162,78 +196,64 @@ def script(script_id):
     return result
 
 
-def get_config(what):
+def get_config(jsonarg):
 
-    if not what in ['devices', 'scripts']:
-        return 'NACK'
+    res = 'NACK'
 
-    return json.dumps( read_config()[what] )
+    if 'section' in jsonarg:
 
+        if jsonarg["section"] in ['devices', 'scripts']:
 
-def process_cmd( cmd_phrase ):
-    """
-        It is expected to receive a string of 1 to 3 words, like:
+            res = json.dumps( read_config()[ jsonarg["section"] ] )
 
-            command [arg [mode] ]
-    """
+    return res
 
-    cmd = arg = mode = ''
-    delay = 0
-    result = 'NACK'
-
-    try:
-        chunks = cmd_phrase.split()
-
-        cmd = chunks[0]
-
-        if chunks[1:]:
-            arg = chunks[1]
-
-        if chunks[2:]:
-            mode = chunks[2]
-
-        if chunks[3:]:
-            if chunks[3].isdigit():
-                delay = int(chunks[3])
-
-    except:
-        return 'Error'
-
-
-    if cmd == 'wol':
-        result = wol(arg)
-
-    elif cmd == 'plug':
-        result = manage_plug(arg, mode, delay)
-
-    elif cmd == 'get_config':
-        result = get_config(arg)
-
-    elif cmd == 'script':
-        result = script(arg)
-
-
-    return result
 
 
 # Interface function to plug this on server.py
 def do( cmd_phrase ):
+    """
+        It is expected to receive a command folowed by a json arguments block
 
-    result = 'NAK'
-    cmd_phrase = cmd_phrase.strip()
+            command {'target': xxxx, ... }
+    """
 
-    if cmd_phrase:
+    result = 'NACK'
 
-        # cmd_phrase log
+    try:
+        cmd  = cmd_phrase.strip().split()[0]
+        args = json.loads( cmd_phrase[ len(cmd): ].strip() )
+
+    except Exception as e:
+        print(f'ERROR READING COMMAND: {str(e)}')
+        return 'Error'
+
+
+    if cmd == 'get_config':
+        result = get_config(args)
+
+    elif cmd == 'wol':
+        result = wol(args)
+
+    elif cmd == 'plug':
+        result = manage_plug(args)
+
+    elif cmd == 'script':
+        result = script(args)
+
+    if type(result) != str:
+        result = json.dumps(result)
+
+    if 'mode' in args and args["mode"] == 'status':
+        pass
+
+    else:
+
+        # log cmd_phrase
         with open(LOGPATH, 'a') as FLOG:
             FLOG.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd_phrase}; ')
 
-        result = process_cmd(cmd_phrase)
-
-        if type(result) != str:
-            result = json.dumps(result)
-
-        # result log
+        # log the result
         with open(LOGPATH, 'a') as FLOG:
             FLOG.write(f'{result}\n')
 
