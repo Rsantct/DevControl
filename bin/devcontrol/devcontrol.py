@@ -220,6 +220,9 @@ def do( cmd_phrase ):
 
     result = 'NACK'
 
+    if cmd_phrase == 'hello':
+        return 'hi!'
+
     try:
         cmd  = cmd_phrase.strip().split()[0]
         args = json.loads( cmd_phrase[ len(cmd): ].strip() )
