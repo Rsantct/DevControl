@@ -216,11 +216,11 @@ function try_connection() {
 }
 
 
+// Currently only plugs have refresh
 function do_refresh() {
 
     if ( try_connection() ) {
 
-        // currently only plugs have refresh
         plugs_refresh()
     }
 }
@@ -238,6 +238,6 @@ if ( try_connection() ) {
 
     fill_in_scripts_buttons(scripts);
 
-    // SCHEDULING PLUGS REFRESH
+    // PAGE REFRESH
     setInterval( do_refresh, REFRESH_INTERVAL );
 }
