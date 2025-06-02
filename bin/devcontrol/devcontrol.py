@@ -21,40 +21,66 @@ MY_DIR      = os.path.dirname(__file__)
 
 
 def _cmd_to_plug(ip, plug_cmd, delay=0):
+    """
+        sends an http command to a plug with optional delay
 
-    def send(url, delay=delay):
+        returns:
+            'some json string' from the http plug API
+            OR
+            'ordered' when delayed
+            OR
+            'no answer' if plug is not available
+    """
+
+
+    def send_http(http_command, delay=0, timeout=1):
+        """
+            the actual http request with optional delay,
+            if so you may want to thread this function call.
+        """
 
         sleep(delay)
 
-        response = requests.get(url, auth=HTTPDigestAuth(u, p))
+        ans = 'no answer'
 
-        # Lanza una excepción para códigos de estado HTTP erróneos (4xx o 5xx)
-        response.raise_for_status()
+        try:
+            response = requests.get(http_command, auth=HTTPDigestAuth(u, p), timeout=timeout)
 
-        return response.text
+            # Lanza una excepción para códigos de estado HTTP erróneos (4xx o 5xx)
+            response.raise_for_status()
+
+            ans = response.text
+
+        except requests.exceptions.Timeout:
+            print("The request timed out")
+
+        except requests.exceptions.RequestException as e:
+            print(f"GET request error: {e}")
+
+        except requests.exceptions.HTTPError as e:
+            print(f"HTTP error: {e}")
+
+        except Exception as e:
+            print(f"Request error: {e}")
+
+        print(f'send_http Rx: {ans}')
+
+        return ans
 
 
     u = 'admin'
     p = read_config()['plugs_pass']
 
-    url_command = f'http://{ip}/{plug_cmd}'
-    ans = ''
+    http_command = f'http://{ip}/{plug_cmd}'
 
-    try:
 
-        if not delay:
-            ans = send(url_command)
+    if not delay:
+        ans = send_http(http_command)
 
-        else:
-            job = threading.Thread(target=send, args=(url_command, delay))
-            job.start()
-            ans = 'ordered'
-
-    except requests.exceptions.RequestException as e:
-        print(f"Error al realizar la petición GET: {e}")
-
-    except requests.exceptions.HTTPError as e:
-        print(f"Error HTTP: {e}")
+    else:
+        job = threading.Thread(target=send_http, args=(http_command, delay))
+        job.start()
+        ans = 'ordered'
 
     return ans
 
@@ -115,6 +141,20 @@ def manage_plug(args):
         }
     """
 
+    def get_plug_status():
+
+        ans = _cmd_to_plug(ip, 'rpc/Switch.GetStatus?id=0')
+
+        try:
+            if json.loads(ans)["output"]:
+                return 'on'
+            else:
+                return 'off'
+
+        except:
+            return ans
+
+
     res = 'NACK'
 
     if not 'target' in args:
@@ -155,19 +195,24 @@ def manage_plug(args):
     else:
         return res
 
-    ans = ''
-    if mode != 'status':
-        ans = _cmd_to_plug(ip, plug_cmd, delay)
 
-    if ans != 'ordered':
-        ans = _cmd_to_plug(ip, 'rpc/Switch.GetStatus?id=0')
+    # No changes
+    if mode == 'status':
+        return get_plug_status()
 
-        if json.loads(ans)["output"]:
-            res = 'on'
-        else:
-            res = 'off'
+    # Change the plug output
     else:
-        res = ans
+
+        plug_ans = _cmd_to_plug(ip, plug_cmd, delay)
+
+        # Delayed
+        if plug_ans == 'ordered':
+
+            res = 'ordered'
+
+        # Not delayed, want to know the new state
+        else:
+            res = get_plug_status()
 
     return res
 
