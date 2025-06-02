@@ -17,7 +17,7 @@ function do_wol(event){
     // example 'bt_Amplifier'
     const wol_id = btn.id.slice(3,);
 
-    mc.send_cmd('wol ' + wol_id);
+    mc.send_cmd( 'wol {"target": "' + wol_id + '"}' );
 
     // Highlights the button for a second
     btn.className = 'device_button_highlighted';
@@ -65,7 +65,8 @@ function do_plug_toggle(event){
             return
     }
 
-    const ans = mc.send_cmd('plug ' + plug_id + ' toggle');
+    const ans = mc.send_cmd( 'plug {"target": "' + plug_id + '", "mode": "toggle"}' );
+
 
     // Highlights the button for a second
     btn.className = 'device_button_highlighted';
@@ -102,7 +103,8 @@ function fill_in_plug_buttons(plugs) {
         cell.appendChild(btn);
 
         // Display current status
-        const onoff = mc.send_cmd('plug ' + plug + ' status');
+        const onoff = mc.send_cmd( 'plug {"target": "' + plug + '", "mode": "status"}' );
+
         if (onoff == 'on'){
             btn.style.borderColor = 'green';
         }else{
@@ -110,6 +112,25 @@ function fill_in_plug_buttons(plugs) {
         }
     }
 }
+
+
+function plugs_refresh(){
+
+    for (const plug in devices.plugs) {
+
+        const btn = document.getElementById('bt_' + plug);
+
+        // Display current status
+        const onoff = mc.send_cmd( 'plug {"target": "' + plug + '", "mode": "status"}' );
+
+        if (onoff == 'on'){
+            btn.style.borderColor = 'green';
+        }else{
+            btn.style.borderColor = 'darkred';
+        }
+    }
+}
+
 
 // SCRIPTS
 
@@ -120,7 +141,7 @@ function do_script(event){
     // example 'bt_Amplifier'
     const script_id = btn.id.slice(3,);
 
-    mc.send_cmd('script ' + script_id);
+    mc.send_cmd( 'script {"target": "' + script_id + '"}' );
 
     // Highlights the button for a second
     btn.className = 'device_button_highlighted';
@@ -153,34 +174,61 @@ function fill_in_scripts_buttons(scripts) {
 }
 
 
-function plugs_refresh(){
+// MAIN
 
-    for (const plug in devices.plugs) {
+function try_connection() {
 
-        const btn = document.getElementById('bt_' + plug);
+    let res = false
 
-        // Display current status
-        const onoff = mc.send_cmd('plug ' + plug + ' status');
-        if (onoff == 'on'){
-            btn.style.borderColor = 'green';
-        }else{
-            btn.style.borderColor = 'darkred';
-        }
+    const tmp = mc.send_cmd( 'hello' );
+
+    if ( typeof tmp == 'string' && tmp.includes('connection error') ) {
+
+        document.getElementById("div_wol").style.display     = 'none';
+        document.getElementById("div_plugs").style.display   = 'none';
+        document.getElementById("div_scripts").style.display = 'none';
+
+        document.getElementById("warnings").style.display = 'block';
+        document.getElementById("warnings").innerHTML = tmp;
+
+    }else{
+
+        document.getElementById("div_wol").style.display     = 'block';
+        document.getElementById("div_plugs").style.display   = 'block';
+        document.getElementById("div_scripts").style.display = 'block';
+
+        document.getElementById("warnings").style.display = 'none';
+        document.getElementById("warnings").innerHTML = '';
+
+        res = true
+    }
+
+    return res
+}
+
+
+function do_refresh() {
+
+    if ( try_connection() ) {
+
+        // currently only plugs have refresh
+        plugs_refresh()
     }
 }
 
 
-// MAIN
+if ( try_connection() ) {
 
-const devices = mc.send_cmd('get_config devices');
-const scripts = mc.send_cmd('get_config scripts');
+    var devices = mc.send_cmd( 'get_config {"section": "devices"}' );
+    var scripts = mc.send_cmd( 'get_config {"section": "scripts"}' );
 
-fill_in_wol_buttons(devices.wol);
 
-fill_in_plug_buttons(devices.plugs);
+    fill_in_wol_buttons(devices.wol);
 
-fill_in_scripts_buttons(scripts);
+    fill_in_plug_buttons(devices.plugs);
 
-// SCHEDULING PLUGS REFRESH
-setInterval( plugs_refresh, REFRESH_INTERVAL );
+    fill_in_scripts_buttons(scripts);
 
+    // SCHEDULING PLUGS REFRESH
+    setInterval( do_refresh, REFRESH_INTERVAL );
+}
