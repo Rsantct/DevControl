@@ -20,7 +20,7 @@ import  threading
 MY_DIR      = os.path.dirname(__file__)
 
 
-def cmd_to_plug(ip, plug_cmd, delay=0):
+def _cmd_to_plug(ip, plug_cmd, delay=0):
 
     def send(url, delay=delay):
 
@@ -130,6 +130,9 @@ def manage_plug(args):
     mode    = args["mode"]
     delay   = args["delay"]
 
+    if type(delay) != int:
+        return 'delay (seconds) must be integer'
+
     config = read_config()
 
     if not plug_id in config["devices"]["plugs"]:
@@ -154,10 +157,10 @@ def manage_plug(args):
 
     ans = ''
     if mode != 'status':
-        ans = cmd_to_plug(ip, plug_cmd, delay)
+        ans = _cmd_to_plug(ip, plug_cmd, delay)
 
     if ans != 'ordered':
-        ans = cmd_to_plug(ip, 'rpc/Switch.GetStatus?id=0')
+        ans = _cmd_to_plug(ip, 'rpc/Switch.GetStatus?id=0')
 
         if json.loads(ans)["output"]:
             res = 'on'
