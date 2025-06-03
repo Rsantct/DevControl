@@ -99,10 +99,10 @@ def init():
 def read_config():
     config = {}
     try:
-        with open(f'{MY_DIR}/devcontrol.cfg', 'r') as f:
+        with open(f'{MY_DIR}/devcontrol.yml', 'r') as f:
             config = yaml.safe_load(f)
     except:
-        print(f'(devcontrol) UNABLE to read devcontrol.cfg')
+        print(f'(devcontrol) UNABLE to read devcontrol.yml')
     return config
 
 

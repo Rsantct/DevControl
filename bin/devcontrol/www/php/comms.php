@@ -7,7 +7,7 @@
     */
 
     $UHOME = get_home();
-    $CFGPATH = $UHOME."/bin/devcontrol/devcontrol.cfg";
+    $CFGPATH = $UHOME."/bin/devcontrol/devcontrol.yml";
 
     // echo "UHOME: ".$UHOME."\n"; // cmdline debugging
 
@@ -19,7 +19,7 @@
         return $uhome;
     }
 
-    // Gets single line configured items from the 'devcontrol.cfg' YAML file
+    // Gets single line configured items from the 'devcontrol.yml' YAML file
     function get_config($item) {
 
         // Needed to have access to variables from outside
