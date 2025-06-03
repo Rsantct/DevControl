@@ -16,6 +16,7 @@ On your 24x7 micro PC you'll need:
         cd
         mkdir -p ~/Downloads
         cd Downloads
+        rm -rf DevControl
         git clone https://github.com/Rsantct/DevControl.git
         cd
         cp -r  Downloads/DevControl/bin/*  bin/
