@@ -21,7 +21,7 @@ On your 24x7 micro PC you'll need:
         cd
         cp -r  Downloads/DevControl/bin/*  bin/
 
-- Adjust the apache conf file to point to your USER HOME
+- Adjust the apache `.conf` file to point to your USER HOME
 
         sudo cp Downloads/DevControl/bin/devcontrol/apache-site/devcontrol.conf /etc/apache2/sites-available/
         sudo nano /etc/apache2/sites-available/devcontrol.conf
@@ -38,13 +38,14 @@ On your 24x7 micro PC you'll need:
 
 - Autorun the server, for example inside `/etc/rc.local`
 
-        su -l YOURUSERHERE -c "python3 /home/YOURUSERHERE/bin/devcontrol.py" &
+        su -l YOURUSERHERE -c "python3 /home/YOURUSERHERE/bin/devcontrol_srv.py" &
 
 
 Then, simply bookmark `http://microPC_IP:8081` on your favourite smartphone or tablet web browser.
 
-Smart Plugs button border color:
-- red: the plug is OFF
-- green: the plug is ON
+Smart Plugs button color:
+- border red: the plug is OFF
+- border green: the plug is ON
+- border & font grey: the plug is NOT available
 
 <a href="url"><img src="bin/devcontrol/img/DevControl_web.png" align="center" width="480" ></a>
