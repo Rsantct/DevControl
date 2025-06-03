@@ -34,7 +34,7 @@ On your 24x7 micro PC you'll need:
 
 - Configure the MAC address of your WOL devices and other stuff
 
-        nano ~/bin/devcontrol/devcontrol.cfg
+        nano ~/bin/devcontrol/devcontrol.yml
 
 - Autorun the server, for example inside `/etc/rc.local`
 
