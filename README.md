@@ -3,9 +3,9 @@
 If you have a 24x7 Raspberry Pi kind of Linux based micro PC running at home, you may want to use it as a Home Automation server.
 
 Features
-- WOL sender to power on some PCs
+- Wake On LAN sender to power on some PCs
 - Smart Plugs controller
-- Scripts
+- Scripts launcher
 
 On your 24x7 micro PC you'll need:
 
