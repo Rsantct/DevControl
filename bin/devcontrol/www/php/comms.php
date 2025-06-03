@@ -19,31 +19,16 @@
         return $uhome;
     }
 
-    // Gets single line configured items from the 'devcontrol.yml' YAML file
+
+    // Reads an item's value from the 'devcontrol.yml' YAML file
     function get_config($item) {
 
-        // Needed to have access to variables from outside
+        global $UHOME;
         global $CFGPATH;
 
-        $tmp = "";
-        $cfile = fopen( $CFGPATH, "r" )
-                  or die("Unable to open file!");
-        while( !feof($cfile) ) {
-            $line = fgets($cfile);
-            // Ignore yaml commented out lines
-            if ( strpos($line, '#') === false ) {
-                if ( strpos( $line, $item) !== false ) {
-                    $tmp = str_replace( "\n", "", $line);   # remove \n
-                    $tmp = str_replace( $item, "", $tmp);   # remove item itself
-                    $tmp = str_replace( ":", "", $tmp);     # remove : separator
-                    $tmp = str_replace( "\"", "", $tmp);    # remove quotes
-                    $tmp = str_replace( "'", "", $tmp);
-                    $tmp = trim($tmp);
-                }
-            }
-        }
-        fclose($cfile);
-        return $tmp;
+        $config = yaml_parse_file($CFGPATH);
+
+        return $config[$item];
     }
 
 
