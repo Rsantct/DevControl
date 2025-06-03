@@ -13,6 +13,8 @@ On your 24x7 micro PC you'll need:
 
 - git clone this repo, for example under your `Downloads` folder, then copy all the repo `bin/*` stuff inside your `~/bin/` folder
 
+        cd
+        mkdir -p ~/Downloads
         cd Downloads
         git clone https://github.com/Rsantct/DevControl.git
         cd
