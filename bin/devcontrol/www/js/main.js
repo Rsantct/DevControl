@@ -105,11 +105,24 @@ function fill_in_plug_buttons(plugs) {
         // Display current status
         const onoff = mc.send_cmd( 'plug {"target": "' + plug + '", "mode": "status"}' );
 
-        if (onoff == 'on'){
-            btn.style.borderColor = 'green';
-        }else{
-            btn.style.borderColor = 'darkred';
-        }
+        plug_btn_color(btn, onoff);
+    }
+}
+
+
+function plug_btn_color(btn, onoff){
+
+    if ( onoff == 'on' ) {
+        btn.style = 'initial';
+        btn.style.borderColor = 'green';
+
+    }else if (onoff == 'off') {
+        btn.style = 'initial';
+        btn.style.borderColor = 'darkred';
+
+    }else{
+        btn.style.borderColor = 'darkgrey';
+        btn.style.color = 'darkgrey';
     }
 }
 
@@ -125,18 +138,7 @@ function plugs_refresh(){
 
         //console.log(plug, onoff)
 
-        if ( onoff == 'on' ) {
-            btn.style = 'initial';
-            btn.style.borderColor = 'green';
-
-        }else if (onoff == 'off') {
-            btn.style = 'initial';
-            btn.style.borderColor = 'darkred';
-
-        }else{
-            btn.style.borderColor = 'darkgrey';
-            btn.style.color = 'darkgrey';
-        }
+        plug_btn_color(btn, onoff);
     }
 }
 
