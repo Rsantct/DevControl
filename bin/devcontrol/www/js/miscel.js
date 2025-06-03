@@ -42,3 +42,51 @@ export function send_cmd( cmd ) {
         return respuTxt;
     }
 }
+
+
+export function try_connection() {
+
+    let res = false
+
+    const tmp = send_cmd( 'hello' );
+
+    if ( typeof tmp == 'string' && tmp.includes('connection error') ) {
+
+        document.getElementById("div_wol").style.display     = 'none';
+        document.getElementById("div_plugs").style.display   = 'none';
+        document.getElementById("div_scripts").style.display = 'none';
+
+        document.getElementById("warnings").style.display = 'block';
+        document.getElementById("warnings").innerHTML = tmp;
+
+    }else{
+
+        document.getElementById("div_wol").style.display     = 'block';
+        document.getElementById("div_plugs").style.display   = 'block';
+        document.getElementById("div_scripts").style.display = 'block';
+
+        document.getElementById("warnings").style.display = 'none';
+        document.getElementById("warnings").innerHTML = '';
+
+        res = true
+    }
+
+    return res
+}
+
+
+export function btn_color(btn, onoff){
+
+    if ( onoff == 'on' ) {
+        btn.style = 'initial';
+        btn.style.borderColor = 'green';
+
+    }else if (onoff == 'off') {
+        btn.style = 'initial';
+        btn.style.borderColor = 'darkred';
+
+    }else{
+        btn.style.borderColor = 'darkgrey';
+        btn.style.color = 'darkgrey';
+    }
+}
