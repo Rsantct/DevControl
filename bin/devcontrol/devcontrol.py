@@ -33,7 +33,7 @@ def _cmd_to_plug(ip, plug_cmd, delay=0):
     """
 
 
-    def send_http(http_command, delay=0, timeout=1):
+    def send_http(http_command, delay=0):
         """
             the actual http request with optional delay,
             if so you may want to thread this function call.
@@ -42,6 +42,11 @@ def _cmd_to_plug(ip, plug_cmd, delay=0):
         sleep(delay)
 
         ans = 'no answer'
+
+        if 'plug_timeout':
+            timeout = read_config()['plug_timeout']
+        else:
+            timeout = 1
 
         try:
             response = requests.get(http_command, auth=HTTPDigestAuth(u, p), timeout=timeout)
@@ -69,7 +74,7 @@ def _cmd_to_plug(ip, plug_cmd, delay=0):
 
 
     u = 'admin'
-    p = read_config()['plugs_pass']
+    p = read_config()['plug_pass']
 
     http_command = f'http://{ip}/{plug_cmd}'
 
