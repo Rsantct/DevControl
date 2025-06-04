@@ -3,8 +3,9 @@
 server_addr: 0.0.0.0
 server_port: 9950
 
-# password for http plugs
-plugs_pass: xxxxxxxx
+# http plug devices
+plugs_pass:     xxxxxxxx
+plug_timeout:   1
 
 devices:
 
