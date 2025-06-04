@@ -49,3 +49,8 @@ Smart Plugs button color:
 - border & font grey: the plug is NOT available
 
 <a href="url"><img src="bin/devcontrol/img/DevControl_web.png" align="center" width="480" ></a>
+
+# ToDo
+
+- scheduled job management
+- display info for scheduled jobs
