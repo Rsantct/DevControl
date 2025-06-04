@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Copyright (c) Rafael Sánchez
+# This file is part of 'DevControl'
+# a very simple Home Automation app.
+
+# This script can be used outside the DevControl machine.
+
+# Sample values, configure yours:
+devcontrol_server="rpi3clac.local"
+plug="Taurus"
+delay=20
+
+
+function print_help {
+    echo
+    echo "    Smart Plug switch-off command, through by a DevControl server,"
+    echo "    delayed N seconds"
+    echo
+    echo "    Usage: smart_plug_off_Nsec.sh [ n ]"
+    echo
+    echo "           default  n = 20 s"
+    echo
+}
+
+if [[ $1 ]]; then
+
+    if [[ $1 == *"-h"* ]]; then
+        print_help
+        exit 0
+    fi
+
+    delay=$1
+fi
+
+# Check if given delay is integer
+if [[ "$delay" =~ ^-?[0-9]+$ ]]; then
+    :
+else
+    echo "Delay must be integer, using the default 20 sec."
+    delay=20
+fi
+
+# Ordering
+echo 'plug { "target": "'$plug'", "mode": "off", "delay": '$delay' } | nc '$devcontrol_server' 9950'
+
+exit 0
