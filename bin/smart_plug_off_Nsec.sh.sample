@@ -31,6 +31,7 @@ function order_plug_off {
 
     plug_off_cmd='echo plug { "target": "'$plug'", "mode": "off", "delay": '$delay' } | nc '$devcontrol_server' 9950'
 
+    plug_available=0
     plug_ans=""
     attempt=0
     while [[ "$attempt" -lt "$max_attempts" ]]; do
