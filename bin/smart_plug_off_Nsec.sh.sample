@@ -23,6 +23,46 @@ function print_help {
     echo
 }
 
+
+function order_plug_off {
+
+    plug_status_cmd='echo plug { "target": "'$plug'", "mode": "status" } | nc '$devcontrol_server' 9950'
+
+    plug_off_cmd='echo plug { "target": "'$plug'", "mode": "off", "delay": '$delay' } | nc '$devcontrol_server' 9950'
+
+    plug_ans=""
+    attempt=0
+    while [[ "$attempt" -lt "$max_attempts" ]]; do
+
+        echo $plug_status_cmd
+
+        # Need to escape quotes before doing eval
+        tmp=${plug_status_cmd//\"/\\\"}
+        plug_ans=$(eval "$tmp")
+
+        if [[ "$plug_ans" == "on" || "$plug_ans" == "off" ]]; then
+            plug_available=1
+            break
+        fi
+
+        attempt=$((attempt + 1))
+        sleep 1
+
+    done
+
+    if [[ plug_available -eq 1 ]]; then
+
+        tmp=${plug_off_cmd//\"/\\\"}
+        plug_ans=$(eval "$tmp")
+        echo $plug_ans
+
+    else
+        echo "plug NOT available"
+
+    fi
+}
+
+
 if [[ $1 ]]; then
 
     if [[ $1 == *"-h"* ]]; then
@@ -42,6 +82,6 @@ else
 fi
 
 # Ordering
-echo 'plug { "target": "'$plug'", "mode": "off", "delay": '$delay' } | nc '$devcontrol_server' 9950'
+order_plug_off
 
 exit 0
