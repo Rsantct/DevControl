@@ -10,6 +10,7 @@
 devcontrol_server="rpi3clac.local"
 plug="Taurus"
 delay=20
+max_attempts=10
 
 
 function print_help {
@@ -46,7 +47,7 @@ function order_plug_off {
         fi
 
         attempt=$((attempt + 1))
-        sleep 1
+        sleep 5
 
     done
 
