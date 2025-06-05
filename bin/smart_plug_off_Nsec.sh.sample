@@ -8,7 +8,7 @@
 
 # Sample values, configure yours:
 devcontrol_server="rpi3clac.local"
-plug="Taurus"
+plug="KEF C35"
 delay=20
 max_attempts=10
 
