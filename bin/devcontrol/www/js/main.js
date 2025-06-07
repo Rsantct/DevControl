@@ -68,7 +68,7 @@ function do_plug_toggle(event){
 
     }else{
 
-        alert('Plug NOT AVAILABLE');
+        alert('The plug is NOT responding');
         return;
     }
 
