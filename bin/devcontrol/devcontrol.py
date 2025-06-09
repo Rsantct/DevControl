@@ -10,6 +10,7 @@
 
 import  os
 import  subprocess as sp
+import  platform
 from    time            import  strftime, sleep
 import  yaml
 import  json
@@ -102,25 +103,88 @@ def init():
 
 
 def read_config():
-    config = {}
+
+    config = {  'devices':  { 'plugs':{}, 'wol':{} },
+                'scripts':  {}
+             }
+
     try:
         with open(f'{MY_DIR}/devcontrol.yml', 'r') as f:
             config = yaml.safe_load(f)
-    except:
-        print(f'(devcontrol) UNABLE to read devcontrol.yml')
+
+        if not 'wol' in config["devices"]:
+            config["devices"]["wol"] = {}
+
+        if not 'plugs' in config["devices"]:
+            config["devices"]["plugs"] = {}
+
+        if not 'scripts' in config:
+            config["scripts"] = {}
+
+    except Exception as e:
+        print(f'(devcontrol) ERROR reading devcontrol.yml: {str(e)}')
+
     return config
 
 
-def wol(args):
+def manage_wol(args):
     """
-        {'target': xxxxx }
+        {   'target':   xxxxx,
+            'mode':     send | ping
+        }
     """
+
+    def get_ip(mac):
+        """ Search an IP from the O.S. ARP MAC/IP table
+        """
+
+        ip = ''
+
+        try:
+            tmp = sp.check_output(['arp']).decode().strip()
+
+        except Exception as e:
+            print(f'(devcontrol) ERROR getting IP from MAC: {str(e)}')
+            return ip
+
+        arp_lines = tmp.split('\n')
+        arp_table = [ line.split() for line in arp_lines ]
+
+        for row in arp_table:
+            if row[2].lower() == mac.lower():
+                ip = row[0]
+                break
+
+        return ip
+
+
+    def ping_host(host):
+
+        param = '-n' if 'windows' in platform.system().lower() else '-c'
+
+        ping_command = ['ping', param, '1', host]
+
+        try:
+            output = sp.run(ping_command, stdout=sp.PIPE, stderr=sp.PIPE, text=True)
+            if output.returncode == 0:
+                return 'up'
+            else:
+                return 'not reachable'
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return 'error with ping'
+
+
     result = 'NACK'
 
     if not 'target' in args:
         return result
 
     config = read_config()
+
+    if not 'target' in args or not 'mode' in args:
+        return result
 
     wol_id = args["target"]
 
@@ -129,11 +193,18 @@ def wol(args):
 
     mac  = config["devices"]["wol"][ wol_id ]
 
-    try:
-        result = sp.check_output(f'wakeonlan {mac}', shell=True) \
-                .decode().strip()
-    except:
-        result = 'Error with WOL'
+    if args["mode"] == 'send':
+
+        try:
+            result = sp.check_output(f'wakeonlan {mac}', shell=True) \
+                    .decode().strip()
+        except:
+            result = 'Error with WOL'
+
+    elif args["mode"] == 'ping':
+        ip = get_ip(mac)
+        result = ping_host(ip)
+
 
     return result
 
@@ -224,9 +295,13 @@ def manage_plug(args):
 
 def script(args):
     """
-        {'target': xxxxx }
+        this simply runs an user script silently then returns the
+        script response if any
+
+        {'target': script_name }
     """
-    result = 'NACK'
+
+    result = ''
 
     if not 'target' in args:
         return result
@@ -238,28 +313,39 @@ def script(args):
     if not script_id in config["scripts"]:
         return f'\'{script_id}\' not configured'
 
-    cmd  = config["scripts"][ script_id ]
+    cmd  = config["scripts"][ script_id ]["script"]
 
     try:
         result = sp.check_output(cmd, shell=True) \
                 .decode().strip()
     except:
-        result = 'Error with script'
+        result = 'Error running the script'
 
     return result
 
 
 def get_config(jsonarg):
+    """
+        Available jsonarg values:
+
+            {"section":  "devices" | "scripts" | "web_config"}
+    """
 
     res = 'NACK'
 
     if 'section' in jsonarg:
 
-        if jsonarg["section"] in ['devices', 'scripts']:
+        if jsonarg["section"] in ['devices', 'scripts', 'web_config']:
 
-            res = json.dumps( read_config()[ jsonarg["section"] ] )
+            res = read_config()[ jsonarg["section"] ]
 
-    return res
+            # Min web refresh is 3 seconds
+            if 'refresh_seconds' in res:
+                if res["refresh_seconds"] < 3:
+                    res["refresh_seconds"] = 3
+                    print(f'(devcontrol) web refresh min value is 3 seconds')
+
+    return json.dumps( res )
 
 
 
@@ -289,7 +375,7 @@ def do( cmd_phrase ):
         result = get_config(args)
 
     elif cmd == 'wol':
-        result = wol(args)
+        result = manage_wol(args)
 
     elif cmd == 'plug':
         result = manage_plug(args)
@@ -300,7 +386,10 @@ def do( cmd_phrase ):
     if type(result) != str:
         result = json.dumps(result)
 
-    if 'mode' in args and args["mode"] == 'status':
+    if cmd == 'get_config':
+        pass
+
+    elif 'mode' in args and args["mode"] in ('status', 'ping'):
         pass
 
     else:
