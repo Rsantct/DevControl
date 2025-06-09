@@ -6,18 +6,22 @@
 
 import * as mc from "./miscel.js";
 
-const REFRESH_INTERVAL = 3000;
+var REFRESH_INTERVAL = 5000;
 
 // WOL PCs
 
 function do_wol(event){
+
+    if ( ! confirm('Please CONFIRM to send WOL packet') ){
+            return;
+    }
 
     const btn = event.target;
 
     // example 'bt_Amplifier'
     const wol_id = btn.id.slice(3,);
 
-    mc.send_cmd( 'wol {"target": "' + wol_id + '"}' );
+    mc.send_cmd( 'wol {"target": "' + wol_id + '", "mode":"send"}' );
 
     // Highlights the button for a second
     btn.className = 'device_button_highlighted';
@@ -46,6 +50,26 @@ function fill_in_wol_buttons(wol_devices) {
         btn.addEventListener('click', do_wol);
 
         cell.appendChild(btn);
+    }
+}
+
+
+function wol_refresh(){
+
+    for (const wol in devices.wol) {
+
+        const btn = document.getElementById('bt_' + wol);
+
+        // Display current status
+        const ping = mc.send_cmd( 'wol {"target": "' + wol + '", "mode": "ping"}' );
+
+        let onoff = "off"
+
+        if ( ping.includes('on') || ping.includes('up') || ping == '1'  ){
+            onoff = "on"
+        }
+
+        mc.btn_color(btn, onoff);
     }
 }
 
@@ -130,21 +154,30 @@ function plugs_refresh(){
 
 
 // SCRIPTS
-
+// (i) There is no refresh here, we just display the result
+//     for 1 second when running the script.
 function do_script(event){
+
+    if ( ! confirm('Please CONFIRM to RUN the script') ){
+            return;
+    }
 
     const btn = event.target;
 
     // example 'bt_Amplifier'
     const script_id = btn.id.slice(3,);
 
-    mc.send_cmd( 'script {"target": "' + script_id + '"}' );
+    const response = mc.send_cmd( 'script {"target": "' + script_id + '"}' );
+    alert('response was: ' + response);
 
-    // Highlights the button for a second
-    btn.className = 'device_button_highlighted';
-    setTimeout(function(){
-            btn.className = 'device_button';
-        }, 1000);
+    // (i) Dot notation does not works when the key having spaces
+    const expected_response = scripts[script_id].response;
+    if ( response == expected_response ) {
+        mc.btn_color(btn, 'on');
+        setTimeout( () => {
+            btn.style = "initial";
+        } , 1000);
+    }
 }
 
 
@@ -173,11 +206,11 @@ function fill_in_scripts_buttons(scripts) {
 
 // MAIN
 
-// Currently only plugs have refresh
 function do_refresh() {
 
     if ( mc.try_connection() ) {
 
+        wol_refresh()
         plugs_refresh()
     }
 }
@@ -188,7 +221,6 @@ if ( mc.try_connection() ) {
     var devices = mc.send_cmd( 'get_config {"section": "devices"}' );
     var scripts = mc.send_cmd( 'get_config {"section": "scripts"}' );
 
-
     fill_in_wol_buttons(devices.wol);
 
     fill_in_plug_buttons(devices.plugs);
@@ -196,5 +228,10 @@ if ( mc.try_connection() ) {
     fill_in_scripts_buttons(scripts);
 
     // PAGE REFRESH
+    const web_config = mc.send_cmd( 'get_config {"section": "web_config"}' );
+    if (web_config.refresh_seconds) {
+        REFRESH_INTERVAL = web_config.refresh_seconds * 1000
+    }
+
     setInterval( do_refresh, REFRESH_INTERVAL );
 }
