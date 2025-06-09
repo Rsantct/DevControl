@@ -3,9 +3,14 @@
 server_addr: 0.0.0.0
 server_port: 9950
 
-# http plug devices
-plugs_pass:     xxxxxxxx
-plug_timeout:   1
+# Web page. Min refresh is 3 seconds
+web_config:
+    refresh_seconds:    5
+
+# Plug devices http configuration.
+# Use the smallest timeout that works for your devices.
+plug_pass:     xxxxxxxx
+plug_timeout:  0.25
 
 devices:
 
@@ -21,8 +26,14 @@ devices:
         Amplifier:   192.168.1.198
         Fan 1:       192.168.1.199
 
-# Scripts
+# Scripts. Notice that expected responses MUST have quotes
 scripts:
 
-    Dyn BM6:         "echo 'amp_switch on' | nc -N localhost 9991"
+    Dyn BM6 - ampli ON:
+        script:         "echo 'amp_switch on' | nc -N localhost 9991"
+        response:       "on"
+
+    SeasFlat - ampli ON:
+        script:         "echo 'amp_switch on' | nc -N atinker.local 9991"
+        response:       "on"
 
