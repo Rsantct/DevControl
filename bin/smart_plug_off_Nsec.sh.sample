@@ -25,7 +25,7 @@ function print_help {
 }
 
 
-function order_plug_off {
+function do_order_plug_off {
 
     plug_status_cmd='echo plug { "target": "'$plug'", "mode": "status" } | nc '$devcontrol_server' 9950'
 
@@ -84,6 +84,6 @@ else
 fi
 
 # Ordering
-order_plug_off
+do_order_plug_off
 
 exit 0
