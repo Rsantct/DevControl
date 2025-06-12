@@ -69,18 +69,22 @@ def _cmd_to_plug(ip, plug_cmd, delay=0):
             ans = response.text
 
         except requests.exceptions.Timeout:
-            print("The request timed out")
+            ans = 'timed out'
 
         except requests.exceptions.RequestException as e:
-            print(f"GET request error: {e}")
+            ans = f'GET error: {str(e)}'
 
         except requests.exceptions.HTTPError as e:
-            print(f"HTTP error: {e}")
+            ans = f'HTTP error: {str(e)}'
 
         except Exception as e:
-            print(f"Request error: {e}")
+            ans = f'request error: {str(e)}'
 
         print(f'send_http Rx: {ans}')
+
+        # Logging no status commands
+        if not 'status' in http_command.lower():
+            do_log(http_command, ans)
 
         return ans
 
@@ -392,6 +396,10 @@ def get_config(jsonarg):
     return json.dumps( res )
 
 
+def do_log(cmd, res):
+        with open(LOGPATH, 'a') as FLOG:
+            FLOG.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd}; {res}\n')
+
 
 # Interface function to plug this on server.py
 def do( cmd_phrase ):
@@ -437,14 +445,7 @@ def do( cmd_phrase ):
         pass
 
     else:
-
-        # log cmd_phrase
-        with open(LOGPATH, 'a') as FLOG:
-            FLOG.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd_phrase}; ')
-
-        # log the result
-        with open(LOGPATH, 'a') as FLOG:
-            FLOG.write(f'{result}\n')
+        do_log(cmd_phrase, result)
 
     return result
 
