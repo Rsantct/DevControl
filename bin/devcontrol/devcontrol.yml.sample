@@ -26,14 +26,20 @@ devices:
         Amplifier:   192.168.1.198
         Fan 1:       192.168.1.199
 
-# Scripts. Notice that expected responses MUST have quotes
+# Scripts
+#           All values MUST have surrounding quotes.
+#           `status_cmd` and `responses` sections are optional.
 scripts:
 
-    Dyn BM6 - ampli ON:
-        script:         "echo 'amp_switch on' | nc -N localhost 9991"
-        response:       "on"
+    Dyn BM6 - amp toggle:
 
-    SeasFlat - ampli ON:
-        script:         "echo 'amp_switch on' | nc -N atinker.local 9991"
-        response:       "on"
+        button_cmd:     "echo 'amp_switch toggle' | nc -N localhost 9991"
+        status_cmd:     "echo 'amp_switch state'  | nc -N localhost 9991"
+        responses:      "on, off"
+
+    SeasFlat - amp toggle:
+
+        button_cmd:     "echo 'amp_switch toggle' | nc -N atinker.local 9991"
+        status_cmd:     "echo 'amp_switch state'  | nc -N atinker.local 9991"
+        responses:      "on, off"
 
