@@ -27,6 +27,8 @@ function print_help {
 
 function do_order_plug_off {
 
+    now=$(date '+%Y/%m/%d %H:%M:%S')
+
     plug_status_cmd='echo plug {"target": "'$plug'", "mode": "status", "from":"'$(hostname)'"} | nc '$devcontrol_server' 9950'
 
     plug_off_cmd='echo plug {"target": "'$plug'", "mode": "off", "delay": '$delay', "from":"'$(hostname)'"} | nc '$devcontrol_server' 9950'
@@ -56,10 +58,14 @@ function do_order_plug_off {
 
         tmp=${plug_off_cmd//\"/\\\"}
         plug_ans=$(eval "$tmp")
-        echo $plug_ans
+        echo -e $plug_ans
+        # LOG
+        echo -e $now'; '$tmp'; '$plug_ans >> ~/.smart_plug_off_Nsec.log
 
     else
         echo "plug NOT available"
+        # LOG
+        echo -e $now"; plug NOT available" >> ~/.smart_plug_off_Nsec.log
 
     fi
 }
