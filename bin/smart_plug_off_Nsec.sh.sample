@@ -27,9 +27,9 @@ function print_help {
 
 function do_order_plug_off {
 
-    plug_status_cmd='echo plug { "target": "'$plug'", "mode": "status" } | nc '$devcontrol_server' 9950'
+    plug_status_cmd='echo plug {"target": "'$plug'", "mode": "status", "from":"'$(hostname)'"} | nc '$devcontrol_server' 9950'
 
-    plug_off_cmd='echo plug { "target": "'$plug'", "mode": "off", "delay": '$delay' } | nc '$devcontrol_server' 9950'
+    plug_off_cmd='echo plug {"target": "'$plug'", "mode": "off", "delay": '$delay', "from":"'$(hostname)'"} | nc '$devcontrol_server' 9950'
 
     plug_available=0
     plug_ans=""
