@@ -21,6 +21,17 @@ import  threading
 MY_DIR      = os.path.dirname(__file__)
 
 
+def init():
+
+    global LOGPATH
+
+    # Command log file
+    LOGPATH = f'{MY_DIR}/devcontrol.log'
+    if os.path.exists(LOGPATH) and os.path.getsize(LOGPATH) > 10e6:
+        print ( f"(devcontrol) log file exceeds ~ 10 MB '{LOGPATH}'" )
+    print ( f"(devcontrol) logging commands in '{LOGPATH}'" )
+
+
 def _cmd_to_plug(ip, plug_cmd, delay=0):
     """
         sends an http command to a plug with optional delay
@@ -91,17 +102,6 @@ def _cmd_to_plug(ip, plug_cmd, delay=0):
     return ans
 
 
-def init():
-
-    global LOGPATH
-
-    # Command log file
-    LOGPATH = f'{MY_DIR}/devcontrol.log'
-    if os.path.exists(LOGPATH) and os.path.getsize(LOGPATH) > 10e6:
-        print ( f"(devcontrol) log file exceeds ~ 10 MB '{LOGPATH}'" )
-    print ( f"(devcontrol) logging commands in '{LOGPATH}'" )
-
-
 def read_config():
 
     config = {  'devices':  { 'plugs':{}, 'wol':{} },
@@ -123,6 +123,26 @@ def read_config():
 
     except Exception as e:
         print(f'(devcontrol) ERROR reading devcontrol.yml: {str(e)}')
+
+
+    # Script status responses allow space or comma separated values
+    for script, values in config["scripts"].items():
+
+        if 'responses' in values and values["responses"]:
+
+            tmp = values["responses"]
+
+            if type(tmp) == str:
+                if ',' in tmp:
+                    tmp = [ x.strip() for x in tmp.split(',') ]
+                else:
+                    tmp = tmp.split()
+
+            elif type(tmp) != list:
+                raise Exception(f'Bad responses values in {script}')
+
+            config["scripts"][script]["responses"] = tmp
+
 
     return config
 
@@ -265,7 +285,7 @@ def manage_plug(args):
     elif mode == 'off':
         plug_cmd = 'rpc/Switch.Set?id=0&on=false'
 
-    elif mode == 'status':
+    elif 'stat' in mode:
         pass
 
     else:
@@ -273,7 +293,7 @@ def manage_plug(args):
 
 
     # No changes
-    if mode == 'status':
+    if 'stat' in mode:
         return get_plug_status()
 
     # Change the plug output
@@ -293,12 +313,12 @@ def manage_plug(args):
     return res
 
 
-def script(args):
+def manage_script(args):
     """
         this simply runs an user script silently then returns the
         script response if any
 
-        {'target': script_name }
+        {'target': script_name, 'mode': run | status }
     """
 
     result = ''
@@ -313,13 +333,37 @@ def script(args):
     if not script_id in config["scripts"]:
         return f'\'{script_id}\' not configured'
 
-    cmd  = config["scripts"][ script_id ]["script"]
+    if not 'mode' in args:
+        return 'needs mode: run | status'
 
-    try:
-        result = sp.check_output(cmd, shell=True) \
-                .decode().strip()
-    except:
-        result = 'Error running the script'
+
+    if args["mode"] in ('run', 'send'):
+
+        cmd  = config["scripts"][ script_id ]["button_cmd"]
+
+        try:
+            result = sp.check_output(cmd, shell=True) \
+                    .decode().strip()
+        except:
+            result = 'Error running the script'
+
+
+    elif 'stat' in args["mode"]:
+
+        try:
+
+            cmd  = config["scripts"][ script_id ]["status_cmd"]
+
+            try:
+                result = sp.check_output(cmd, shell=True) \
+                        .decode().strip()
+            except:
+                result = 'Error getting the script status'
+
+        except:
+
+            result = 'not available'
+
 
     return result
 
@@ -381,7 +425,7 @@ def do( cmd_phrase ):
         result = manage_plug(args)
 
     elif cmd == 'script':
-        result = script(args)
+        result = manage_script(args)
 
     if type(result) != str:
         result = json.dumps(result)
@@ -389,7 +433,7 @@ def do( cmd_phrase ):
     if cmd == 'get_config':
         pass
 
-    elif 'mode' in args and args["mode"] in ('status', 'ping'):
+    elif 'mode' in args and args["mode"] in ('state', 'status', 'ping'):
         pass
 
     else:
