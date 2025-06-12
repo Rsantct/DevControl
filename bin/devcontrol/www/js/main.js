@@ -154,8 +154,6 @@ function plugs_refresh(){
 
 
 // SCRIPTS
-// (i) There is no refresh here, we just display the result
-//     for 1 second when running the script.
 function do_script(event){
 
     if ( ! confirm('Please CONFIRM to RUN the script') ){
@@ -167,17 +165,11 @@ function do_script(event){
     // example 'bt_Amplifier'
     const script_id = btn.id.slice(3,);
 
-    const response = mc.send_cmd( 'script {"target": "' + script_id + '"}' );
+    const response = mc.send_cmd( 'script {"target": "' + script_id + '", "mode": "run"}' );
     alert('response was: ' + response);
 
-    // (i) Dot notation does not works when the key having spaces
-    const expected_response = scripts[script_id].response;
-    if ( response == expected_response ) {
-        mc.btn_color(btn, 'on');
-        setTimeout( () => {
-            btn.style = "initial";
-        } , 1000);
-    }
+    // Display current status
+    mc.btn_color(btn, response);
 }
 
 
@@ -204,14 +196,28 @@ function fill_in_scripts_buttons(scripts) {
 }
 
 
+function scripts_refresh(){
+
+    for (const script_id in scripts) {
+
+        const btn = document.getElementById('bt_' + script_id);
+
+        // Display current status
+        const onoff = mc.send_cmd( 'script {"target": "' + script_id + '", "mode": "status"}' );
+        mc.btn_color(btn, onoff);
+    }
+}
+
+
 // MAIN
 
 function do_refresh() {
 
     if ( mc.try_connection() ) {
 
-        wol_refresh()
-        plugs_refresh()
+        wol_refresh();
+        plugs_refresh();
+        scripts_refresh();
     }
 }
 
