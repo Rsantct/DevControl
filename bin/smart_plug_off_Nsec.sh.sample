@@ -58,14 +58,14 @@ function do_order_plug_off {
 
         tmp=${plug_off_cmd//\"/\\\"}
         plug_ans=$(eval "$tmp")
-        echo -e $plug_ans
+        echo $plug_ans
         # LOG
-        echo -e $now'; '$tmp'; '$plug_ans >> ~/.smart_plug_off_Nsec.log
+        echo $now'; '$tmp'; '$plug_ans >> ~/.smart_plug_off_Nsec.log
 
     else
         echo "plug NOT available"
         # LOG
-        echo -e $now"; plug NOT available" >> ~/.smart_plug_off_Nsec.log
+        echo $now"; plug NOT available" >> ~/.smart_plug_off_Nsec.log
 
     fi
 }
