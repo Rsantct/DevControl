@@ -132,10 +132,6 @@ function fill_in_plug_buttons(plugs) {
         btn.addEventListener('click', do_plug_toggle);
 
         cell.appendChild(btn);
-
-        // Display current status
-        const onoff = mc.send_cmd( 'plug {"target": "' + plug + '", "mode": "status"}' );
-        mc.btn_color(btn, onoff);
     }
 }
 
@@ -234,6 +230,7 @@ if ( mc.try_connection() ) {
     fill_in_scripts_buttons(scripts);
 
     // PAGE REFRESH
+    do_refresh();
     const web_config = mc.send_cmd( 'get_config {"section": "web_config"}' );
     if (web_config.refresh_seconds) {
         REFRESH_INTERVAL = web_config.refresh_seconds * 1000
