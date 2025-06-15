@@ -14,6 +14,7 @@ import  platform
 from    time            import  strftime, sleep
 import  yaml
 import  json
+import  urllib.parse
 import  requests
 from    requests.auth   import HTTPDigestAuth
 import  threading
@@ -23,16 +24,86 @@ MY_DIR      = os.path.dirname(__file__)
 
 def init():
 
-    global LOGPATH
 
     # Command log file
+    global LOGPATH
+
     LOGPATH = f'{MY_DIR}/devcontrol.log'
     if os.path.exists(LOGPATH) and os.path.getsize(LOGPATH) > 10e6:
         print ( f"(devcontrol) log file exceeds ~ 10 MB '{LOGPATH}'" )
     print ( f"(devcontrol) logging commands in '{LOGPATH}'" )
 
+    create_configured_schedules()
 
-def _cmd_to_plug(ip, plug_cmd, delay=0):
+
+def create_configured_schedules():
+    """
+        PLUGs schedule as per configurated under the YAML file
+    """
+
+    config = read_config()
+
+    for plug_id, content in config["devices"]["plugs"].items():
+
+        host = content["address"]
+
+        if 'schedule' in content and content["schedule"]:
+
+            plug_cmd = 'rpc/Schedule.DeleteAll'
+            _cmd_to_plug( host, plug_cmd )
+
+            for mode in ('switch_off', 'switch_on'):
+
+                if mode in content["schedule"] and content["schedule"][mode]:
+
+                    plug_cmd = prepare_plug_schedule(plug_id, mode)
+                    _cmd_to_plug( host, plug_cmd )
+
+
+def prepare_plug_schedule(plug_id, mode):
+    """ mode:   switch_off | switch_on
+    """
+
+    config = read_config()
+
+    # The `timespec` part
+    timespec = config["devices"]["plugs"][ plug_id ]["schedule"][mode]
+
+    # Remove leading zeroes if any
+    timespec = timespec.split()
+    timespec_cleaned = []
+    for x in timespec:
+        if x.isdigit():
+            timespec_cleaned.append( str(int(x)) )
+        else:
+            timespec_cleaned.append( x )
+
+    # Back to string with SINGLE spaces
+    timespec = ' '.join( timespec_cleaned )
+
+
+    # The `calls` part
+    calls = [   {   "method":   "Switch.Set",
+                    "params":   {   "id": 0,
+                                    "on": True if 'on' in mode else False
+                                }
+                }
+            ]
+
+    # Separators will remove unnecessary spaces (but it is not necessary)
+    calls = json.dumps(calls) #, separators=(",", ":"))
+
+    # This is a MUST:
+    timespec = urllib.parse.quote(timespec)
+    calls    = urllib.parse.quote(calls)
+
+    # All together
+    url_cmd = f'rpc/Schedule.Create?timespec="{timespec}"&calls={calls}'
+
+    return url_cmd
+
+
+def _cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
     """
         sends an http command to a plug with optional delay
 
@@ -45,9 +116,9 @@ def _cmd_to_plug(ip, plug_cmd, delay=0):
     """
 
 
-    def send_http(http_command, delay=0):
+    def send_http_get(http_command, delay=0):
         """
-            the actual http request with optional delay,
+            This is the actual http request with optional delay,
             if so you may want to thread this function call.
         """
 
@@ -80,11 +151,20 @@ def _cmd_to_plug(ip, plug_cmd, delay=0):
         except Exception as e:
             ans = f'request error: {str(e)}'
 
-        print(f'send_http Rx: {ans}')
+        print(f'send_http_get Rx: {ans}')
 
         # Logging no status commands
         if not 'status' in http_command.lower():
             do_log(http_command, ans)
+
+        if verbose:
+            print()
+            print('--- url:')
+            print(http_command)
+            print()
+            print('--- response:')
+            print(ans)
+            print()
 
         return ans
 
@@ -92,14 +172,14 @@ def _cmd_to_plug(ip, plug_cmd, delay=0):
     u = 'admin'
     p = read_config()['plug_pass']
 
-    http_command = f'http://{ip}/{plug_cmd}'
+    http_command = f'http://{host}/{plug_cmd}'
 
 
     if not delay:
-        ans = send_http(http_command)
+        ans = send_http_get(http_command)
 
     else:
-        job = threading.Thread(target=send_http, args=(http_command, delay))
+        job = threading.Thread(target=send_http_get, args=(http_command, delay))
         job.start()
         ans = 'ordered'
 
@@ -243,7 +323,7 @@ def manage_plug(args):
 
     def get_plug_status():
 
-        ans = _cmd_to_plug(ip, 'rpc/Switch.GetStatus?id=0')
+        ans = _cmd_to_plug(host, 'rpc/Switch.GetStatus?id=0')
 
         try:
             if json.loads(ans)["output"]:
@@ -278,7 +358,7 @@ def manage_plug(args):
     if not plug_id in config["devices"]["plugs"]:
         return f'\'{plug_id}\' not configured'
 
-    ip  = config["devices"]["plugs"][ plug_id ]
+    host  = config["devices"]["plugs"][ plug_id ]["address"]
 
     if mode == 'toggle':
         plug_cmd = 'rpc/Switch.Toggle?id=0'
@@ -291,6 +371,28 @@ def manage_plug(args):
 
     elif 'stat' in mode:
         pass
+
+    elif mode == 'schedule':
+
+        if args['schedule'] == 'list':
+            plug_cmd = 'rpc/Schedule.List'
+            return _cmd_to_plug(host, plug_cmd)
+
+        elif args['schedule'] == 'delete':
+            plug_cmd = f'rpc/Schedule.Delete?id={args["schedule_id"]}'
+            return _cmd_to_plug(host, plug_cmd)
+
+        elif args['schedule'] == 'deleteall':
+            plug_cmd = 'rpc/Schedule.DeleteAll'
+            return _cmd_to_plug(host, plug_cmd)
+
+        elif args['schedule'] == 'create_configured':
+            create_configured_schedules()
+            plug_cmd = 'rpc/Schedule.List'
+            return _cmd_to_plug(host, plug_cmd)
+
+        else:
+            return 'NACK'
 
     else:
         return res
