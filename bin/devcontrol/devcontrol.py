@@ -4,7 +4,11 @@
 # This file is part of 'DevControl'
 # a very simple Home Automation app.
 
-""" A module to Wake On Lan PCs and switching Smart Plugs.
+""" A module to:
+        - Wake On Lan PCs
+        - Switching Smart Plugs
+        - Run user cripts
+
     This module is loaded by '../devcontrol_srv.py'
 """
 
