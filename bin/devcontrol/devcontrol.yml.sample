@@ -10,7 +10,7 @@ web_config:
 # Plug devices http configuration.
 # Use the smallest timeout that works for your devices.
 plug_pass:     xxxxxxxx
-plug_timeout:  0.25
+plug_timeout:  0.5
 
 devices:
 
@@ -22,8 +22,18 @@ devices:
 
     # Smart plugs to switch on/off
     plugs:
-        # id:        ip
-        Amplifier:   192.168.1.198
+
+        Amplifíer:
+
+            address:            192.168.1.58
+
+            schedule:
+            #                   CRON timespec has 6 fields, example:
+            #                   sec min hou dom mon  dow
+            #                   30  00  00   *   *   0,1,2,3,4,5,6
+                switch_off:     00  10  02   *   *   *
+                switch_on:
+
         Fan 1:       192.168.1.199
 
 # Scripts
