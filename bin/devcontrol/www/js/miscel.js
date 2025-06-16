@@ -37,8 +37,6 @@ export function send_cmd( cmd ) {
         }
 
         // alert(respuTxt);
-
-        //console.log('envia_com respuTxt:', respuTxt);
         return respuTxt;
     }
 }
@@ -90,3 +88,62 @@ export function btn_color(btn, onoff){
         btn.style.color = 'darkgrey';
     }
 }
+
+export function make_section(div_id, section_title, section_items, btn_handler){
+
+    let table   = document.createElement("table");
+    table.id = div_id.replace('div', 'table');
+
+    let theader = table.createTHead();
+    let tbody   = table.createTBody();
+    let hrow    = theader.insertRow();
+    let h_title_cell = hrow.insertCell();
+    let h_sched_cell = hrow.insertCell();
+
+    h_title_cell.innerHTML = section_title
+    h_sched_cell.innerHTML = 'schedule:'
+
+    for (const item in section_items) {
+
+        let row = tbody.insertRow();
+
+        let butn_cell = row.insertCell();
+        butn_cell.className = 'device_cell';
+
+        let sche_cell = row.insertCell();
+        sche_cell.className = 'schedule_cell';
+
+        let btn = document.createElement('button');
+        btn.type = "button";
+        btn.className = "device_button";
+        // example 'bt_Amplifier'
+        btn.id = 'bt_' + item;
+        btn.innerHTML = item;
+        btn.addEventListener('click', btn_handler);
+
+        butn_cell.appendChild(btn);
+
+        if (div_id == 'div_plugs'){
+
+            // display plug device schedule
+            const schedules = send_cmd( 'plug {"target": "' + item + '", "mode": "schedule", "schedule": "nice_list"}' );
+
+            if ( schedules.length > 0 ){
+
+                for (const s of schedules) {
+                    sche_cell.innerHTML += s[1].padEnd(3, ' ').replace(' ', '&nbsp;') + ' ' + s[0] + '<br>';
+                }
+
+            }else{
+                sche_cell.innerHTML += '--'
+            }
+
+        }else{
+            sche_cell.innerHTML += '--'
+        }
+    }
+
+    document.getElementById(div_id).appendChild(table)
+}
+
+
