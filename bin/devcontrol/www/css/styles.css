@@ -33,11 +33,12 @@ th, td  {   padding: 5px;
             font-size:1.0em;
         }
 
-table#wol_table { border-style: none; }
+table#table_wol     { border-radius: 10px/10px; }
 
-table#plugs_table { border-style: none; }
+table#table_plugs   { border-radius: 10px/10px; }
 
-table#scripts_table { border-style: none; }
+table#table_scripts { border-radius: 10px/10px; }
+
 
 .schedule_cell{
     font-family:        monospace;
