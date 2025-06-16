@@ -9,7 +9,7 @@ Features
 
 On your 24x7 micro PC you'll need:
 
-- `sudo apt install wakeonlan`
+- `sudo apt install wakeonlan net-tools`
 
 - git clone this repo, for example under your `Downloads` folder, then copy all the repo `bin/*` stuff inside your `~/bin/` folder
 
