@@ -37,10 +37,10 @@ def init():
         print ( f"(devcontrol) log file exceeds ~ 10 MB '{LOGPATH}'" )
     print ( f"(devcontrol) logging commands in '{LOGPATH}'" )
 
-    create_configured_schedules()
+    order_configured_schedules()
 
 
-def create_configured_schedules():
+def order_configured_schedules():
     """
         PLUGs schedule as per configurated under the YAML file
     """
@@ -370,7 +370,6 @@ def manage_plug(args):
             # if plug was not reachable (`tmp` == 'timed out')
             return resu
 
-
         for job in jobs_list:
 
             timespec = job["timespec"].split()
@@ -393,7 +392,6 @@ def manage_plug(args):
 
                     else:
                         resu.append( (nice_timespec, 'OFF') )
-
 
         return resu
 
@@ -453,7 +451,7 @@ def manage_plug(args):
             return _cmd_to_plug(host, plug_cmd)
 
         elif args['schedule'] == 'create_configured':
-            create_configured_schedules()
+            order_configured_schedules()
             plug_cmd = 'rpc/Schedule.List'
             return _cmd_to_plug(host, plug_cmd)
 
