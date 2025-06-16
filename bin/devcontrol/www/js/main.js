@@ -8,6 +8,7 @@ import * as mc from "./miscel.js";
 
 var REFRESH_INTERVAL = 5000;
 
+
 // WOL PCs
 
 function do_wol(event){
@@ -33,24 +34,7 @@ function do_wol(event){
 
 function fill_in_wol_buttons(wol_devices) {
 
-    var table = document.getElementById("main_wol_table");
-
-    for (const device in wol_devices) {
-
-        var row = table.insertRow();
-        var cell = row.insertCell();
-        cell.className = 'device_cell';
-
-        var btn = document.createElement('button');
-        btn.type = "button";
-        btn.className = "device_button";
-        // example 'bt_Amplifier'
-        btn.id = 'bt_' + device;
-        btn.innerHTML = device;
-        btn.addEventListener('click', do_wol);
-
-        cell.appendChild(btn);
-    }
+    mc.make_section('div_wol', 'Wake On LAN PCs', devices.wol, do_wol);
 }
 
 
@@ -115,24 +99,7 @@ function do_plug_toggle(event){
 
 function fill_in_plug_buttons(plugs) {
 
-    var table = document.getElementById("main_plugs_table");
-
-    for (const plug in plugs) {
-
-        var row = table.insertRow();
-        var cell = row.insertCell();
-        cell.className = 'device_cell';
-
-        var btn = document.createElement('button');
-        btn.type = "button";
-        btn.className = "device_button";
-        // example 'bt_Plug_01'
-        btn.id = 'bt_' + plug;
-        btn.innerHTML = plug;
-        btn.addEventListener('click', do_plug_toggle);
-
-        cell.appendChild(btn);
-    }
+    mc.make_section('div_plugs', 'Smart Plugs', devices.plugs, do_plug_toggle);
 }
 
 
@@ -171,24 +138,7 @@ function do_script(event){
 
 function fill_in_scripts_buttons(scripts) {
 
-    var table = document.getElementById("main_scripts_table");
-
-    for (const script in scripts) {
-
-        var row = table.insertRow();
-        var cell = row.insertCell();
-        cell.className = 'device_cell';
-
-        var btn = document.createElement('button');
-        btn.type = "button";
-        btn.className = "device_button";
-        // example 'Amplifier'
-        btn.id = 'bt_' + script;
-        btn.innerHTML = script;
-        btn.addEventListener('click', do_script);
-
-        cell.appendChild(btn);
-    }
+    mc.make_section('div_scripts', 'Scripts', scripts, do_script);
 }
 
 
