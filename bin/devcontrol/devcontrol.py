@@ -155,8 +155,6 @@ def _cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
         except Exception as e:
             ans = f'request error: {str(e)}'
 
-        print(f'send_http_get Rx: {ans}')
-
         # Logging no status commands
         if not 'status' in http_command.lower():
             do_log(http_command, ans)
@@ -339,6 +337,67 @@ def manage_plug(args):
             return ans
 
 
+    def get_plug_schedules():
+        """
+            example of Shedule.List:
+
+            {"jobs":    [
+                            {   "id":       1,
+                                "enable":   true,
+                                "timespec": "0 10 2 * * *",
+                                "calls":    [
+                                                {"method": "Switch.Set", "params": {"id": 0, "on": false}}
+                                            ]
+                            }
+                        ],
+            "rev":103}
+
+
+            Will return a list of tuples representing all jobs calls
+
+            [ [ HH:MM:SS, ON | OFF ], ... ]
+        """
+
+        resu = []
+
+        tmp = _cmd_to_plug(host, 'rpc/Schedule.List')
+
+        try:
+            tmp = json.loads( tmp )
+            jobs_list = tmp["jobs"]
+
+        except:
+            # if plug was not reachable (`tmp` == 'timed out')
+            return resu
+
+
+        for job in jobs_list:
+
+            timespec = job["timespec"].split()
+
+            hh, mm, ss = [x.zfill(2) for x in timespec[0:3][::-1]]
+
+            # lets discard the seconds
+            hhmm = ':'.join( (hh, mm) )
+
+            dom, mon, dow = timespec[3:]
+
+            nice_timespec = f'{hhmm} {dom} {mon} {dow}'
+
+            for job_call in job["calls"]:
+
+                if job_call["method"] == 'Switch.Set':
+
+                    if job_call["params"]["on"]:
+                        resu.append( (nice_timespec, 'ON') )
+
+                    else:
+                        resu.append( (nice_timespec, 'OFF') )
+
+
+        return resu
+
+
     res = 'NACK'
 
     if not 'target' in args:
@@ -382,6 +441,9 @@ def manage_plug(args):
             plug_cmd = 'rpc/Schedule.List'
             return _cmd_to_plug(host, plug_cmd)
 
+        elif args['schedule'] == 'nice_list':
+            return get_plug_schedules()
+
         elif args['schedule'] == 'delete':
             plug_cmd = f'rpc/Schedule.Delete?id={args["schedule_id"]}'
             return _cmd_to_plug(host, plug_cmd)
@@ -409,7 +471,7 @@ def manage_plug(args):
     # Change the plug output
     else:
 
-        plug_ans = _cmd_to_plug(ip, plug_cmd, delay)
+        plug_ans = _cmd_to_plug(host, plug_cmd, delay)
 
         # Delayed
         if plug_ans == 'ordered':

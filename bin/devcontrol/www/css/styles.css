@@ -4,14 +4,12 @@
     a very simple Home Automation app.
 */
 
-/* GLOBAL THEME */
 body    {   color:white;
             background-color: rgb(38, 38, 38);
             font-family: Verdana, Helvetica, Arial;
             font-weight:bold;
         }
 
-/* GLOBAL BUTTONS STYLE */
 button  {   background-color: rgb(100, 100, 100);
             border-radius: 5px/5px;
             border:2px solid rgb(120,120,120);
@@ -21,7 +19,6 @@ button  {   background-color: rgb(100, 100, 100);
             font-size:0.95em;
         }
 
-/* GLOBAL TABLES behavior */
 table   {   width: 90%;
             margin-top: 1.5em;;
             margin-bottom: auto;
@@ -31,40 +28,45 @@ table   {   width: 90%;
             border:2px solid rgb(120,120,120);
         }
 
-
-/* GLOBAL TABLES CELLS behavior */
 th, td  {   padding: 5px;
             text-align: center;
             font-size:1.0em;
         }
 
-table#main_wol_table { border-style: none; }
+table#table_wol     { border-radius: 10px/10px; }
 
-table#main_plugs_table { border-style: none; }
+table#table_plugs   { border-radius: 10px/10px; }
 
-table#main_scripts_table { border-style: none; }
+table#table_scripts { border-radius: 10px/10px; }
+
+
+.schedule_cell{
+    font-family:        monospace;
+    text-align:         center;
+    vertical-align:     center;
+}
 
 .device_cell {
-    border-style: none; width:30%;
+    border-style: none; width:50%;
 }
 .device_button {
-    width: 12em;
-    height: 2.0em;
+    width: 8.5em;
+    height: 3.3em;
     box-shadow: 0 5px 10px 0 rgba(200,200,200,0.3), 0 3px 10px 0 rgba(0,0,0,0.1);
     border:4px solid rgb(120,120,120);
     border-radius: 10px/10px;
     /* below is for text inside button: */
-    font-size:1.5em;
+    font-size:1.15em;
     display: inline;
 }
 .device_button_highlighted  {
-    width: 11em;
-    height: 1.9em;
+    width: 8.0em;
+    height: 3.0em;
     box-shadow: 0 5px 10px 0 rgba(200,200,200,0.3), 0 3px 10px 0 rgba(0,0,0,0.1);
     border:5px solid rgb(200,200,200);
     border-radius: 10px/10px;
     background-color: rgb(140, 140, 140);
     /* below is for text inside button: */
-    font-size:1.5em;
+    font-size:1.15em;
     display: inline;
 }
