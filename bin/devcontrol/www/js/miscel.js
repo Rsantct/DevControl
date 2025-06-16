@@ -91,6 +91,10 @@ export function btn_color(btn, onoff){
 
 export function make_section(div_id, section_title, section_items, btn_handler){
 
+    if ( ! section_items ){
+        return;
+    }
+
     let table   = document.createElement("table");
     table.id = div_id.replace('div', 'table');
 
@@ -100,7 +104,7 @@ export function make_section(div_id, section_title, section_items, btn_handler){
     let h_title_cell = hrow.insertCell();
     let h_sched_cell = hrow.insertCell();
 
-    h_title_cell.innerHTML = section_title
+    h_title_cell.innerHTML = section_title;
     h_sched_cell.innerHTML = 'schedule:'
 
     for (const item in section_items) {
