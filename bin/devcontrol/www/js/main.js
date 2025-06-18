@@ -25,9 +25,9 @@ function do_wol(event){
     mc.send_cmd( 'wol {"target": "' + wol_id + '", "mode":"send"}' );
 
     // Highlights the button for a second
-    btn.className = 'device_button_highlighted';
+    btn.className = 'ctrl_button_highlighted';
     setTimeout(function(){
-            btn.className = 'device_button';
+            btn.className = 'ctrl_button';
         }, 1000);
 }
 
@@ -84,9 +84,9 @@ function do_plug_toggle(event){
 
 
     // Highlights the button for a second
-    btn.className = 'device_button_highlighted';
+    btn.className = 'ctrl_button_highlighted';
     setTimeout(function(){
-            btn.className = 'device_button';
+            btn.className = 'ctrl_button';
         }, 1000);
 
     if (ans == 'on'){
