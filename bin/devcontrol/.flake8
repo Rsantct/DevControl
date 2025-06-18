@@ -1,0 +1,11 @@
+# .flake8
+
+[flake8]
+ignore = 
+
+# You can also use extend-ignore to add to the default ignored codes
+extend-ignore = E201, E202, E211, E221, E271, E272, E303, E501, E722
+
+# E221 multiple spaces before operator
+# E501 line too long
+# E722 bare 'except:'
