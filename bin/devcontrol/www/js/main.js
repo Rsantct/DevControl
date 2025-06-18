@@ -7,6 +7,7 @@
 import * as mc from "./miscel.js";
 
 var REFRESH_INTERVAL = 5000;
+var info = {};
 
 
 // WOL PCs
@@ -154,6 +155,11 @@ function scripts_refresh(){
     }
 }
 
+// INFO
+function info_refresh(){
+
+    info = mc.send_cmd('get_info');
+}
 
 // MAIN
 
@@ -164,6 +170,7 @@ function do_refresh() {
         wol_refresh();
         plugs_refresh();
         scripts_refresh();
+        info_refresh();
     }
 }
 
@@ -172,6 +179,7 @@ if ( mc.try_connection() ) {
 
     var devices = mc.send_cmd( 'get_config {"section": "devices"}' );
     var scripts = mc.send_cmd( 'get_config {"section": "scripts"}' );
+    info = mc.send_cmd('get_info');
 
     fill_in_wol_buttons(devices.wol);
 
