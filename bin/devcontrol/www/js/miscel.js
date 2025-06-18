@@ -5,6 +5,11 @@
 */
 
 
+function isPlainObject(variable) {
+  return Object.prototype.toString.call(variable) === '[object Object]';
+}
+
+
 export function send_cmd( cmd ) {
 
     cmd = encodeURIComponent(cmd);
@@ -102,10 +107,10 @@ export function make_section(div_id, section_title, section_items, btn_handler){
     let tbody   = table.createTBody();
     let hrow    = theader.insertRow();
     let h_title_cell = hrow.insertCell();
-    let h_sched_cell = hrow.insertCell();
+    let h_info_cell  = hrow.insertCell();
 
     h_title_cell.innerHTML = section_title;
-    h_sched_cell.innerHTML = 'schedule:'
+    h_info_cell.innerHTML = ''
 
     for (const item in section_items) {
 
@@ -114,12 +119,12 @@ export function make_section(div_id, section_title, section_items, btn_handler){
         let butn_cell = row.insertCell();
         butn_cell.className = 'device_cell';
 
-        let sche_cell = row.insertCell();
-        sche_cell.className = 'schedule_cell';
+        let info_cell = row.insertCell();
+        info_cell.className = 'info_cell';
 
         let btn = document.createElement('button');
         btn.type = "button";
-        btn.className = "device_button";
+        btn.className = "ctrl_button";
         // example 'bt_Amplifier'
         btn.id = 'bt_' + item;
         btn.innerHTML = item;
@@ -132,22 +137,21 @@ export function make_section(div_id, section_title, section_items, btn_handler){
             // display plug device schedule
             const schedules = send_cmd( 'plug {"target": "' + item + '", "mode": "schedule", "schedule": "nice_list"}' );
 
-            if ( schedules.length > 0 ){
+            if ( Array.isArray(schedules) ){
 
                 for (const s of schedules) {
-                    sche_cell.innerHTML += s[1].padEnd(3, ' ').replace(' ', '&nbsp;') + ' ' + s[0] + '<br>';
+                    info_cell.innerHTML += s[1].padEnd(3, ' ').replace(' ', '&nbsp;') + ' ' + s[0] + '<br>';
                 }
 
             }else{
-                sche_cell.innerHTML += '--'
+                info_cell.innerHTML += '--'
             }
 
         }else{
-            sche_cell.innerHTML += '--'
+            info_cell.innerHTML += '--'
         }
     }
 
     document.getElementById(div_id).appendChild(table)
 }
-
 
