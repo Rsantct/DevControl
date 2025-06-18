@@ -14,8 +14,11 @@ from    time import  strftime
 
 _MY_DIR      = os.path.dirname(__file__)
 
-LOGPATH = f'{_MY_DIR}/../devcontrol.log'
-CFGPATH = f'{_MY_DIR}/../devcontrol.yml'
+LOGPATH =   f'{_MY_DIR}/../devcontrol.log'
+CFGPATH =   f'{_MY_DIR}/../devcontrol.yml'
+INFOPATH =  f'{_MY_DIR}/../.devcontrol'
+
+_INFO_VOID = { "wol": {}, "plugs": {}, "scripts": {} }
 
 
 def read_config():
@@ -88,5 +91,34 @@ def get_config(jsonarg):
 
 
 def do_log(cmd, res):
-    with open(LOGPATH, 'a') as FLOG:
-        FLOG.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd}; {res}\n')
+
+    with open(LOGPATH, 'a') as f:
+        f.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd}; {res}\n')
+
+
+def dump_info(d):
+
+    info = {}
+
+    try:
+        with open(INFOPATH, 'r') as f:
+            info = json.loads( f.read() )
+
+    except Exception as e:
+        print(f'Error reading `.devcontrol` info file')
+        info = _INFO_VOID
+
+    if 'wol' in d:
+        # getting the only received key (see in wol module)
+        wol_id = next(iter(d["wol"]))
+        info["wol"][wol_id] = d["wol"][wol_id]
+
+
+    with open(INFOPATH, 'w') as f:
+        f.write( json.dumps(info) )
+
+
+def read_info():
+
+    with open(INFOPATH, 'r') as f:
+        return json.loads( f.read() )
