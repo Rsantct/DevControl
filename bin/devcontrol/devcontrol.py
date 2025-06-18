@@ -29,6 +29,13 @@ def init():
         print ( f"(devcontrol) log file exceeds ~ 10 MB '{mc.LOGPATH}'" )
     print ( f"(devcontrol) logging commands in '{mc.LOGPATH}'" )
 
+
+    if not os.path.exists(mc.INFOPATH):
+        info = mc._INFO_VOID
+        with open(mc.INFOPATH, 'w') as f:
+            f.write( json.dumps( info ) )
+
+
     # Loading the configured plug schedules (currently only Shelly)
     plugs.shelly.set_configured_schedules()
 
@@ -47,8 +54,15 @@ def do( cmd_phrase ):
         return 'hi!'
 
     try:
+
         cmd  = cmd_phrase.strip().split()[0]
-        args = json.loads( cmd_phrase[ len(cmd): ].strip() )
+
+        tail = cmd_phrase[ len(cmd): ].strip()
+
+        if tail:
+            args = json.loads( tail )
+        else:
+            args = {}
 
     except Exception as e:
         print(f'ERROR READING COMMAND: {str(e)}')
@@ -57,6 +71,9 @@ def do( cmd_phrase ):
 
     if 'section' in args and cmd == 'get_config':
         result = mc.get_config(args)
+
+    elif cmd == 'get_info':
+        result = mc.read_info()
 
     elif 'target' in args:
 
