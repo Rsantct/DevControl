@@ -40,7 +40,7 @@ table#table_plugs   { border-radius: 10px/10px; }
 table#table_scripts { border-radius: 10px/10px; }
 
 
-.schedule_cell{
+.info_cell{
     font-family:        monospace;
     text-align:         center;
     vertical-align:     center;
@@ -49,7 +49,7 @@ table#table_scripts { border-radius: 10px/10px; }
 .device_cell {
     border-style: none; width:50%;
 }
-.device_button {
+.ctrl_button {
     width: 8.5em;
     height: 3.3em;
     box-shadow: 0 5px 10px 0 rgba(200,200,200,0.3), 0 3px 10px 0 rgba(0,0,0,0.1);
@@ -59,7 +59,7 @@ table#table_scripts { border-radius: 10px/10px; }
     font-size:1.15em;
     display: inline;
 }
-.device_button_highlighted  {
+.ctrl_button_highlighted  {
     width: 8.0em;
     height: 3.0em;
     box-shadow: 0 5px 10px 0 rgba(200,200,200,0.3), 0 3px 10px 0 rgba(0,0,0,0.1);
