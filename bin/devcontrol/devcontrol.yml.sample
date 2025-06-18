@@ -25,6 +25,7 @@ devices:
 
         Amplifíer:
 
+            protocol:           shelly
             address:            192.168.1.58
 
             schedule:
@@ -34,7 +35,9 @@ devices:
                 switch_off:     00  10  02   *   *   *
                 switch_on:
 
-        Fan 1:       192.168.1.199
+        Fan 1:       
+            protocol:           shelly
+            address:            192.168.1.199
 
 # Scripts
 #           All values MUST have surrounding quotes.
