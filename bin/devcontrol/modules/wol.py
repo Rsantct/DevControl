@@ -91,4 +91,14 @@ def manage_wol(args):
         result = ping_host(ip)
 
 
+    # info file
+    if 'Sending' in result:
+        d = {"wol": {wol_id: "waiting for response"}}
+        mc.dump_info(d)
+
+    else:
+        d = {"wol": {wol_id: result}}
+        mc.dump_info(d)
+
+
     return result
