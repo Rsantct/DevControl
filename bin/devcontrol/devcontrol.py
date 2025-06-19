@@ -30,10 +30,9 @@ def init():
     print ( f"(devcontrol) logging commands in '{mc.LOGPATH}'" )
 
 
-    if not os.path.exists(mc.INFOPATH):
-        info = mc._INFO_VOID
-        with open(mc.INFOPATH, 'w') as f:
-            f.write( json.dumps( info ) )
+    # void info file
+    with open(mc.STATUSPATH, 'w') as f:
+        f.write( json.dumps( mc._STATUS_VOID ) )
 
 
     # Loading the configured plug schedules (currently only Shelly)
@@ -72,8 +71,8 @@ def do( cmd_phrase ):
     if 'section' in args and cmd == 'get_config':
         result = mc.get_config(args)
 
-    elif cmd == 'get_info':
-        result = mc.read_info()
+    elif cmd == 'get_status':
+        result = mc.read_status()
 
     elif 'target' in args:
 
