@@ -62,15 +62,23 @@ def manage_wol(args):
             return 'error with ping'
 
 
-    result = 'NACK'
+    def send_wol(mac):
+        try:
+            res = sp.check_output(f'wakeonlan {mac}', shell=True).decode().strip()
+        except:
+            res = 'Error with WOL'
+        return res
+
+
+    result = ''
 
     if 'target' not in args:
-        return result
+        return 'NACK'
 
     config = mc.read_config()
 
     if 'target' not in args or 'mode' not in args:
-        return result
+        return 'NACK'
 
     wol_id = args["target"]
 
@@ -80,25 +88,19 @@ def manage_wol(args):
     mac = config["devices"]["wol"][ wol_id ]
 
     if args["mode"] == 'send':
-
-        try:
-            result = sp.check_output(f'wakeonlan {mac}', shell=True).decode().strip()
-        except:
-            result = 'Error with WOL'
+        result = send_wol(mac)
 
     elif args["mode"] == 'ping':
         ip = get_ip(mac)
         result = ping_host(ip)
 
 
-    # info file
+    # status file
     if 'Sending' in result:
-        d = {"wol": {wol_id: "waiting for response"}}
-        mc.dump_info(d)
+        mc.dump_status("wol", {wol_id: "waiting for response"})
 
     else:
-        d = {"wol": {wol_id: result}}
-        mc.dump_info(d)
+        mc.dump_status("wol", {wol_id: result})
 
 
     return result
