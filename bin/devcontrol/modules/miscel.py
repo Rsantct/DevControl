@@ -14,11 +14,11 @@ from    time import  strftime
 
 _MY_DIR      = os.path.dirname(__file__)
 
-LOGPATH =   f'{_MY_DIR}/../devcontrol.log'
-CFGPATH =   f'{_MY_DIR}/../devcontrol.yml'
-INFOPATH =  f'{_MY_DIR}/../.devcontrol'
+LOGPATH     = f'{_MY_DIR}/../devcontrol.log'
+CFGPATH     = f'{_MY_DIR}/../devcontrol.yml'
+STATUSPATH  = f'{_MY_DIR}/../.devcontrol'
 
-_INFO_VOID = { "wol": {}, "plugs": {}, "scripts": {} }
+_STATUS_VOID = { "wol": {}, "plugs": {}, "scripts": {} }
 
 
 def read_config():
@@ -96,29 +96,28 @@ def do_log(cmd, res):
         f.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd}; {res}\n')
 
 
-def dump_info(d):
+def dump_status(what, element_status):
 
-    info = {}
+    st = {}
 
     try:
-        with open(INFOPATH, 'r') as f:
-            info = json.loads( f.read() )
+        with open(STATUSPATH, 'r') as f:
+            st = json.loads( f.read() )
 
     except Exception as e:
-        print(f'Error reading `.devcontrol` info file')
-        info = _INFO_VOID
+        print(f'Error reading `.devcontrol` status file')
+        st = _STATUS_VOID
 
-    if 'wol' in d:
-        # getting the only received key (see in wol module)
-        wol_id = next(iter(d["wol"]))
-        info["wol"][wol_id] = d["wol"][wol_id]
+    # getting the only received key (see in wol module)
+    elemet_id = next(iter( element_status ))
+
+    st[what][elemet_id] = element_status[elemet_id]
+
+    with open(STATUSPATH, 'w') as f:
+        f.write( json.dumps(st) )
 
 
-    with open(INFOPATH, 'w') as f:
-        f.write( json.dumps(info) )
+def read_status():
 
-
-def read_info():
-
-    with open(INFOPATH, 'r') as f:
+    with open(STATUSPATH, 'r') as f:
         return json.loads( f.read() )
