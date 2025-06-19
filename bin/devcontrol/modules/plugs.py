@@ -28,7 +28,14 @@ def manage_plug(args):
 
 
     if 'protocol' in plug and plug["protocol"].lower() == 'shelly':
-        return shelly.manage_plug(args)
+        result = shelly.manage_plug(args)
 
     else:
-        return 'unknown plug protocol'
+        result = 'unknown plug protocol'
+
+
+    # status file
+    mc.dump_status("plugs", {plug_id: result})
+
+
+    return result
