@@ -62,4 +62,7 @@ def manage_script(args):
             result = 'not available'
 
 
+    # status file
+    mc.dump_status("scripts", {script_id: result})
+
     return result
