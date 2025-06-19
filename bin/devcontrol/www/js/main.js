@@ -6,8 +6,14 @@
 
 import * as mc from "./miscel.js";
 
-var REFRESH_INTERVAL = 5000;
-var info = {};
+// seconds
+var REFRESH_INTERVAL = 5;
+
+// Used to kepp the wol info cells until counter is zero,
+// for example while waiting for PC to be `up` after sending a WOL packet
+var WOL_REFRESH_COUNT = {};
+// Seconds to keep `waiting for response` after sendoiing a WOL packet
+const WAIT_4_WOL = 15;
 
 
 // WOL PCs
@@ -23,41 +29,63 @@ function do_wol(event){
     // example 'bt_Amplifier'
     const wol_id = btn.id.slice(3,);
 
-    mc.send_cmd( 'wol {"target": "' + wol_id + '", "mode":"send"}' );
+    const ans = mc.send_cmd( 'wol {"target": "' + wol_id + '", "mode":"send"}' );
 
     // Highlights the button for a second
     btn.className = 'ctrl_button_highlighted';
     setTimeout(function(){
             btn.className = 'ctrl_button';
         }, 1000);
+
+    if ( ans.toLowerCase().includes('sending') ){
+        const info_cell = document.getElementById('info_' + wol_id);
+        info_cell.innerHTML = 'waiting for response ...';
+        WOL_REFRESH_COUNT[wol_id] = WAIT_4_WOL;
+    }
+
 }
 
 
 function fill_in_wol_buttons(wol_devices) {
 
     mc.make_section('div_wol', 'Wake On LAN PCs', devices.wol, do_wol);
+
+    // initializes the counter for all WOL devices
+    for (const wol_id in devices.wol){
+        WOL_REFRESH_COUNT[wol_id] = 0;
+    }
 }
 
 
 function wol_refresh(){
 
-    for (const wol in devices.wol) {
+    for (const wol_id in devices.wol) {
 
-        const btn = document.getElementById('bt_' + wol);
+        const btn = document.getElementById('bt_' + wol_id);
 
-        // Display current status
-        const ping = mc.send_cmd( 'wol {"target": "' + wol + '", "mode": "ping"}' );
+        // get current status
+        const ping = mc.send_cmd( 'wol {"target": "' + wol_id + '", "mode": "ping"}' );
 
+        // Button color
         let onoff = "off"
-
         if ( ping.includes('on') || ping.includes('up') || ping == '1'  ){
             onoff = "on"
         }
-
         mc.btn_color(btn, onoff);
+
+        // Info cell
+        //console.log(WOL_REFRESH_COUNT);
+        if ( WOL_REFRESH_COUNT[wol_id] <= 0 ){
+            const info_cell = document.getElementById('info_' + wol_id);
+            info_cell.innerHTML = ping;
+            WOL_REFRESH_COUNT[wol_id] = 0;
+
+        // Still `waiting for response` do not change info cell
+        }else{
+            WOL_REFRESH_COUNT[wol_id] -= ( WAIT_4_WOL / REFRESH_INTERVAL );
+        }
     }
 }
-
 
 // PLUGS
 
@@ -155,11 +183,6 @@ function scripts_refresh(){
     }
 }
 
-// INFO
-function info_refresh(){
-
-    info = mc.send_cmd('get_info');
-}
 
 // MAIN
 
@@ -170,7 +193,6 @@ function do_refresh() {
         wol_refresh();
         plugs_refresh();
         scripts_refresh();
-        info_refresh();
     }
 }
 
@@ -179,7 +201,6 @@ if ( mc.try_connection() ) {
 
     var devices = mc.send_cmd( 'get_config {"section": "devices"}' );
     var scripts = mc.send_cmd( 'get_config {"section": "scripts"}' );
-    info = mc.send_cmd('get_info');
 
     fill_in_wol_buttons(devices.wol);
 
@@ -191,8 +212,8 @@ if ( mc.try_connection() ) {
     do_refresh();
     const web_config = mc.send_cmd( 'get_config {"section": "web_config"}' );
     if (web_config.refresh_seconds) {
-        REFRESH_INTERVAL = web_config.refresh_seconds * 1000
+        REFRESH_INTERVAL = web_config.refresh_seconds;
     }
 
-    setInterval( do_refresh, REFRESH_INTERVAL );
+    setInterval( do_refresh, REFRESH_INTERVAL * 1000);
 }
