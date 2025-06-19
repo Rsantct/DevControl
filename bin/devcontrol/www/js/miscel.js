@@ -78,9 +78,14 @@ export function try_connection() {
 }
 
 
-export function btn_color(btn, onoff){
+export function btn_color(btn, onoff=null){
+    // `onoff` values:
+    //          'on'    -->     green
+    //          'off'   -->     red
+    //          other   -->     grey
 
-    if ( onoff == 'on' ) {
+
+    if ( onoff == 'on') {
         btn.style = 'initial';
         btn.style.borderColor = 'green';
 
@@ -93,6 +98,7 @@ export function btn_color(btn, onoff){
         btn.style.color = 'darkgrey';
     }
 }
+
 
 export function make_section(div_id, section_title, section_items, btn_handler){
 
@@ -121,6 +127,7 @@ export function make_section(div_id, section_title, section_items, btn_handler){
 
         let info_cell = row.insertCell();
         info_cell.className = 'info_cell';
+        info_cell.id = 'info_' + item;
 
         let btn = document.createElement('button');
         btn.type = "button";
@@ -146,12 +153,10 @@ export function make_section(div_id, section_title, section_items, btn_handler){
             }else{
                 info_cell.innerHTML += '--'
             }
-
-        }else{
-            info_cell.innerHTML += '--'
         }
     }
 
     document.getElementById(div_id).appendChild(table)
 }
+
 
