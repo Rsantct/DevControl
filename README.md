@@ -48,7 +48,7 @@ Smart Plugs button color:
 - border green: the plug is ON
 - border & font grey: the plug is NOT available
 
-<a href="url"><img src="bin/devcontrol/doc/img/DevControl_web.png" align="center" width="480" ></a>
+<a href="url"><img src="doc/img/DevControl_web.png" align="center" width="480" ></a>
 
 # ToDo
 
