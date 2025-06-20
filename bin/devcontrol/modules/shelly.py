@@ -40,8 +40,8 @@ def cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
 
         ans = 'no answer'
 
-        if 'plug_timeout':
-            timeout = mc.read_config()['plug_timeout']
+        if SHELLY_CFG["timeout"]:
+            timeout = SHELLY_CFG["timeout"]
         else:
             timeout = 1
 
@@ -81,8 +81,10 @@ def cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
         return ans
 
 
+    SHELLY_CFG = mc.read_config()["plugs"]["shelly"]
+
     u = 'admin'
-    p = mc.read_config()['plug_pass']
+    p = SHELLY_CFG["pass"]
 
     http_command = f'http://{host}/{plug_cmd}'
 
@@ -107,7 +109,7 @@ def set_configured_schedules():
         """
 
         # The `timespec` part
-        timespec = config["devices"]["plugs"][ plug_id ]["schedule"][mode]
+        timespec = plugs[ plug_id ]["schedule"][mode]
 
         # Remove leading zeroes if any
         timespec = timespec.split()
@@ -143,23 +145,29 @@ def set_configured_schedules():
         return url_cmd
 
 
-    config = mc.read_config()
+    plugs = mc.read_config()["devices"]["plugs"]
 
-    for plug_id, content in config["devices"]["plugs"].items():
 
-        if 'protocol' not in content or not content["protocol"].lower() == 'shelly':
+    for plug_id, props in plugs.items():
+
+
+        if 'protocol' not in props or not props["protocol"].lower() == 'shelly':
             continue
 
-        host = content["address"]
+        host = props["address"]
 
-        if 'schedule' in content and content["schedule"]:
 
-            plug_cmd = 'rpc/Schedule.DeleteAll'
-            cmd_to_plug( host, plug_cmd )
+        if 'schedule' in props and props["schedule"]:
+
+            if 'schedule_mode' in props and props["schedule_mode"] == 'override':
+
+                plug_cmd = 'rpc/Schedule.DeleteAll'
+                cmd_to_plug( host, plug_cmd )
+
 
             for mode in ('switch_off', 'switch_on'):
 
-                if mode in content["schedule"] and content["schedule"][mode]:
+                if mode in props["schedule"] and props["schedule"][mode]:
 
                     plug_cmd = prepare_plug_schedule_cmd(plug_id, mode)
                     cmd_to_plug( host, plug_cmd )
