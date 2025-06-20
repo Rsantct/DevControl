@@ -21,6 +21,8 @@ On your 24x7 micro PC you'll need:
         cd
         cp -r  Downloads/DevControl/bin/*  bin/
 
+**To update the software use the lines above**
+
 - Adjust the apache `.conf` file to point to your USER HOME
 
         sudo cp Downloads/DevControl/bin/devcontrol/apache-site/devcontrol.conf /etc/apache2/sites-available/
@@ -43,14 +45,13 @@ On your 24x7 micro PC you'll need:
 
 Then, simply bookmark `http://microPC_IP:8081` on your favourite smartphone or tablet web browser.
 
-Smart Plugs button color:
-- border red: the plug is OFF
-- border green: the plug is ON
-- border & font grey: the plug is NOT available
+Button color:
+- border red: the device response is OFF
+- border green: the device response is ON
+- border & font grey: no response from the device.
 
 <a href="url"><img src="doc/img/DevControl_web.png" align="center" width="480" ></a>
 
 # ToDo
 
-- scheduled job management
-- display info for scheduled jobs
+lots of things ...
