@@ -66,16 +66,18 @@ function wol_refresh(){
         // get current status
         const ping = mc.send_cmd( 'wol {"target": "' + wol_id + '", "mode": "ping"}' );
 
+        const is_Up = ping.includes('on') || ping.includes('up') || ping == '1';
+
         // Button color
         let onoff = "off"
-        if ( ping.includes('on') || ping.includes('up') || ping == '1'  ){
+        if ( is_Up  ){
             onoff = "on"
         }
         mc.btn_color(btn, onoff);
 
         // Info cell
         //console.log(WOL_REFRESH_COUNT);
-        if ( WOL_REFRESH_COUNT[wol_id] <= 0 ){
+        if ( WOL_REFRESH_COUNT[wol_id] <= 0 || is_Up ){
             const info_cell = document.getElementById('info_' + wol_id);
             info_cell.innerHTML = ping;
             WOL_REFRESH_COUNT[wol_id] = 0;
