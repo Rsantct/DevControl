@@ -7,10 +7,15 @@ server_port: 9950
 web_config:
     refresh_seconds:    5
 
-# Plug devices http configuration.
-# Use the smallest timeout that works for your devices.
-plug_pass:     xxxxxxxx
-plug_timeout:  0.5
+# Communications settings.
+comms:
+
+    shelly:
+
+        pass:           xxxxxxxx
+        # Use the smallest timeout that works for your devices.
+        timeout:        0.5
+
 
 devices:
 
