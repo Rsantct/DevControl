@@ -33,6 +33,8 @@ devices:
             protocol:           shelly
             address:            192.168.1.58
 
+            # set `override` to remove the existing device schedule or `extend` to keep it
+            schedule_mode:      override
             schedule:
             #                   CRON timespec has 6 fields, example:
             #                   sec min hou dom mon  dow
