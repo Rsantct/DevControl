@@ -40,8 +40,8 @@ def cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
 
         ans = 'no answer'
 
-        if SHELLY_CFG["timeout"]:
-            timeout = SHELLY_CFG["timeout"]
+        if COMMS["timeout"]:
+            timeout = COMMS["timeout"]
         else:
             timeout = 1
 
@@ -81,10 +81,10 @@ def cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
         return ans
 
 
-    SHELLY_CFG = mc.read_config()["plugs"]["shelly"]
+    COMMS = mc.read_config()["comms"]["shelly"]
 
     u = 'admin'
-    p = SHELLY_CFG["pass"]
+    p = COMMS["pass"]
 
     http_command = f'http://{host}/{plug_cmd}'
 
