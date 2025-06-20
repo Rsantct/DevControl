@@ -159,7 +159,8 @@ def set_configured_schedules():
 
         if 'schedule' in props and props["schedule"]:
 
-            if 'schedule_mode' in props and props["schedule_mode"] == 'override':
+            # Defaults to override existing schedules
+            if not ( 'schedule_mode' in props and props["schedule_mode"] != 'override' ):
 
                 plug_cmd = 'rpc/Schedule.DeleteAll'
                 cmd_to_plug( host, plug_cmd )
