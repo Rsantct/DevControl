@@ -16,6 +16,8 @@
 
 import  os
 import  json
+import  threading
+from    time import sleep
 
 from    modules import wol
 from    modules import plugs
@@ -37,6 +39,43 @@ def init():
 
     # Loading the configured plug schedules (currently only Shelly)
     plugs.shelly.set_configured_schedules()
+
+    # refresh
+    refresh_job = threading.Thread(target=do_refresh_loop)
+    refresh_job.start()
+
+
+def do_refresh_loop():
+
+    def refresh_wols():
+        for wol_id in wol_keys:
+            ans = wol.manage_wol( {"target": wol_id, "mode": "ping"} )
+            mc.dump_status('wol', {wol_id: ans})
+
+
+    def refresh_plugs():
+        for plug_id in plug_keys:
+            ans = plugs.manage_plug( {"target": plug_id, "mode": "status"} )
+            mc.dump_status('plugs', {plug_id: ans})
+
+
+    def refresh_scripts():
+        for script_id in scripts_keys:
+            ans = scripts.manage_script( {"target": script_id, "mode": "status"} )
+            mc.dump_status('scripts', {script_id: ans})
+
+
+    devices      = mc.get_config( {'section': 'devices'} )
+    wol_keys     = devices["wol"].keys()
+    plug_keys    = devices["plugs"].keys()
+    scripts_keys = mc.get_config( {'section': 'scripts'} ).keys()
+
+
+    while True:
+        refresh_wols()
+        refresh_plugs()
+        refresh_scripts()
+        sleep(3)
 
 
 # Interface function to plug this on server.py
