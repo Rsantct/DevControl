@@ -15,6 +15,7 @@ var WOL_REFRESH_COUNT = {};
 // Seconds to keep `waiting for response` after sendoiing a WOL packet
 const WAIT_4_WOL = 15;
 
+var STATUS = {};
 
 // WOL PCs
 
@@ -63,8 +64,7 @@ function wol_refresh(){
 
         const btn = document.getElementById('bt_' + wol_id);
 
-        // get current status
-        const ping = mc.send_cmd( 'wol {"target": "' + wol_id + '", "mode": "ping"}' );
+        const ping = STATUS.wol[wol_id];
 
         const is_Up = ping.includes('on') || ping.includes('up') || ping == '1';
 
@@ -136,12 +136,12 @@ function fill_in_plug_buttons(plugs) {
 
 function plugs_refresh(){
 
-    for (const plug in devices.plugs) {
+    for (const plug_id in devices.plugs) {
 
-        const btn = document.getElementById('bt_' + plug);
+        const btn = document.getElementById('bt_' + plug_id);
 
-        // Display current status
-        const onoff = mc.send_cmd( 'plug {"target": "' + plug + '", "mode": "status"}' );
+        // Button color
+        const onoff = STATUS.plugs[plug_id];
         mc.btn_color(btn, onoff);
     }
 }
@@ -179,8 +179,8 @@ function scripts_refresh(){
 
         const btn = document.getElementById('bt_' + script_id);
 
-        // Display current status
-        const onoff = mc.send_cmd( 'script {"target": "' + script_id + '", "mode": "status"}' );
+        // Button color
+        const onoff = STATUS.scripts[script_id];
         mc.btn_color(btn, onoff);
     }
 }
@@ -192,9 +192,13 @@ function do_refresh() {
 
     if ( mc.try_connection() ) {
 
-        wol_refresh();
-        plugs_refresh();
-        scripts_refresh();
+        STATUS = mc.send_cmd( 'get_status' );
+
+        if ( mc.isPlainObject(STATUS) ) {
+            wol_refresh();
+            plugs_refresh();
+            scripts_refresh();
+        }
     }
 }
 
@@ -211,11 +215,12 @@ if ( mc.try_connection() ) {
     fill_in_scripts_buttons(scripts);
 
     // PAGE REFRESH
-    do_refresh();
+
     const web_config = mc.send_cmd( 'get_config {"section": "web_config"}' );
     if (web_config.refresh_seconds) {
         REFRESH_INTERVAL = web_config.refresh_seconds;
     }
 
+    do_refresh();
     setInterval( do_refresh, REFRESH_INTERVAL * 1000);
 }
