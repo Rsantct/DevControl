@@ -35,7 +35,7 @@ def manage_plug(args):
 
 
     # status file
-    mc.dump_status("plugs", {plug_id: result})
+    mc.dump_element_status("plugs", {plug_id: result})
 
 
     return result
