@@ -36,7 +36,6 @@ def init():
     with open(mc.STATUSPATH, 'w') as f:
         f.write( json.dumps( mc._STATUS_VOID ) )
 
-
     # Loading the configured plug schedules (currently only Shelly)
     plugs.shelly.set_configured_schedules()
 
@@ -47,22 +46,36 @@ def init():
 
 def do_refresh_loop():
 
-    def refresh_wols():
+    def dump_status():
+
+        st = mc._STATUS_VOID
+
         for wol_id in wol_keys:
             ans = wol.manage_wol( {"target": wol_id, "mode": "ping"} )
-            mc.dump_status('wol', {wol_id: ans})
+            st["wol"][wol_id] = ans
 
 
-    def refresh_plugs():
         for plug_id in plug_keys:
             ans = plugs.manage_plug( {"target": plug_id, "mode": "status"} )
-            mc.dump_status('plugs', {plug_id: ans})
+            st["plugs"][plug_id] = ans
 
 
-    def refresh_scripts():
         for script_id in scripts_keys:
             ans = scripts.manage_script( {"target": script_id, "mode": "status"} )
-            mc.dump_status('scripts', {script_id: ans})
+            st["scripts"][script_id] = ans
+
+        mc.dump_status( st )
+
+
+    status_update_interval = 3
+
+    config = mc.read_config()
+    if 'status_update_interval' in config and config["status_update_interval"]:
+        tmp = config["status_update_interval"]
+        if tmp >= 3:
+            status_update_interval = tmp
+        else:
+            print(f'(devcontrol) Minimum `status_update_interval` is {status_update_interval} seconds')
 
 
     devices      = mc.get_config( {'section': 'devices'} )
@@ -70,12 +83,10 @@ def do_refresh_loop():
     plug_keys    = devices["plugs"].keys()
     scripts_keys = mc.get_config( {'section': 'scripts'} ).keys()
 
-
+    # LOOP
     while True:
-        refresh_wols()
-        refresh_plugs()
-        refresh_scripts()
-        sleep(3)
+        dump_status()
+        sleep(status_update_interval)
 
 
 # Interface function to plug this on server.py
