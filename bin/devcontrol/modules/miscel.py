@@ -10,7 +10,7 @@
 import  os
 import  yaml
 import  json
-from    time import  strftime
+from    time import  strftime, sleep
 
 _MY_DIR      = os.path.dirname(__file__)
 
@@ -96,7 +96,24 @@ def do_log(cmd, res):
         f.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd}; {res}\n')
 
 
-def dump_status(what, element_status):
+def dump_status(status):
+
+    tries = 3
+
+    while tries:
+
+        try:
+            with open(STATUSPATH, 'w') as f:
+                f.write( json.dumps(status) )
+            break
+
+        except Exception as e:
+            print(f'(miscel.dump_status) ERROR: {str(e)}')
+            tries -= 1
+            sleep(.2)
+
+
+def dump_element_status(what, element_status):
     """ arguments:
 
             what:               wol | plugs | scripts   (string)
@@ -128,5 +145,20 @@ def dump_status(what, element_status):
 
 def read_status():
 
-    with open(STATUSPATH, 'r') as f:
-        return json.loads( f.read() )
+    resu = {}
+
+    tries = 5
+
+    while tries:
+
+        try:
+            with open(STATUSPATH, 'r') as f:
+                resu = json.loads( f.read() )
+                break
+
+        except Exception as e:
+            print(f'(miscel.read_status) ERROR: {str(e)}')
+            tries -= 1
+            sleep(.2)
+
+    return resu
