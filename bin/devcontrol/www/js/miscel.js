@@ -5,8 +5,9 @@
 */
 
 
-function isPlainObject(variable) {
-  return Object.prototype.toString.call(variable) === '[object Object]';
+// Check if `x` is a non void object, e.g. a dictionary
+export function isPlainObject(x) {
+  return Object.prototype.toString.call(x) === '[object Object]';
 }
 
 
