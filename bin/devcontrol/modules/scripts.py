@@ -63,6 +63,6 @@ def manage_script(args):
 
 
     # status file
-    mc.dump_status("scripts", {script_id: result})
+    mc.dump_element_status("scripts", {script_id: result})
 
     return result
