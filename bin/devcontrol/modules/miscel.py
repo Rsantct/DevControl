@@ -87,7 +87,7 @@ def get_config(jsonarg):
                     res["refresh_seconds"] = 3
                     print('(devcontrol) web refresh min value is 3 seconds')
 
-    return json.dumps( res )
+    return res
 
 
 def do_log(cmd, res):
@@ -97,6 +97,15 @@ def do_log(cmd, res):
 
 
 def dump_status(what, element_status):
+    """ arguments:
+
+            what:               wol | plugs | scripts   (string)
+
+            element_status:     {elem_id: elem_status}  (dict)
+
+        example:
+                    "wol", {"Salon": "waiting for response"}
+    """
 
     st = {}
 
