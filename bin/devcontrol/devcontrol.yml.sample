@@ -3,12 +3,16 @@
 server_addr: 0.0.0.0
 server_port: 9950
 
-# Backend status update interval (minimum 3 seconds)
-status_update_interval: 3
 
-# Web page. Min refresh is 3 seconds
-web_config:
-    refresh_seconds:    5
+# Refresh intervals
+refresh:
+
+    # Backend status update interval (minimum 3 seconds, 0 to disable)
+    backend_update_interval: 0
+
+    # Web client refresh (minimum is 3 seconds)
+    web_refresh_interval: 5
+
 
 # Communications settings.
 comms:
