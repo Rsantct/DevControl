@@ -23,6 +23,7 @@ from    modules import wol
 from    modules import plugs
 from    modules import scripts
 from    modules import miscel as mc
+from    modules.fmt import Fmt
 
 
 def init():
@@ -31,7 +32,6 @@ def init():
         print ( f"(devcontrol) log file exceeds ~ 10 MB '{mc.LOGPATH}'" )
     print ( f"(devcontrol) logging commands in '{mc.LOGPATH}'" )
 
-
     # void info file
     with open(mc.STATUSPATH, 'w') as f:
         f.write( json.dumps( mc._STATUS_VOID ) )
@@ -39,54 +39,19 @@ def init():
     # Loading the configured plug schedules (currently only Shelly)
     plugs.shelly.set_configured_schedules()
 
-    # refresh
-    refresh_job = threading.Thread(target=do_refresh_loop)
-    refresh_job.start()
+    # Backend status update
+    interval = mc.CONFIG["refresh"]["backend_update_interval"]
+    if interval:
+        refresh_job = threading.Thread(target=do_refresh_loop, args=(interval,))
+        refresh_job.start()
 
 
-def do_refresh_loop():
-
-    def dump_status():
-
-        st = mc._STATUS_VOID
-
-        for wol_id in wol_keys:
-            ans = wol.manage_wol( {"target": wol_id, "mode": "ping"} )
-            st["wol"][wol_id] = ans
-
-
-        for plug_id in plug_keys:
-            ans = plugs.manage_plug( {"target": plug_id, "mode": "status"} )
-            st["plugs"][plug_id] = ans
-
-
-        for script_id in scripts_keys:
-            ans = scripts.manage_script( {"target": script_id, "mode": "status"} )
-            st["scripts"][script_id] = ans
-
-        mc.dump_status( st )
-
-
-    status_update_interval = 3
-
-    config = mc.read_config()
-    if 'status_update_interval' in config and config["status_update_interval"]:
-        tmp = config["status_update_interval"]
-        if tmp >= 3:
-            status_update_interval = tmp
-        else:
-            print(f'(devcontrol) Minimum `status_update_interval` is {status_update_interval} seconds')
-
-
-    devices      = mc.get_config( {'section': 'devices'} )
-    wol_keys     = devices["wol"].keys()
-    plug_keys    = devices["plugs"].keys()
-    scripts_keys = mc.get_config( {'section': 'scripts'} ).keys()
+def do_refresh_loop(interval):
 
     # LOOP
     while True:
-        dump_status()
-        sleep(status_update_interval)
+        mc.dump_status()
+        sleep(interval)
 
 
 # Interface function to plug this on server.py
