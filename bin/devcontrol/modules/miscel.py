@@ -11,6 +11,11 @@ import  os
 import  yaml
 import  json
 from    time import  strftime, sleep
+from    .fmt import Fmt
+
+from    . import wol
+from    . import plugs
+from    . import scripts
 
 _MY_DIR      = os.path.dirname(__file__)
 
@@ -20,8 +25,15 @@ STATUSPATH  = f'{_MY_DIR}/../.devcontrol'
 
 _STATUS_VOID = { "wol": {}, "plugs": {}, "scripts": {} }
 
+CONFIG = {}
 
-def read_config():
+
+def init():
+    global CONFIG
+    CONFIG = read_config(check_refresh=True)
+
+
+def read_config(check_refresh=False):
 
     config = {  'devices':  { 'plugs':{}, 'wol':{} },
                 'scripts':  {}
@@ -63,6 +75,31 @@ def read_config():
             config["scripts"][script]["responses"] = tmp
 
 
+    # Early return
+    if not check_refresh:
+        return config
+
+
+    # Backend update interval min 3 seconds, disabled if set to 0
+
+    bui = config["refresh"]["backend_update_interval"]
+
+    if bui <= 0:
+        pass
+
+    elif bui < 3:
+        print(f'{Fmt.RED}(devcontrol) `backend_update_interval` forced to minimum 3 seconds.{Fmt.END}')
+        config["refresh"]["backend_update_interval"] = 3
+
+    # Web client refresh interval
+
+    wri = config["refresh"]["web_refresh_interval"]
+
+    if wri < 3:
+        print(f'{Fmt.RED}(devcontrol) `web_refresh_interval` forced to minimum 3 seconds.{Fmt.END}')
+        config["refresh"]["web_refresh_interval"] = 3
+
+
     return config
 
 
@@ -73,19 +110,13 @@ def get_config(jsonarg):
             { "section":  "devices" OR "scripts" OR "web_config" }
     """
 
-    res = 'NACK'
+    res = {}
 
     if 'section' in jsonarg:
 
-        if jsonarg["section"] in ['devices', 'scripts', 'web_config']:
+        if jsonarg["section"] in ['devices', 'scripts', 'refresh']:
 
             res = read_config()[ jsonarg["section"] ]
-
-            # Min web refresh is 3 seconds
-            if 'refresh_seconds' in res:
-                if res["refresh_seconds"] < 3:
-                    res["refresh_seconds"] = 3
-                    print('(devcontrol) web refresh min value is 3 seconds')
 
     return res
 
@@ -96,7 +127,28 @@ def do_log(cmd, res):
         f.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd}; {res}\n')
 
 
-def dump_status(status):
+def dump_status():
+
+    wol_keys     = CONFIG["devices"]["wol"].keys()
+    plug_keys    = CONFIG["devices"]["plugs"].keys()
+    scripts_keys = CONFIG["scripts"].keys()
+
+    st = _STATUS_VOID
+
+    for wol_id in wol_keys:
+        ans = wol.manage_wol( {"target": wol_id, "mode": "ping"} )
+        st["wol"][wol_id] = ans
+
+
+    for plug_id in plug_keys:
+        ans = plugs.manage_plug( {"target": plug_id, "mode": "status"} )
+        st["plugs"][plug_id] = ans
+
+
+    for script_id in scripts_keys:
+        ans = scripts.manage_script( {"target": script_id, "mode": "status"} )
+        st["scripts"][script_id] = ans
+
 
     tries = 3
 
@@ -104,7 +156,7 @@ def dump_status(status):
 
         try:
             with open(STATUSPATH, 'w') as f:
-                f.write( json.dumps(status) )
+                f.write( json.dumps(st) )
             break
 
         except Exception as e:
@@ -144,6 +196,15 @@ def dump_element_status(what, element_status):
 
 
 def read_status():
+    """
+        return the STATUS dict to a client
+
+        if necessary, will query all elements by calling dump_status()
+
+    """
+
+    if not CONFIG["refresh"]["backend_update_interval"]:
+        dump_status()
 
     resu = {}
 
@@ -162,3 +223,6 @@ def read_status():
             sleep(.2)
 
     return resu
+
+
+init()
