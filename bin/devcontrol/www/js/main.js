@@ -216,9 +216,10 @@ if ( mc.try_connection() ) {
 
     // PAGE REFRESH
 
-    const web_config = mc.send_cmd( 'get_config {"section": "web_config"}' );
-    if (web_config.refresh_seconds) {
-        REFRESH_INTERVAL = web_config.refresh_seconds;
+    const refresh_config = mc.send_cmd( 'get_config {"section": "refresh"}' );
+
+    if (refresh_config.web_refresh_interval) {
+        REFRESH_INTERVAL = refresh_config.web_refresh_interval;
     }
 
     do_refresh();
