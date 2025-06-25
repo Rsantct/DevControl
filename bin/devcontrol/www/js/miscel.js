@@ -60,8 +60,8 @@ export function try_connection() {
         document.getElementById("div_plugs").style.display   = 'none';
         document.getElementById("div_scripts").style.display = 'none';
 
-        document.getElementById("warnings").style.display = 'block';
-        document.getElementById("warnings").innerHTML = tmp;
+        document.getElementById("div_warnings").style.display = 'block';
+        document.getElementById("div_warnings").innerHTML = tmp;
 
     }else{
 
@@ -69,8 +69,8 @@ export function try_connection() {
         document.getElementById("div_plugs").style.display   = 'block';
         document.getElementById("div_scripts").style.display = 'block';
 
-        document.getElementById("warnings").style.display = 'none';
-        document.getElementById("warnings").innerHTML = '';
+        document.getElementById("div_warnings").style.display = 'none';
+        document.getElementById("div_warnings").innerHTML = '';
 
         res = true
     }
