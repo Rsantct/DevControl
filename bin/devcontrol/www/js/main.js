@@ -9,11 +9,11 @@ import * as mc from "./miscel.js";
 // seconds
 var REFRESH_INTERVAL = 5;
 
-// Used to kepp the wol info cells until counter is zero,
-// for example while waiting for PC to be `up` after sending a WOL packet
+// Object to keep the different wol info cells until waiting counter expired,
+// while waiting for PC to be `up` after sending a WOL packet
 var WOL_REFRESH_COUNT = {};
-// Seconds to keep `waiting for response` after sendoiing a WOL packet
-const WAIT_4_WOL = 15;
+// Seconds to keep `waiting for response` after sending a WOL packet
+const WAIT_4_WOL = 30;
 
 var STATUS = {};
 
