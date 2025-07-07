@@ -173,7 +173,7 @@ def dump_element_status(what, element_status):
             element_status:     {elem_id: elem_status}  (dict)
 
         example:
-                    "wol", {"Salon": "waiting for response"}
+                    "wol", {"Salon": "waiting for ping response"}
     """
 
     st = {}
