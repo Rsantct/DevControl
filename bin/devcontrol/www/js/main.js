@@ -40,7 +40,7 @@ function do_wol(event){
 
     if ( ans.toLowerCase().includes('sending') ){
         const info_cell = document.getElementById('info_' + wol_id);
-        info_cell.innerHTML = 'waiting for response ...';
+        info_cell.innerHTML = 'waiting for ping response ...';
         WOL_REFRESH_COUNT[wol_id] = WAIT_4_WOL;
     }
 
