@@ -97,7 +97,7 @@ def manage_wol(args):
 
     # status file
     if 'Sending' in result:
-        mc.dump_element_status("wol", {wol_id: "waiting for response"})
+        mc.dump_element_status("wol", {wol_id: "waiting for ping response ..."})
 
     else:
         mc.dump_element_status("wol", {wol_id: result})
