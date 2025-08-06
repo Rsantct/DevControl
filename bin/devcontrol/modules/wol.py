@@ -7,10 +7,22 @@
 """ A module to send Wake On LAN packets to PCs
 """
 
-
+import os
+import json
 import subprocess as sp
 import platform
 from . import miscel as mc
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+MYARP_PATH = f'{THIS_DIR}/.wol.table'
+
+
+def _init():
+
+    if not os.path.isfile(MYARP_PATH):
+        with open(MYARP_PATH, 'w') as f:
+            f.write('{}')
+        print(f'saving empty wol.table')
 
 
 def manage_wol(args):
@@ -20,26 +32,62 @@ def manage_wol(args):
         }
     """
 
-    def get_ip(mac):
-        """ Search an IP from the O.S. ARP MAC/IP table
-        """
+    def get_ip_from_mac(mac):
 
-        ip = ''
+        def update_saved_table(mac, ip):
 
-        try:
-            tmp = sp.check_output(['arp']).decode().strip()
+            with open(MYARP_PATH, 'r') as f:
+                saved_table = json.loads( f.read() )
 
-        except Exception as e:
-            print(f'(devcontrol) ERROR getting IP from MAC: {str(e)}')
+            saved_table[mac] = ip
+
+            with open(MYARP_PATH, 'w') as f:
+                f.write( json.dumps(saved_table) )
+
+            print(f'Updating {wol_id} on wol.table')
+
+
+        def get_ip_from_arp(mac):
+            """ Search an IP from the O.S. ARP MAC/IP table
+            """
+
+            ip = ''
+
+            try:
+                tmp = sp.check_output(['arp']).decode().strip()
+
+            except Exception as e:
+                print(f'(devcontrol) ERROR getting IP from MAC: {str(e)}')
+                return ip
+
+            arp_lines = tmp.split('\n')
+            arp_table = [ line.split() for line in arp_lines ]
+
+            for row in arp_table:
+                if row[2].lower() == mac.lower():
+                    ip = row[0]
+                    break
+
             return ip
 
-        arp_lines = tmp.split('\n')
-        arp_table = [ line.split() for line in arp_lines ]
 
-        for row in arp_table:
-            if row[2].lower() == mac.lower():
-                ip = row[0]
-                break
+        def get_ip_from_saved_arp_table(mac):
+
+            with open(MYARP_PATH, 'r') as f:
+                saved_table = json.loads( f.read() )
+
+            return saved_table.get(mac)
+
+
+        ip = get_ip_from_arp(mac)
+
+        if ip:
+
+            if ip != get_ip_from_saved_arp_table(mac):
+                update_saved_table(mac, ip)
+
+        else:
+            ip = get_ip_from_saved_arp_table(mac)
 
         return ip
 
@@ -91,9 +139,12 @@ def manage_wol(args):
         result = send_wol(mac)
 
     elif args["mode"] == 'ping':
-        ip = get_ip(mac)
-        result = ping_host(ip)
+        ip = get_ip_from_mac(mac)
 
+        if ip:
+            result = ping_host(ip)
+        else:
+            result = f'cannot get the IP for the MAC of `{wol_id}`,\ndo manual ping from command line and retry'
 
     # status file
     if 'Sending' in result:
@@ -104,3 +155,6 @@ def manage_wol(args):
 
 
     return result
+
+
+_init()
