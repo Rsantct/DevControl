@@ -38,7 +38,7 @@ devices:
         Amplifíer:
 
             protocol:           shelly
-            address:            192.168.1.58
+            ip:                 192.168.1.58
 
             # Set `override` to remove the existing device schedule or `extend` to keep it
             schedule_mode:      override
@@ -51,7 +51,7 @@ devices:
 
         Fan 1:       
             protocol:           shelly
-            address:            192.168.1.199
+            ip:                 192.168.1.199
 
 # Scripts
 #           All values MUST have surrounding quotes.
