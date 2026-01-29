@@ -8,10 +8,15 @@
 """
 
 import os
+import sys
+UHOME = os.path.expanduser('~')
+sys.path.append(f'{UHOME}/bin')
+sys.path.append(f'{UHOME}/bin/devcontrol/modules')
+
 import json
 import subprocess as sp
 import platform
-from . import miscel as mc
+import miscel as mc
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 MYARP_PATH = f'{THIS_DIR}/.wol.table'
