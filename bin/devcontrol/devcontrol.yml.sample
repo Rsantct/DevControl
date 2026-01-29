@@ -71,5 +71,5 @@ scripts:
         responses:      "on, off"
 
 zigbees:
-    billi estudio: estudio_luz_estanteria_1
+    Billy estudio: estudio_luz_estanteria_1
 
