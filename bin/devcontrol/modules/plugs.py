@@ -7,8 +7,14 @@
 """ A module to manage plugs
 """
 
-from . import miscel as mc
-from . import shelly
+import os
+import sys
+UHOME = os.path.expanduser('~')
+sys.path.append(f'{UHOME}/bin')
+sys.path.append(f'{UHOME}/bin/devcontrol/modules')
+
+import miscel as mc
+import shelly
 
 
 def manage_plug(args):
