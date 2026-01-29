@@ -18,7 +18,6 @@ const WAIT_4_WOL = 30;
 var STATUS = {};
 
 // WOL PCs
-
 function do_wol(event){
 
     if ( ! confirm('Please CONFIRM to send WOL packet') ){
@@ -90,7 +89,6 @@ function wol_refresh(){
 }
 
 // PLUGS
-
 function do_plug_toggle(event){
 
     const btn = event.target;
@@ -129,7 +127,6 @@ function do_plug_toggle(event){
 
 
 function fill_in_plug_buttons(plugs) {
-
     mc.make_section('div_plugs', 'Smart Plugs', devices.plugs, do_plug_toggle);
 }
 
@@ -151,7 +148,7 @@ function plugs_refresh(){
 function do_script(event){
 
     if ( ! confirm('Please CONFIRM to RUN the script') ){
-            return;
+        return;
     }
 
     const btn = event.target;
@@ -168,7 +165,6 @@ function do_script(event){
 
 
 function fill_in_scripts_buttons(scripts) {
-
     mc.make_section('div_scripts', 'Scripts', scripts, do_script);
 }
 
@@ -183,6 +179,31 @@ function scripts_refresh(){
         const onoff = STATUS.scripts[script_id];
         mc.btn_color(btn, onoff);
     }
+}
+
+
+// ZIGBEES
+function do_zigbee(event){
+
+    if ( ! confirm('Please CONFIRM to TOGGLE') ){
+        return;
+    }
+
+    const btn = event.target;
+
+    // example 'bt_Amplifier'
+    const zigbee_id = btn.id.slice(3,);
+
+    const response = mc.send_cmd( 'zigbee {"target": "' + zigbee_id + '", "mode": "toggle"}' );
+    alert('response was: ' + response);
+
+    // Display current status
+    mc.btn_color(btn, response);
+}
+
+
+function fill_in_zigbee_buttons(zigbees) {
+    mc.make_section('div_zigbees', 'Zigbee devives', zigbees, do_zigbee);
 }
 
 
@@ -207,12 +228,12 @@ if ( mc.try_connection() ) {
 
     var devices = mc.send_cmd( 'get_config {"section": "devices"}' );
     var scripts = mc.send_cmd( 'get_config {"section": "scripts"}' );
+    var zigbees = mc.send_cmd( 'get_config {"section": "zigbees"}' );
 
     fill_in_wol_buttons(devices.wol);
-
     fill_in_plug_buttons(devices.plugs);
-
     fill_in_scripts_buttons(scripts);
+    fill_in_zigbee_buttons(zigbees);
 
     // PAGE REFRESH
 
