@@ -23,7 +23,7 @@ LOGPATH     = f'{_MY_DIR}/../devcontrol.log'
 CFGPATH     = f'{_MY_DIR}/../devcontrol.yml'
 STATUSPATH  = f'{_MY_DIR}/../.devcontrol'
 
-_STATUS_VOID = { "wol": {}, "plugs": {}, "scripts": {} }
+_STATUS_VOID = { "wol": {}, "plugs": {}, "scripts": {}, "zigbees": {} }
 
 CONFIG = {}
 
@@ -188,9 +188,9 @@ def dump_element_status(what, element_status):
         st = _STATUS_VOID
 
     # getting the only received key (see in wol module)
-    elemet_id = next(iter( element_status ))
+    element_id = next(iter( element_status ))
 
-    st[what][elemet_id] = element_status[elemet_id]
+    st[what][element_id] = element_status[element_id]
 
     with open(STATUSPATH, 'w') as f:
         f.write( json.dumps(st) )
