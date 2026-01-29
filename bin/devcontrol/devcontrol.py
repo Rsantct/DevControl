@@ -15,6 +15,11 @@
 """
 
 import  os
+import  sys
+UHOME = os.path.expanduser('~')
+sys.path.append(f'{UHOME}/bin')
+sys.path.append(f'{UHOME}/bin/devcontrol/modules')
+
 import  json
 import  threading
 from    time import sleep
@@ -22,6 +27,7 @@ from    time import sleep
 from    modules import wol
 from    modules import plugs
 from    modules import scripts
+from    modules import zigbee
 from    modules import miscel as mc
 from    modules.fmt import Fmt
 
@@ -99,6 +105,9 @@ def do( cmd_phrase ):
 
         elif cmd == 'script':
             result = scripts.manage_script(args)
+
+        elif cmd == 'zigbee':
+            result = zigbee.manage_zigbee(args)
 
 
     if type(result) != str:
