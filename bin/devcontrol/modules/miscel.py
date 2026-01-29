@@ -11,11 +11,11 @@ import  os
 import  yaml
 import  json
 from    time import  strftime, sleep
-from    .fmt import Fmt
+from    fmt import Fmt
 
-from    . import wol
-from    . import plugs
-from    . import scripts
+import  wol
+import  plugs
+import  scripts
 
 _MY_DIR      = os.path.dirname(__file__)
 
@@ -107,16 +107,17 @@ def get_config(jsonarg):
     """
         Available jsonarg values:
 
-            { "section":  "devices" OR "scripts" OR "web_config" }
+            { "section":  devices | scripts | zegbees | refresh }
     """
 
     res = {}
 
     if 'section' in jsonarg:
 
-        if jsonarg["section"] in ['devices', 'scripts', 'refresh']:
+        target = jsonarg["section"]
 
-            res = read_config()[ jsonarg["section"] ]
+        if target in ['devices', 'scripts', 'zigbees', 'refresh']:
+            res = read_config().get(target, {})
 
     return res
 
