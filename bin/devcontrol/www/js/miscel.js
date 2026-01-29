@@ -59,6 +59,7 @@ export function try_connection() {
         document.getElementById("div_wol").style.display     = 'none';
         document.getElementById("div_plugs").style.display   = 'none';
         document.getElementById("div_scripts").style.display = 'none';
+        document.getElementById("div_zigbees").style.display    = 'none';
 
         document.getElementById("div_warnings").style.display = 'block';
         document.getElementById("div_warnings").innerHTML = tmp;
@@ -68,6 +69,7 @@ export function try_connection() {
         document.getElementById("div_wol").style.display     = 'block';
         document.getElementById("div_plugs").style.display   = 'block';
         document.getElementById("div_scripts").style.display = 'block';
+        document.getElementById("div_zigbees").style.display    = 'block';
 
         document.getElementById("div_warnings").style.display = 'none';
         document.getElementById("div_warnings").innerHTML = '';
