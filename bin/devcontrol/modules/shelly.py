@@ -7,6 +7,12 @@
 """ A module to manage Shelly devices
 """
 
+import os
+import sys
+UHOME = os.path.expanduser('~')
+sys.path.append(f'{UHOME}/bin')
+sys.path.append(f'{UHOME}/bin/devcontrol/modules')
+
 from    time import sleep
 import  json
 import  urllib.parse
@@ -14,7 +20,7 @@ import  requests
 from    requests.auth   import HTTPDigestAuth
 import  threading
 
-from    . import miscel as mc
+import miscel as mc
 
 
 def cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
@@ -154,7 +160,7 @@ def set_configured_schedules():
         if 'protocol' not in props or not props["protocol"].lower() == 'shelly':
             continue
 
-        host = props["address"]
+        host = props["ip"]
 
 
         if 'schedule' in props and props["schedule"]:
@@ -278,7 +284,7 @@ def manage_plug(args):
     if plug_id not in config["devices"]["plugs"]:
         return f'\'{plug_id}\' not configured'
 
-    host  = config["devices"]["plugs"][ plug_id ]["address"]
+    host  = config["devices"]["plugs"][ plug_id ]["ip"]
 
     if mode == 'toggle':
         plug_cmd = 'rpc/Switch.Toggle?id=0'
