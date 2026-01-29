@@ -70,3 +70,6 @@ scripts:
         status_cmd:     "echo 'amp_switch state'  | nc -N atinker.local 9991"
         responses:      "on, off"
 
+zigbees:
+    billi estudio: estudio_luz_estanteria_1
+
