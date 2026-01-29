@@ -7,9 +7,14 @@
 """ A module to manage user scripts
 """
 
+import os
+import sys
+UHOME = os.path.expanduser('~')
+sys.path.append(f'{UHOME}/bin')
+sys.path.append(f'{UHOME}/bin/devcontrol/modules')
 
 import subprocess as sp
-from . import miscel as mc
+import miscel as mc
 
 
 def manage_script(args):
