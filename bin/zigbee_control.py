@@ -32,8 +32,6 @@ verbose         = False
 estado          = {}
 DEVICE          = ''
 client          = mqtt.Client()
-flag_conectado  = False
-flag_subscribed = False
 
 # OjO necesita configuration.yaml en Zigbee2MQTT
 #
@@ -46,8 +44,14 @@ flag_subscribed = False
 disponibilidad = {'state': 'unknown', 'cuando': ''}
 
 
-def init_topics():
+def init():
+
+    global flag_conectado, flag_subscribed
     global TOPIC, TOPIC_GET, TOPIC_SET, TOPIC_AVAIL, TOPIC_INFO
+
+    flag_conectado  = False
+    flag_subscribed = False
+
     TOPIC       = f'zigbee2mqtt/{DEVICE}'
     TOPIC_SET   = f'zigbee2mqtt/{DEVICE}/set'
     TOPIC_GET   = f'zigbee2mqtt/{DEVICE}/get'
@@ -128,7 +132,10 @@ def set_luz(modo, brillo=100, on_time=None, veces=1):
     modo = modo.lower()
 
     # brillo debe ser 0...254
-    brillo = int(brillo / 100 * 254)
+    try:
+        brillo = int(brillo / 100 * 254)
+    except:
+        brillo = 254
 
     # on_time debe ser entero y lo limitamos a 24h:
     try:
@@ -354,6 +361,19 @@ def on_message(client, userdata, msg):
         print(f'RECIBIDO msg: {msg}')
 
 
+def desconectar_del_broker_mqtt():
+
+    global flag_conectado
+
+    try:
+        client.loop_stop()
+        client.disconnect()
+    except:
+        print('ERROR desconectar_del_broquer_mqtt')
+
+    flag_conectado = False
+
+
 def conectar_con_broker_mqtt(address='localhost'):
 
     # handlers para eventos asíncronos en el cliente
@@ -405,7 +425,7 @@ if __name__ == "__main__":
             print(__doc__)
             sys.exit()
 
-    init_topics()
+    init()
 
     if not conectar_con_broker_mqtt():
         print(False)
@@ -418,5 +438,4 @@ if __name__ == "__main__":
     else:
         print( json.dumps(resultado) )
 
-    client.loop_stop()
-    client.disconnect()
+    desconectar_del_broker_mqtt()
