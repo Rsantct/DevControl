@@ -145,7 +145,7 @@ export function make_section(div_id, section_title, section_items, btn_handler){
         if (div_id == 'div_plugs'){
 
             // display plug device schedule
-            const schedules = send_cmd( 'plug {"target": "' + item + '", "mode": "schedule", "schedule": "nice_list"}' );
+            const schedules = send_cmd( 'plug {"target": "' + item + '", "command": "schedule", "schedule": "nice_list"}' );
 
             if ( Array.isArray(schedules) ){
 
