@@ -22,7 +22,7 @@ def manage_script(args):
         this simply runs an user script silently then returns the
         script response if any
 
-        {'target': script_name, 'mode': run | status }
+        {'target': script_name, 'command': run | status }
     """
 
     result = ''
@@ -37,11 +37,11 @@ def manage_script(args):
     if script_id not in config["scripts"]:
         return f'\'{script_id}\' not configured'
 
-    if 'mode' not in args:
-        return 'needs mode: run | status'
+    if 'command' not in args:
+        return 'needs command: run | status'
 
 
-    if args["mode"] in ('run', 'send'):
+    if args["command"] in ('run', 'send'):
 
         cmd = config["scripts"][ script_id ]["button_cmd"]
 
@@ -51,7 +51,7 @@ def manage_script(args):
             result = 'Error running the script'
 
 
-    elif 'stat' in args["mode"]:
+    elif 'sta' in args["command"]:
 
         try:
 
@@ -65,9 +65,5 @@ def manage_script(args):
         except:
 
             result = 'not available'
-
-
-    # status file
-    mc.dump_element_status("scripts", {script_id: result})
 
     return result
