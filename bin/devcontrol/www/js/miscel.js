@@ -85,7 +85,7 @@ export function btn_color(btn, onoff=null){
     // `onoff` values:
     //          'on'    -->     green
     //          'off'   -->     red
-    //          other   -->     grey
+    //          other   -->     gray
 
 
     if ( onoff == 'on') {
@@ -97,8 +97,8 @@ export function btn_color(btn, onoff=null){
         btn.style.borderColor = 'darkred';
 
     }else{
-        btn.style.borderColor = 'darkgrey';
-        btn.style.color = 'darkgrey';
+        btn.style.borderColor = 'darkgray';
+        btn.style.color = 'darkgray';
     }
 }
 
