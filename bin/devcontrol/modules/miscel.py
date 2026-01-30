@@ -10,30 +10,27 @@
 import  os
 import  yaml
 import  json
-from    time import  strftime, sleep
-from    .fmt import Fmt
+from    time import  strftime, sleep, time
+from    fmt import Fmt
 
-from    . import wol
-from    . import plugs
-from    . import scripts
+import  wol
+import  plugs
+import  scripts
+import  zigbees
 
 _MY_DIR      = os.path.dirname(__file__)
 
 LOGPATH     = f'{_MY_DIR}/../devcontrol.log'
 CFGPATH     = f'{_MY_DIR}/../devcontrol.yml'
 STATUSPATH  = f'{_MY_DIR}/../.devcontrol'
-
-_STATUS_VOID = { "wol": {}, "plugs": {}, "scripts": {} }
-
-CONFIG = {}
-
+CONFIG      = {}
 
 def init():
     global CONFIG
-    CONFIG = read_config(check_refresh=True)
+    CONFIG = read_config()
 
 
-def read_config(check_refresh=False):
+def read_config():
 
     config = {  'devices':  { 'plugs':{}, 'wol':{} },
                 'scripts':  {}
@@ -74,30 +71,21 @@ def read_config(check_refresh=False):
 
             config["scripts"][script]["responses"] = tmp
 
-
-    # Early return
-    if not check_refresh:
-        return config
-
-
-    # Backend update interval min 3 seconds, disabled if set to 0
-
-    bui = config["refresh"]["backend_update_interval"]
-
-    if bui <= 0:
-        pass
-
-    elif bui < 3:
+    # Backend update interval 3...10 seconds, default 5.
+    tmp = config["refresh"].get("backend_update_interval", 5)
+    if tmp < 3:
         print(f'{Fmt.RED}(devcontrol) `backend_update_interval` forced to minimum 3 seconds.{Fmt.END}')
-        config["refresh"]["backend_update_interval"] = 3
+    elif tmp > 30:
+        print(f'{Fmt.RED}(devcontrol) `backend_update_interval` forced to maximun 10 seconds.{Fmt.END}')
+    config["refresh"]["backend_update_interval"] = min(max(3, tmp), 10)
 
-    # Web client refresh interval
-
-    wri = config["refresh"]["web_refresh_interval"]
-
-    if wri < 3:
-        print(f'{Fmt.RED}(devcontrol) `web_refresh_interval` forced to minimum 3 seconds.{Fmt.END}')
-        config["refresh"]["web_refresh_interval"] = 3
+    # Web client polling interval 2...10 seconds, default 3.
+    tmp = config["refresh"].get("web_polling_interval", 3)
+    if tmp < 3:
+        print(f'{Fmt.RED}(devcontrol) `web_polling_interval` forced to minimum 2 seconds.{Fmt.END}')
+    elif tmp > 30:
+        print(f'{Fmt.RED}(devcontrol) `web_polling_interval` forced to maximun 10 seconds.{Fmt.END}')
+    config["refresh"]["web_polling_interval"] = min(max(2, tmp), 10)
 
 
     return config
@@ -107,16 +95,17 @@ def get_config(jsonarg):
     """
         Available jsonarg values:
 
-            { "section":  "devices" OR "scripts" OR "web_config" }
+            { "section":  devices | scripts | zegbees | refresh }
     """
 
     res = {}
 
     if 'section' in jsonarg:
 
-        if jsonarg["section"] in ['devices', 'scripts', 'refresh']:
+        target = jsonarg["section"]
 
-            res = read_config()[ jsonarg["section"] ]
+        if target in ['devices', 'scripts', 'zigbees', 'refresh']:
+            res = read_config().get(target, {})
 
     return res
 
@@ -127,102 +116,64 @@ def do_log(cmd, res):
         f.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd}; {res}\n')
 
 
+def read_status():
+
+    st = {}
+
+    tries = 3
+    while tries:
+
+        try:
+            with open(STATUSPATH, 'r') as f:
+                st = json.loads( f.read() )
+            break
+        except:
+            tries -= 1
+            sleep(.1)
+
+    if not tries:
+        print(f'{Fmt.BOLD}(miscel.read_status) ERROR{Fmt.END}')
+
+    return st
+
+
 def dump_status():
 
     wol_keys     = CONFIG["devices"]["wol"].keys()
     plug_keys    = CONFIG["devices"]["plugs"].keys()
     scripts_keys = CONFIG["scripts"].keys()
+    zigbees_keys = CONFIG["zigbees"].keys()
 
-    st = _STATUS_VOID
+    st = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {} }
 
     for wol_id in wol_keys:
-        ans = wol.manage_wol( {"target": wol_id, "mode": "ping"} )
+        ans = wol.manage_wol( {"target": wol_id, "command": "ping"} )
         st["wol"][wol_id] = ans
 
-
     for plug_id in plug_keys:
-        ans = plugs.manage_plug( {"target": plug_id, "mode": "status"} )
+        ans = plugs.manage_plug( {"target": plug_id, "command": "status"} )
         st["plugs"][plug_id] = ans
 
-
     for script_id in scripts_keys:
-        ans = scripts.manage_script( {"target": script_id, "mode": "status"} )
+        ans = scripts.manage_script( {"target": script_id, "command": "status"} )
         st["scripts"][script_id] = ans
 
+    for z_id in zigbees_keys:
+        ans = zigbees.manage_zigbee( {"target": z_id, "command": "status"} )
+        st["zigbees"][z_id] = ans
 
     tries = 3
-
     while tries:
 
         try:
             with open(STATUSPATH, 'w') as f:
                 f.write( json.dumps(st) )
             break
-
-        except Exception as e:
-            print(f'(miscel.dump_status) ERROR: {str(e)}')
+        except:
             tries -= 1
             sleep(.2)
 
-
-def dump_element_status(what, element_status):
-    """ arguments:
-
-            what:               wol | plugs | scripts   (string)
-
-            element_status:     {elem_id: elem_status}  (dict)
-
-        example:
-                    "wol", {"Salon": "waiting for ping response"}
-    """
-
-    st = {}
-
-    try:
-        with open(STATUSPATH, 'r') as f:
-            st = json.loads( f.read() )
-
-    except Exception as e:
-        print(f'Error reading `.devcontrol` status file')
-        st = _STATUS_VOID
-
-    # getting the only received key (see in wol module)
-    elemet_id = next(iter( element_status ))
-
-    st[what][elemet_id] = element_status[elemet_id]
-
-    with open(STATUSPATH, 'w') as f:
-        f.write( json.dumps(st) )
-
-
-def read_status():
-    """
-        return the STATUS dict to a client
-
-        if necessary, will query all elements by calling dump_status()
-
-    """
-
-    if not CONFIG["refresh"]["backend_update_interval"]:
-        dump_status()
-
-    resu = {}
-
-    tries = 5
-
-    while tries:
-
-        try:
-            with open(STATUSPATH, 'r') as f:
-                resu = json.loads( f.read() )
-                break
-
-        except Exception as e:
-            print(f'(miscel.read_status) ERROR: {str(e)}')
-            tries -= 1
-            sleep(.2)
-
-    return resu
-
+    if not tries:
+        print(f'{Fmt.BOLD}(miscel.dump_status) ERROR{Fmt.END}')
 
 init()

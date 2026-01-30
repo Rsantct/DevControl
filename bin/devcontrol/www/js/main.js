@@ -18,7 +18,6 @@ const WAIT_4_WOL = 30;
 var STATUS = {};
 
 // WOL PCs
-
 function do_wol(event){
 
     if ( ! confirm('Please CONFIRM to send WOL packet') ){
@@ -30,13 +29,16 @@ function do_wol(event){
     // example 'bt_Amplifier'
     const wol_id = btn.id.slice(3,);
 
-    const ans = mc.send_cmd( 'wol {"target": "' + wol_id + '", "mode":"send"}' );
+    const ans = mc.send_cmd( 'wol {"target": "' + wol_id + '", "command":"send"}' );
 
     // Highlights the button for a second
     btn.className = 'ctrl_button_highlighted';
     setTimeout(function(){
             btn.className = 'ctrl_button';
         }, 1000);
+
+    // Button to gray until refresh
+    btn.style.borderColor = 'darkgray';
 
     if ( ans.toLowerCase().includes('sending') ){
         const info_cell = document.getElementById('info_' + wol_id);
@@ -90,7 +92,6 @@ function wol_refresh(){
 }
 
 // PLUGS
-
 function do_plug_toggle(event){
 
     const btn = event.target;
@@ -99,7 +100,7 @@ function do_plug_toggle(event){
     const plug_id = btn.id.slice(3,);
 
     // confirm switching
-    if ( btn.style.color != 'darkgrey' ) {
+    if ( btn.style.color != 'darkgray' ) {
 
         if ( ! confirm('Please CONFIRM to switch') ){
                 return;
@@ -111,7 +112,7 @@ function do_plug_toggle(event){
         return;
     }
 
-    const ans = mc.send_cmd( 'plug {"target": "' + plug_id + '", "mode": "toggle"}' );
+    const ans = mc.send_cmd( 'plug {"target": "' + plug_id + '", "command": "toggle"}' );
 
 
     // Highlights the button for a second
@@ -120,16 +121,12 @@ function do_plug_toggle(event){
             btn.className = 'ctrl_button';
         }, 1000);
 
-    if (ans == 'on'){
-        btn.style.borderColor = 'green';
-    }else{
-        btn.style.borderColor = 'darkred';
-    }
+    // Button to gray until refresh
+    btn.style.borderColor = 'darkgray';
 }
 
 
 function fill_in_plug_buttons(plugs) {
-
     mc.make_section('div_plugs', 'Smart Plugs', devices.plugs, do_plug_toggle);
 }
 
@@ -151,7 +148,7 @@ function plugs_refresh(){
 function do_script(event){
 
     if ( ! confirm('Please CONFIRM to RUN the script') ){
-            return;
+        return;
     }
 
     const btn = event.target;
@@ -159,16 +156,15 @@ function do_script(event){
     // example 'bt_Amplifier'
     const script_id = btn.id.slice(3,);
 
-    const response = mc.send_cmd( 'script {"target": "' + script_id + '", "mode": "run"}' );
-    alert('response was: ' + response);
+    const response = mc.send_cmd( 'script {"target": "' + script_id + '", "command": "run"}' );
+    //alert('response was: ' + response);
 
-    // Display current status
-    mc.btn_color(btn, response);
+    // Button to gray until refresh
+    btn.style.borderColor = 'darkgray';
 }
 
 
 function fill_in_scripts_buttons(scripts) {
-
     mc.make_section('div_scripts', 'Scripts', scripts, do_script);
 }
 
@@ -186,6 +182,54 @@ function scripts_refresh(){
 }
 
 
+// ZIGBEES
+function do_zigbee(event){
+
+    // example 'bt_Amplifier'
+    const btn = event.target;
+    const z_id = btn.id.slice(3,);
+
+    if ( ! confirm('Please CONFIRM to TOGGLE') ){
+        return;
+    }
+
+    let bright = null;
+
+    if ( STATUS.zigbees[z_id] == 'off' ){
+        bright = prompt('Brightness (1...100-default):');
+    }
+
+    let cmd = `zigbee {"target": "${z_id}", "command": "toggle"}`
+    if (bright){
+        cmd = `zigbee {"target": "${z_id}", "command": "on ${bright}"}`
+    }
+
+    const response = mc.send_cmd( cmd );
+    console.log('response was: ' + response);
+
+    // Button to gray until refresh
+    btn.style.borderColor = 'darkgray';
+}
+
+
+function fill_in_zigbee_buttons(zigbees) {
+    mc.make_section('div_zigbees', 'Zigbee devives', zigbees, do_zigbee);
+}
+
+
+function zigbees_refresh(){
+
+    for (const z_id in zigbees) {
+
+        const btn = document.getElementById('bt_' + z_id);
+
+        // Button color
+        const onoff = STATUS.zigbees[z_id];
+        mc.btn_color(btn, onoff);
+    }
+}
+
+
 // MAIN
 
 function do_refresh() {
@@ -198,6 +242,7 @@ function do_refresh() {
             wol_refresh();
             plugs_refresh();
             scripts_refresh();
+            zigbees_refresh();
         }
     }
 }
@@ -207,21 +252,17 @@ if ( mc.try_connection() ) {
 
     var devices = mc.send_cmd( 'get_config {"section": "devices"}' );
     var scripts = mc.send_cmd( 'get_config {"section": "scripts"}' );
+    var zigbees = mc.send_cmd( 'get_config {"section": "zigbees"}' );
 
     fill_in_wol_buttons(devices.wol);
-
     fill_in_plug_buttons(devices.plugs);
-
     fill_in_scripts_buttons(scripts);
+    fill_in_zigbee_buttons(zigbees);
 
     // PAGE REFRESH
 
-    const refresh_config = mc.send_cmd( 'get_config {"section": "refresh"}' );
-
-    if (refresh_config.web_refresh_interval) {
-        REFRESH_INTERVAL = refresh_config.web_refresh_interval;
-    }
-
+    const tmp = mc.send_cmd( 'get_config {"section": "refresh"}' );
+    REFRESH_INTERVAL = tmp.web_polling_interval;
     do_refresh();
     setInterval( do_refresh, REFRESH_INTERVAL * 1000);
 }

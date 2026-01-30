@@ -8,10 +8,15 @@
 """
 
 import os
+import sys
+UHOME = os.path.expanduser('~')
+sys.path.append(f'{UHOME}/bin')
+sys.path.append(f'{UHOME}/bin/devcontrol/modules')
+
 import json
 import subprocess as sp
 import platform
-from . import miscel as mc
+import miscel as mc
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 MYARP_PATH = f'{THIS_DIR}/.wol.table'
@@ -28,7 +33,7 @@ def _init():
 def manage_wol(args):
     """
         {   'target':   xxxxx,
-            'mode':     send | ping
+            'command':  send | ping
         }
     """
 
@@ -125,7 +130,7 @@ def manage_wol(args):
 
     config = mc.read_config()
 
-    if 'target' not in args or 'mode' not in args:
+    if 'target' not in args or 'command' not in args:
         return 'NACK'
 
     wol_id = args["target"]
@@ -135,24 +140,16 @@ def manage_wol(args):
 
     mac = config["devices"]["wol"][ wol_id ]
 
-    if args["mode"] == 'send':
+    if args["command"] == 'send':
         result = send_wol(mac)
 
-    elif args["mode"] == 'ping':
+    elif args["command"] == 'ping':
         ip = get_ip_from_mac(mac)
 
         if ip:
             result = ping_host(ip)
         else:
             result = f'cannot get the IP for the MAC of `{wol_id}`,\ndo manual ping from command line and retry'
-
-    # status file
-    if 'Sending' in result:
-        mc.dump_element_status("wol", {wol_id: "waiting for ping response ..."})
-
-    else:
-        mc.dump_element_status("wol", {wol_id: result})
-
 
     return result
 

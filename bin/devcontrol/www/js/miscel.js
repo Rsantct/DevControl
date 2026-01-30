@@ -59,6 +59,7 @@ export function try_connection() {
         document.getElementById("div_wol").style.display     = 'none';
         document.getElementById("div_plugs").style.display   = 'none';
         document.getElementById("div_scripts").style.display = 'none';
+        document.getElementById("div_zigbees").style.display    = 'none';
 
         document.getElementById("div_warnings").style.display = 'block';
         document.getElementById("div_warnings").innerHTML = tmp;
@@ -68,6 +69,7 @@ export function try_connection() {
         document.getElementById("div_wol").style.display     = 'block';
         document.getElementById("div_plugs").style.display   = 'block';
         document.getElementById("div_scripts").style.display = 'block';
+        document.getElementById("div_zigbees").style.display    = 'block';
 
         document.getElementById("div_warnings").style.display = 'none';
         document.getElementById("div_warnings").innerHTML = '';
@@ -83,7 +85,7 @@ export function btn_color(btn, onoff=null){
     // `onoff` values:
     //          'on'    -->     green
     //          'off'   -->     red
-    //          other   -->     grey
+    //          other   -->     gray
 
 
     if ( onoff == 'on') {
@@ -95,8 +97,8 @@ export function btn_color(btn, onoff=null){
         btn.style.borderColor = 'darkred';
 
     }else{
-        btn.style.borderColor = 'darkgrey';
-        btn.style.color = 'darkgrey';
+        btn.style.borderColor = 'darkgray';
+        btn.style.color = 'darkgray';
     }
 }
 
@@ -143,7 +145,7 @@ export function make_section(div_id, section_title, section_items, btn_handler){
         if (div_id == 'div_plugs'){
 
             // display plug device schedule
-            const schedules = send_cmd( 'plug {"target": "' + item + '", "mode": "schedule", "schedule": "nice_list"}' );
+            const schedules = send_cmd( 'plug {"target": "' + item + '", "command": "schedule", "schedule": "nice_list"}' );
 
             if ( Array.isArray(schedules) ){
 

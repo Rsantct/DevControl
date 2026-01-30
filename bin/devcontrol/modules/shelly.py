@@ -7,6 +7,12 @@
 """ A module to manage Shelly devices
 """
 
+import os
+import sys
+UHOME = os.path.expanduser('~')
+sys.path.append(f'{UHOME}/bin')
+sys.path.append(f'{UHOME}/bin/devcontrol/modules')
+
 from    time import sleep
 import  json
 import  urllib.parse
@@ -14,7 +20,7 @@ import  requests
 from    requests.auth   import HTTPDigestAuth
 import  threading
 
-from    . import miscel as mc
+import miscel as mc
 
 
 def cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
@@ -154,7 +160,7 @@ def set_configured_schedules():
         if 'protocol' not in props or not props["protocol"].lower() == 'shelly':
             continue
 
-        host = props["address"]
+        host = props["ip"]
 
 
         if 'schedule' in props and props["schedule"]:
@@ -177,7 +183,7 @@ def set_configured_schedules():
 def manage_plug(args):
     """
         {   'target':   xxxx
-            'mode':     on | off | toggle | status
+            'command':  on | off | toggle | status
             'delay':    N  (seconds)
         }
     """
@@ -260,14 +266,14 @@ def manage_plug(args):
     if 'target' not in args:
         return res
 
-    if 'mode' not in args:
-        args["mode"] = 'status'
+    if 'command' not in args:
+        args["command"] = 'status'
 
     if 'delay' not in args:
         args['delay'] = 0
 
     plug_id = args["target"]
-    mode    = args["mode"]
+    command = args["command"]
     delay   = args["delay"]
 
     if type(delay) != int:
@@ -278,21 +284,21 @@ def manage_plug(args):
     if plug_id not in config["devices"]["plugs"]:
         return f'\'{plug_id}\' not configured'
 
-    host  = config["devices"]["plugs"][ plug_id ]["address"]
+    host  = config["devices"]["plugs"][ plug_id ]["ip"]
 
-    if mode == 'toggle':
+    if command == 'toggle':
         plug_cmd = 'rpc/Switch.Toggle?id=0'
 
-    elif mode == 'on':
+    elif command == 'on':
         plug_cmd = 'rpc/Switch.Set?id=0&on=true'
 
-    elif mode == 'off':
+    elif command == 'off':
         plug_cmd = 'rpc/Switch.Set?id=0&on=false'
 
-    elif 'stat' in mode:
+    elif 'stat' in command:
         pass
 
-    elif mode == 'schedule':
+    elif command == 'schedule':
 
         if args['schedule'] == 'list':
             plug_cmd = 'rpc/Schedule.List'
@@ -320,9 +326,8 @@ def manage_plug(args):
     else:
         return res
 
-
     # No changes
-    if 'stat' in mode:
+    if 'stat' in command:
         return get_plug_status()
 
     # Change the plug output

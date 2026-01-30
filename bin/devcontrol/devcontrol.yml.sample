@@ -7,11 +7,11 @@ server_port: 9950
 # Refresh intervals
 refresh:
 
-    # Backend status update interval (minimum 3 seconds, 0 to disable)
-    backend_update_interval: 0
+    # Backend status auto-update interval (3...10 seconds, default 5)
+    backend_update_interval: 5
 
-    # Web client refresh (minimum is 3 seconds)
-    web_refresh_interval: 5
+    # Web client polling interval (2...10 seconds, default 3).
+    web_polling_interval: 3
 
 
 # Communications settings.
@@ -69,4 +69,7 @@ scripts:
         button_cmd:     "echo 'amp_switch toggle' | nc -N atinker.local 9991"
         status_cmd:     "echo 'amp_switch state'  | nc -N atinker.local 9991"
         responses:      "on, off"
+
+zigbees:
+    Billy estudio: estudio_luz_estanteria_1
 

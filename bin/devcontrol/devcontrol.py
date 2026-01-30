@@ -10,48 +10,47 @@
         - Wake On Lan PCs
         - Switching Smart Plugs
         - Run user cripts
+        - Manage Zigbee devices
 
     This module is loaded by '../devcontrol_srv.py'
 """
 
 import  os
+import  sys
+UHOME = os.path.expanduser('~')
+sys.path.append(f'{UHOME}/bin')
+sys.path.append(f'{UHOME}/bin/devcontrol/modules')
+
 import  json
 import  threading
-from    time import sleep
+from    time import sleep, time
 
 from    modules import wol
 from    modules import plugs
 from    modules import scripts
+from    modules import zigbees
 from    modules import miscel as mc
 from    modules.fmt import Fmt
 
 
 def init():
 
+    def loop_dump_status():
+        pause = mc.CONFIG["refresh"]["backend_update_interval"]
+        while True:
+            mc.dump_status()
+            sleep(pause)
+
     if os.path.exists(mc.LOGPATH) and os.path.getsize(mc.LOGPATH) > 10e6:
         print ( f"(devcontrol) log file exceeds ~ 10 MB '{mc.LOGPATH}'" )
     print ( f"(devcontrol) logging commands in '{mc.LOGPATH}'" )
 
-    # void info file
-    with open(mc.STATUSPATH, 'w') as f:
-        f.write( json.dumps( mc._STATUS_VOID ) )
-
     # Loading the configured plug schedules (currently only Shelly)
     plugs.shelly.set_configured_schedules()
 
-    # Backend status update
-    interval = mc.CONFIG["refresh"]["backend_update_interval"]
-    if interval:
-        refresh_job = threading.Thread(target=do_refresh_loop, args=(interval,))
-        refresh_job.start()
-
-
-def do_refresh_loop(interval):
-
-    # LOOP
-    while True:
-        mc.dump_status()
-        sleep(interval)
+    # Loop status auto-update
+    j1 = threading.Thread( target=loop_dump_status )
+    j1.start()
 
 
 # Interface function to plug this on server.py
@@ -100,22 +99,19 @@ def do( cmd_phrase ):
         elif cmd == 'script':
             result = scripts.manage_script(args)
 
-
-    if type(result) != str:
-        result = json.dumps(result)
+        elif cmd == 'zigbee':
+            result = zigbees.manage_zigbee(args)
 
 
     # Select what to log
     if cmd == 'get_config':
         pass
-
-    elif 'mode' in args and args["mode"] in ('state', 'status', 'ping'):
+    elif 'command' in args and args["command"] in ('state', 'status', 'ping'):
         pass
-
     else:
         mc.do_log(cmd_phrase, result)
 
-    return result
+    return json.dumps(result)
 
 
 # Things to do first

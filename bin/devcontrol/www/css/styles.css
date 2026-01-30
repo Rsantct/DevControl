@@ -34,10 +34,9 @@ th, td  {   padding: 5px;
         }
 
 table#table_wol     { border-radius: 10px/10px; }
-
 table#table_plugs   { border-radius: 10px/10px; }
-
 table#table_scripts { border-radius: 10px/10px; }
+table#table_zigbees { border-radius: 10px/10px; }
 
 
 .info_cell{
