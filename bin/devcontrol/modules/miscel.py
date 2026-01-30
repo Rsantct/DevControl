@@ -10,22 +10,19 @@
 import  os
 import  yaml
 import  json
-from    time import  strftime, sleep
+from    time import  strftime, sleep, time
 from    fmt import Fmt
 
 import  wol
 import  plugs
 import  scripts
+import  zigbees
 
 _MY_DIR      = os.path.dirname(__file__)
 
 LOGPATH     = f'{_MY_DIR}/../devcontrol.log'
 CFGPATH     = f'{_MY_DIR}/../devcontrol.yml'
-STATUSPATH  = f'{_MY_DIR}/../.devcontrol'
-
-_STATUS_VOID = { "wol": {}, "plugs": {}, "scripts": {}, "zigbees": {} }
-
-CONFIG = {}
+CONFIG      = {}
 
 
 def init():
@@ -133,22 +130,27 @@ def dump_status():
     wol_keys     = CONFIG["devices"]["wol"].keys()
     plug_keys    = CONFIG["devices"]["plugs"].keys()
     scripts_keys = CONFIG["scripts"].keys()
+    zigbees_keys = CONFIG["zigbees"].keys()
 
     st = _STATUS_VOID
 
     for wol_id in wol_keys:
-        ans = wol.manage_wol( {"target": wol_id, "mode": "ping"} )
+        ans = wol.manage_wol( {"target": wol_id, "command": "ping"} )
         st["wol"][wol_id] = ans
 
 
     for plug_id in plug_keys:
-        ans = plugs.manage_plug( {"target": plug_id, "mode": "status"} )
+        ans = plugs.manage_plug( {"target": plug_id, "command": "status"} )
         st["plugs"][plug_id] = ans
 
 
     for script_id in scripts_keys:
-        ans = scripts.manage_script( {"target": script_id, "mode": "status"} )
+        ans = scripts.manage_script( {"target": script_id, "command": "status"} )
         st["scripts"][script_id] = ans
+
+    for z_id in zigbees_keys:
+        ans = zigbees.manage_zigbee( {"target": z_id, "command": "status"} )
+        st["zigbees"][z_id] = ans
 
 
     tries = 3
@@ -164,66 +166,6 @@ def dump_status():
             print(f'(miscel.dump_status) ERROR: {str(e)}')
             tries -= 1
             sleep(.2)
-
-
-def dump_element_status(what, element_status):
-    """ arguments:
-
-            what:               wol | plugs | scripts   (string)
-
-            element_status:     {elem_id: elem_status}  (dict)
-
-        example:
-                    "wol", {"Salon": "waiting for ping response"}
-    """
-
-    st = {}
-
-    try:
-        with open(STATUSPATH, 'r') as f:
-            st = json.loads( f.read() )
-
-    except Exception as e:
-        print(f'Error reading `.devcontrol` status file')
-        st = _STATUS_VOID
-
-    # getting the only received key (see in wol module)
-    element_id = next(iter( element_status ))
-
-    st[what][element_id] = element_status[element_id]
-
-    with open(STATUSPATH, 'w') as f:
-        f.write( json.dumps(st) )
-
-
-def read_status():
-    """
-        return the STATUS dict to a client
-
-        if necessary, will query all elements by calling dump_status()
-
-    """
-
-    if not CONFIG["refresh"]["backend_update_interval"]:
-        dump_status()
-
-    resu = {}
-
-    tries = 5
-
-    while tries:
-
-        try:
-            with open(STATUSPATH, 'r') as f:
-                resu = json.loads( f.read() )
-                break
-
-        except Exception as e:
-            print(f'(miscel.read_status) ERROR: {str(e)}')
-            tries -= 1
-            sleep(.2)
-
-    return resu
 
 
 init()
