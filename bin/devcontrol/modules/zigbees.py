@@ -82,7 +82,7 @@ def manage_zigbee(args):
             result = 'off'
 
     elif 'sta' in command:
-        return zc.consultar_estado()
+        return zc.consultar_estado().get('state', 'unknown')
 
     zc.desconectar_del_broker_mqtt()
 
