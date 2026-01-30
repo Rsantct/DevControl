@@ -71,21 +71,21 @@ def read_config():
 
             config["scripts"][script]["responses"] = tmp
 
-    # Backend update interval 3...30 seconds, default 5.
+    # Backend update interval 3...10 seconds, default 5.
     tmp = config["refresh"].get("backend_update_interval", 5)
     if tmp < 3:
         print(f'{Fmt.RED}(devcontrol) `backend_update_interval` forced to minimum 3 seconds.{Fmt.END}')
     elif tmp > 30:
         print(f'{Fmt.RED}(devcontrol) `backend_update_interval` forced to maximun 10 seconds.{Fmt.END}')
-    config["refresh"]["backend_update_interval"] = min(max(3, tmp), 30)
+    config["refresh"]["backend_update_interval"] = min(max(3, tmp), 10)
 
-    # Web client polling interval 3...30 seconds, default 5.
-    tmp = config["refresh"].get("web_polling_interval", 5)
+    # Web client polling interval 2...10 seconds, default 3.
+    tmp = config["refresh"].get("web_polling_interval", 3)
     if tmp < 3:
-        print(f'{Fmt.RED}(devcontrol) `web_polling_interval` forced to minimum 3 seconds.{Fmt.END}')
+        print(f'{Fmt.RED}(devcontrol) `web_polling_interval` forced to minimum 2 seconds.{Fmt.END}')
     elif tmp > 30:
         print(f'{Fmt.RED}(devcontrol) `web_polling_interval` forced to maximun 10 seconds.{Fmt.END}')
-    config["refresh"]["web_polling_interval"] = min(max(3, tmp), 30)
+    config["refresh"]["web_polling_interval"] = min(max(2, tmp), 10)
 
 
     return config
