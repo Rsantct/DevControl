@@ -7,11 +7,11 @@ server_port: 9950
 # Refresh intervals
 refresh:
 
-    # Backend status update interval (minimum 3 seconds, 0 to disable)
-    backend_update_interval: 0
+    # Backend status auto-update interval (minimum 3 seconds)
+    backend_update_interval: 5
 
-    # Web client refresh (minimum is 3 seconds)
-    web_refresh_interval: 5
+    # Web client polling interval (minimum is 3 seconds).
+    web_polling_interval: 5
 
 
 # Communications settings.
