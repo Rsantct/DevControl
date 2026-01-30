@@ -39,9 +39,4 @@ def manage_plug(args):
     else:
         result = 'unknown plug protocol'
 
-
-    # status file
-    mc.dump_element_status("plugs", {plug_id: result})
-
-
     return result
