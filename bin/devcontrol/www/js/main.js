@@ -213,7 +213,7 @@ function do_zigbee(event){
 
 
 function fill_in_zigbee_buttons(zigbees) {
-    mc.make_section('div_zigbees', 'Zigbee devives', zigbees, do_zigbee);
+    mc.make_section('div_zigbees', 'Zigbee devices', zigbees, do_zigbee);
 }
 
 
