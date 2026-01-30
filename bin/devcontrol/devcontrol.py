@@ -10,6 +10,7 @@
         - Wake On Lan PCs
         - Switching Smart Plugs
         - Run user cripts
+        - Manage Zigbee devices
 
     This module is loaded by '../devcontrol_srv.py'
 """
@@ -20,9 +21,9 @@ UHOME = os.path.expanduser('~')
 sys.path.append(f'{UHOME}/bin')
 sys.path.append(f'{UHOME}/bin/devcontrol/modules')
 
-import  threading
 import  json
-from    time import sleep
+import  threading
+from    time import sleep, time
 
 from    modules import wol
 from    modules import plugs
@@ -31,9 +32,14 @@ from    modules import zigbees
 from    modules import miscel as mc
 from    modules.fmt import Fmt
 
-STATUS  = {}
 
 def init():
+
+    def loop_dump_status():
+        pause = mc.CONFIG["refresh"]["backend_update_interval"]
+        while True:
+            mc.dump_status()
+            sleep(pause)
 
     if os.path.exists(mc.LOGPATH) and os.path.getsize(mc.LOGPATH) > 10e6:
         print ( f"(devcontrol) log file exceeds ~ 10 MB '{mc.LOGPATH}'" )
@@ -41,6 +47,10 @@ def init():
 
     # Loading the configured plug schedules (currently only Shelly)
     plugs.shelly.set_configured_schedules()
+
+    # Loop status auto-update
+    j1 = threading.Thread( target=loop_dump_status )
+    j1.start()
 
 
 # Interface function to plug this on server.py
@@ -76,7 +86,7 @@ def do( cmd_phrase ):
         result = mc.get_config(args)
 
     elif cmd == 'get_status':
-        result = STATUS
+        result = mc.read_status()
 
     elif 'target' in args:
 
