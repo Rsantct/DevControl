@@ -185,17 +185,27 @@ function scripts_refresh(){
 // ZIGBEES
 function do_zigbee(event){
 
+    // example 'bt_Amplifier'
+    const btn = event.target;
+    const z_id = btn.id.slice(3,);
+
     if ( ! confirm('Please CONFIRM to TOGGLE') ){
         return;
     }
 
-    const btn = event.target;
+    let bright = null;
 
-    // example 'bt_Amplifier'
-    const zigbee_id = btn.id.slice(3,);
+    if ( STATUS.zigbees[z_id] == 'off' ){
+        bright = prompt('Brightness (1...100-default):');
+    }
 
-    const response = mc.send_cmd( 'zigbee {"target": "' + zigbee_id + '", "command": "toggle"}' );
-    //alert('response was: ' + response);
+    let cmd = `zigbee {"target": "${z_id}", "command": "toggle"}`
+    if (bright){
+        cmd = `zigbee {"target": "${z_id}", "command": "on ${bright}"}`
+    }
+
+    const response = mc.send_cmd( cmd );
+    console.log('response was: ' + response);
 
     // Button to gray until refresh
     btn.style.borderColor = 'darkgray';
