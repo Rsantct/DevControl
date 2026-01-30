@@ -37,6 +37,9 @@ function do_wol(event){
             btn.className = 'ctrl_button';
         }, 1000);
 
+    // Button to gray until refresh
+    btn.style.borderColor = 'darkgray';
+
     if ( ans.toLowerCase().includes('sending') ){
         const info_cell = document.getElementById('info_' + wol_id);
         info_cell.innerHTML = 'waiting for ping response ...';
@@ -97,7 +100,7 @@ function do_plug_toggle(event){
     const plug_id = btn.id.slice(3,);
 
     // confirm switching
-    if ( btn.style.color != 'darkgrey' ) {
+    if ( btn.style.color != 'darkgray' ) {
 
         if ( ! confirm('Please CONFIRM to switch') ){
                 return;
@@ -118,11 +121,8 @@ function do_plug_toggle(event){
             btn.className = 'ctrl_button';
         }, 1000);
 
-    if (ans == 'on'){
-        btn.style.borderColor = 'green';
-    }else{
-        btn.style.borderColor = 'darkred';
-    }
+    // Button to gray until refresh
+    btn.style.borderColor = 'darkgray';
 }
 
 
@@ -157,10 +157,10 @@ function do_script(event){
     const script_id = btn.id.slice(3,);
 
     const response = mc.send_cmd( 'script {"target": "' + script_id + '", "command": "run"}' );
-    alert('response was: ' + response);
+    //alert('response was: ' + response);
 
-    // Display current status
-    mc.btn_color(btn, response);
+    // Button to gray until refresh
+    btn.style.borderColor = 'darkgray';
 }
 
 
@@ -195,10 +195,10 @@ function do_zigbee(event){
     const zigbee_id = btn.id.slice(3,);
 
     const response = mc.send_cmd( 'zigbee {"target": "' + zigbee_id + '", "command": "toggle"}' );
-    alert('response was: ' + response);
+    //alert('response was: ' + response);
 
-    // Display current status
-    mc.btn_color(btn, response);
+    // Button to gray until refresh
+    btn.style.borderColor = 'darkgray';
 }
 
 
