@@ -29,7 +29,7 @@ function do_wol(event){
     // example 'bt_Amplifier'
     const wol_id = btn.id.slice(3,);
 
-    const ans = mc.send_cmd( 'wol {"target": "' + wol_id + '", "mode":"send"}' );
+    const ans = mc.send_cmd( 'wol {"target": "' + wol_id + '", "command":"send"}' );
 
     // Highlights the button for a second
     btn.className = 'ctrl_button_highlighted';
@@ -109,7 +109,7 @@ function do_plug_toggle(event){
         return;
     }
 
-    const ans = mc.send_cmd( 'plug {"target": "' + plug_id + '", "mode": "toggle"}' );
+    const ans = mc.send_cmd( 'plug {"target": "' + plug_id + '", "command": "toggle"}' );
 
 
     // Highlights the button for a second
@@ -156,7 +156,7 @@ function do_script(event){
     // example 'bt_Amplifier'
     const script_id = btn.id.slice(3,);
 
-    const response = mc.send_cmd( 'script {"target": "' + script_id + '", "mode": "run"}' );
+    const response = mc.send_cmd( 'script {"target": "' + script_id + '", "command": "run"}' );
     alert('response was: ' + response);
 
     // Display current status
@@ -194,7 +194,7 @@ function do_zigbee(event){
     // example 'bt_Amplifier'
     const zigbee_id = btn.id.slice(3,);
 
-    const response = mc.send_cmd( 'zigbee {"target": "' + zigbee_id + '", "mode": "toggle"}' );
+    const response = mc.send_cmd( 'zigbee {"target": "' + zigbee_id + '", "command": "toggle"}' );
     alert('response was: ' + response);
 
     // Display current status
@@ -204,6 +204,19 @@ function do_zigbee(event){
 
 function fill_in_zigbee_buttons(zigbees) {
     mc.make_section('div_zigbees', 'Zigbee devives', zigbees, do_zigbee);
+}
+
+
+function zigbees_refresh(){
+
+    for (const z_id in zigbees) {
+
+        const btn = document.getElementById('bt_' + z_id);
+
+        // Button color
+        const onoff = STATUS.zigbees[z_id];
+        mc.btn_color(btn, onoff);
+    }
 }
 
 
@@ -219,6 +232,7 @@ function do_refresh() {
             wol_refresh();
             plugs_refresh();
             scripts_refresh();
+            zigbees_refresh();
         }
     }
 }
