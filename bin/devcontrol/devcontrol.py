@@ -20,17 +20,18 @@ UHOME = os.path.expanduser('~')
 sys.path.append(f'{UHOME}/bin')
 sys.path.append(f'{UHOME}/bin/devcontrol/modules')
 
-import  json
 import  threading
+import  json
 from    time import sleep
 
 from    modules import wol
 from    modules import plugs
 from    modules import scripts
-from    modules import zigbee
+from    modules import zigbees
 from    modules import miscel as mc
 from    modules.fmt import Fmt
 
+STATUS  = {}
 
 def init():
 
@@ -38,26 +39,8 @@ def init():
         print ( f"(devcontrol) log file exceeds ~ 10 MB '{mc.LOGPATH}'" )
     print ( f"(devcontrol) logging commands in '{mc.LOGPATH}'" )
 
-    # void info file
-    with open(mc.STATUSPATH, 'w') as f:
-        f.write( json.dumps( mc._STATUS_VOID ) )
-
     # Loading the configured plug schedules (currently only Shelly)
     plugs.shelly.set_configured_schedules()
-
-    # Backend status update
-    interval = mc.CONFIG["refresh"]["backend_update_interval"]
-    if interval:
-        refresh_job = threading.Thread(target=do_refresh_loop, args=(interval,))
-        refresh_job.start()
-
-
-def do_refresh_loop(interval):
-
-    # LOOP
-    while True:
-        mc.dump_status()
-        sleep(interval)
 
 
 # Interface function to plug this on server.py
@@ -93,7 +76,7 @@ def do( cmd_phrase ):
         result = mc.get_config(args)
 
     elif cmd == 'get_status':
-        result = mc.read_status()
+        result = STATUS
 
     elif 'target' in args:
 
@@ -107,24 +90,18 @@ def do( cmd_phrase ):
             result = scripts.manage_script(args)
 
         elif cmd == 'zigbee':
-            result = zigbee.manage_zigbee(args)
-
-
-    if type(result) != str:
-        result = json.dumps(result)
+            result = zigbees.manage_zigbee(args)
 
 
     # Select what to log
     if cmd == 'get_config':
         pass
-
-    elif 'mode' in args and args["mode"] in ('state', 'status', 'ping'):
+    elif 'command' in args and args["command"] in ('state', 'status', 'ping'):
         pass
-
     else:
         mc.do_log(cmd_phrase, result)
 
-    return result
+    return json.dumps(result)
 
 
 # Things to do first
