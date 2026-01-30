@@ -21,7 +21,7 @@ import zigbee_control as zc
 
 def init_zc(device):
     zc.DEVICE = device
-    zc.init_topics()
+    zc.init()
     return zc.conectar_con_broker_mqtt()
 
 
@@ -45,13 +45,10 @@ def do_toggle(device):
 
 def manage_zigbee(args):
     """
-        this simply toggles or queries the status of a device
-        then returns the response if any
-
-        {'target': element_name, 'mode': toggle | state }
+        {'target': 'element_name', 'command': 'a command phrase' }
     """
 
-    result = 'none'
+    result = ''
 
     if 'target' not in args:
         return result
@@ -60,26 +57,33 @@ def manage_zigbee(args):
 
     elem_name = args['target']
     device    = config.get('zigbees', {}).get(elem_name, '')
-    todo      = args.get('mode', '')
+    tmp       = args.get('command', '').split(' ')
+    command   = tmp[0]
+    args      = tmp[1:]
 
     if not init_zc(device):
-        return 'error initializing device'
+        return f'error with {device}'
 
-    if todo == 'toggle':
+    if command == 'toggle':
         result = do_toggle(device)
 
-    elif todo == 'on':
-        if zc.set_luz('on'):
+    elif command == 'on':
+
+        try:
+            brillo = int(args[0])
+        except:
+            brillo = None
+
+        if zc.set_luz('on', brillo):
             result = 'on'
 
-    elif todo == 'off':
+    elif command == 'off':
         if zc.set_luz('off'):
             result = 'off'
 
-    elif todo == 'state':
+    elif 'sta' in command:
         return zc.consultar_estado()
 
-    # status file
-    mc.dump_element_status("zigbees", {elem_name: result})
+    zc.desconectar_del_broker_mqtt()
 
     return result
