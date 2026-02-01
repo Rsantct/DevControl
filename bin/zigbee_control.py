@@ -2,7 +2,7 @@
 """
     Gestión de dispositivo Zigbee
 
-    Uso:    control_zigbee.py  [-v] -d=ZIGBEE_ID  ..opciones..
+    Uso:    control_zigbee.py  [-v] -dev=ZIGBEE_DEV  ...comando...
 
         -v                  respuesta verbose
 
@@ -12,9 +12,10 @@
         power_on=on|off     configural el comportamiento al recibir alimentación
 
 
-        blink [NN]          parpadea NN veces (1 por defecto)
+        blink [N]           parpadea N veces (1 por defecto)
 
         on  [N]             brillo 0..100
+        on  tc=N            temperatura de color 0..100 (fria...cálida)
         on  timer=N         inicia un temporizador de apagado en N segundos
         off
 
@@ -28,12 +29,36 @@ import  json
 import  time
 from    datetime import datetime
 
+ZTCOLORMIN = 250
+ZTCOLORMAX = 454
+
+MQTT_HOST = "localhost"
+MQTT_PORT = 1883
+
+QoS_TOPIC_BASE  = 0
+QoS_TOPIC_SET   = 1
+QoS_TOPIC_GET   = 0
+QoS_TOPIC_AVAIL = 0
+QoS_TOPIC_INFO  = 0
+
+
+# Topics genéricos del bridge ZIGBEE2MQTT
+# Todo el diccionario de configuración
+TOPIC_INFO    = "zigbee2mqtt/bridge/info"
+# Devices
+TOPIC_DEVICES = "zigbee2mqtt/bridge/devices"
+DEVICES       = {}
+# Grupos
+TOPIC_GROUPS  = "zigbee2mqtt/bridge/groups"
+GRUPOS        = {}
+
+
+client          = mqtt.Client()
+ZNAME           = ''
 verbose         = False
 estado          = {}
-DEVICE          = ''
-client          = mqtt.Client()
-
-# OjO necesita configuration.yaml en Zigbee2MQTT
+disponibilidad = {'state': 'unknown', 'cuando': ''}
+# OjO disponibilidad necesita configuration.yaml en Zigbee2MQTT
 #
 #   availability: true
 #   advanced:
@@ -41,24 +66,51 @@ client          = mqtt.Client()
 #       availability_timeout: 60
 #
 # posibles valores "online", "offline" o "unknown"
-disponibilidad = {'state': 'unknown', 'cuando': ''}
 
 
-def init():
+class Fmt:
+    """
+    # Some nice ANSI formats for printouts formatting
+    # CREDITS: https://github.com/adoxa/ansicon/blob/master/sequences.txt
+    """
+
+    BLACK           = '\033[30m'
+    RED             = '\033[31m'
+    GREEN           = '\033[32m'
+    YELLOW          = '\033[33m'
+    BLUE            = '\033[34m'
+    MAGENTA         = '\033[35m'
+    CYAN            = '\033[36m'
+    WHITE           = '\033[37m'
+    GRAY            = '\033[90m'
+
+    BRIGHTBLACK     = '\033[90m'
+    BRIGHTRED       = '\033[91m'
+    BRIGHTGREEN     = '\033[92m'
+    BRIGHTYELLOW    = '\033[93m'
+    BRIGHTBLUE      = '\033[94m'
+    BRIGHTMAGENTA   = '\033[95m'
+    BRIGHTCYAN      = '\033[96m'
+    BRIGHTWHITE     = '\033[97m'
+
+    BOLD            = '\033[1m'
+    UNDERLINE       = '\033[4m'
+    BLINK           = '\033[5m'
+    END             = '\033[0m'
+
+
+def prepare_zname():
 
     global flag_conectado, flag_subscribed
-    global TOPIC, TOPIC_GET, TOPIC_SET, TOPIC_AVAIL, TOPIC_INFO
+    global TOPIC_BASE, TOPIC_GET, TOPIC_SET, TOPIC_AVAIL, TOPIC_INFO
 
     flag_conectado  = False
     flag_subscribed = False
 
-    TOPIC       = f'zigbee2mqtt/{DEVICE}'
-    TOPIC_SET   = f'zigbee2mqtt/{DEVICE}/set'
-    TOPIC_GET   = f'zigbee2mqtt/{DEVICE}/get'
-    TOPIC_AVAIL = f'zigbee2mqtt/{DEVICE}/availability'
-    # Este topic proporciona todo el diccionario de configuración
-    # del bridge ZIGBEE2MQTT (es muy extenso)
-    TOPIC_INFO  = "zigbee2mqtt/bridge/info"
+    TOPIC_BASE  = f'zigbee2mqtt/{ZNAME}'
+    TOPIC_SET   = f'zigbee2mqtt/{ZNAME}/set'
+    TOPIC_GET   = f'zigbee2mqtt/{ZNAME}/get'
+    TOPIC_AVAIL = f'zigbee2mqtt/{ZNAME}/availability'
 
 
 def get_timestamp():
@@ -70,7 +122,66 @@ def clamp(n, minn=0, maxn=100):
     return max(minn, min(n, maxn))
 
 
-def consultar_estado():
+def get_miembros_de_grupo(gname=''):
+
+    update_devices()
+
+    miembros = []
+
+    for grupo in GRUPOS:
+        if grupo.get('friendly_name', '') == gname:
+            for m in grupo.get('members', []):
+                miembros.append( {'ieee_address': m.get('ieee_address', '')} )
+
+    # buscambos friendly_name de cada device del grupo
+    for dev_grupo in miembros:
+        for dev_global in DEVICES:
+            if dev_global.get('ieee_address') == dev_grupo.get('ieee_address'):
+                dev_grupo['friendly_name'] = dev_global.get('friendly_name')
+                break
+
+    return miembros
+
+
+def consultar_estado_grupo(gname=''):
+    """ Un grupo no tiene reporte de estado, hay que consultar a cada miembro
+    """
+
+    global ZNAME
+
+    update_devices()
+
+    miembros = get_miembros_de_grupo(gname)
+
+    for miembro in miembros:
+
+        ZNAME = miembro.get('friendly_name')
+
+        prepare_zname()
+
+        if conectar_con_broker_mqtt():
+            estado = consultar_estado(timeout=2).get('state', '')
+            miembro['state'] = estado
+            desconectar_del_broker_mqtt()
+        else:
+            print(f'{Fmt.RED}(consultar_estado_grupo) NO CONECTA para {ZNAME}{Fmt.END}')
+
+    if verbose:
+        print('--- (consultar_estado_grupo) miembros:')
+        print( json.dumps(miembros, indent=2) )
+
+
+    if all(miembro.get('state') == 'off' for miembro in miembros):
+        return 'off'
+
+    elif any(miembro.get('state') == 'on' for miembro in miembros):
+        return 'on'
+
+    else:
+        return ''
+
+
+def consultar_estado(timeout=5):
     """
     En Zigbee2MQTT, cuando activas availability: enabled: true, el servidor publica
     el estado en un topic específico y lo marca como "Retained" (retenido) en el broker MQTT.
@@ -91,13 +202,13 @@ def consultar_estado():
         client.publish(TOPIC_GET, json.dumps({'state': ''}))
 
         # Esperamos a que el driver responda por Zigbee
-        timeout = 5
         start_time = time.time()
         while not estado and (time.time() - start_time) < timeout:
             time.sleep(0.1)
 
-    if estado:
-        estado['observaciones'] = 'linkquality <20 puede fallar, 50~100 correcto, >100 excelente'
+    else:
+        if verbose:
+            print(f'(consultar_estado) SIN disponibilidad')
 
     return estado
 
@@ -112,20 +223,22 @@ def enviar_comando(payload):
         return False
 
 
-def set_luz(modo, brillo=100, on_time=None, veces=1):
+def set_luz(modo, brillo=100, on_time=None, blink_veces=1, color_temp=80):
     """
-    modo:       on | off | blink
+    modo:           on | off | blink
 
-    brillo:     0 a 100
+    brillo:         0 ~ 100
 
-    on_time:    Cuenta atrás en segundos para apagarse por su cuenta (temporizador interno del device)
-                (no es compatible con brillo)
+    color_temp:     0 ~ 100 (fria ~ cálida)
 
-    veces:      para blink
+    on_time:        Cuenta atrás en segundos para apagarse por su cuenta
+                    (temporizador interno del device, no es compatible con brillo)
+
+    blink_veces:    veces del parpadeo
     """
 
     def do_blink():
-        for _ in range(veces):
+        for _ in range(blink_veces):
             cc = enviar_comando( {'effect': 'blink'} )
             time.sleep(3)
 
@@ -136,6 +249,12 @@ def set_luz(modo, brillo=100, on_time=None, veces=1):
         brillo = int(brillo / 100 * 254)
     except:
         brillo = 254
+
+    # color_temp debe ser ZTCOLORMIN...ZTCOLORMAX
+    try:
+        color_temp = int(color_temp / 100 * (ZTCOLORMAX - ZTCOLORMIN) + ZTCOLORMIN)
+    except Exception as e:
+        color_temp = int((ZTCOLORMIN + ZTCOLORMAX) / 2)
 
     # on_time debe ser entero y lo limitamos a 24h:
     try:
@@ -148,9 +267,9 @@ def set_luz(modo, brillo=100, on_time=None, veces=1):
 
     elif modo == 'on':
         if on_time:
-            cmd = {'state': 'on', 'on_time': on_time}
+            cmd = { 'state': 'on', 'on_time': on_time }
         else:
-            cmd = {'state': 'on', 'brightness': brillo}
+            cmd = { 'state': 'on', 'brightness': brillo, 'color_temp': color_temp }
 
     elif modo == 'blink':
         do_blink()
@@ -167,6 +286,7 @@ def do_main():
     apagar       = False
     encender     = False
     brillo       = 100
+    color_temp   = 50
     temporizador = None
     blink        = False
     veces        = 1
@@ -176,7 +296,7 @@ def do_main():
         if '-d=' in opc or opc == '-v':
             continue
 
-        if 'sta' in opc:
+        if opc.startswith('stat') or opc == 'estado':
             return consultar_estado()
 
         if 'power' in opc:
@@ -189,6 +309,10 @@ def do_main():
 
         if opc == 'on':
             encender = True
+
+        elif 'tc=' in opc or 'ct=' in opc:
+            color_temp = opc.split('=')[-1]
+            color_temp = clamp( int(color_temp), 0, 100 )
 
         elif 'temp' in opc or 'time' in opc:
             temporizador = opc.split('=')[-1]
@@ -203,7 +327,7 @@ def do_main():
             try:
                 if blink:
                     veces = clamp( int(opc), 1, 10)
-                brillo = clamp( int(opc) )
+                brillo = clamp( int(opc), 0, 100 )
             except:
                 pass
 
@@ -212,10 +336,10 @@ def do_main():
         return set_luz("OFF")
 
     elif encender:
-        return set_luz("ON", brillo=brillo, on_time=temporizador)
+        return set_luz("ON", brillo=brillo, color_temp=color_temp, on_time=temporizador)
 
     elif blink:
-        return set_luz('blink', veces=veces)
+        return set_luz('blink', blink_veces=veces)
 
     else:
         return False
@@ -224,7 +348,7 @@ def do_main():
 def do_demo():
 
     try:
-        print(f"Probando device: {DEVICE} ...")
+        print(f"Probando device: {ZNAME} ...")
 
         set_luz("ON", 50)
         time.sleep(1)
@@ -279,16 +403,16 @@ def on_connect(client, userdata, flags, rc):
         #   1 (At least once):  Asegura que el mensaje llegue, aunque pueda repetirse.
         #   2 (Exactly once):   Garantiza que llegue exactamente una vez (más lento,
         #                       requiere más "papeleo" entre cliente y broker).
-        client.subscribe( [ (TOPIC,       0),
-                            (TOPIC_AVAIL, 0),
-                            (TOPIC_INFO,  0)
+        client.subscribe( [ (TOPIC_BASE,  QoS_TOPIC_BASE),
+                            (TOPIC_AVAIL, QoS_TOPIC_AVAIL),
+                            (TOPIC_INFO,  QoS_TOPIC_INFO)
                           ]
                         )
 
         flag_conectado = True
 
         if verbose:
-            print("✅ Conectado al broker MQTT")
+            print(f"✅ Conectado al broker MQTT, topic base: {Fmt.BLUE}{Fmt.BOLD}{TOPIC_BASE}{Fmt.END}")
 
     else:
         print(f"❌ Error de conexión con el broquer MQTT: {rc}")
@@ -327,12 +451,12 @@ def on_message(client, userdata, msg):
             print(f'ERROR leyendo TOPIC_AVAIL: {e}')
 
     # Si el mensaje es el estado del dispositivo
-    elif msg.topic == TOPIC:
+    elif msg.topic == TOPIC_BASE:
 
         msg = msg.payload.decode().lower()
 
         if verbose:
-            print('TOPIC mensaje:', msg)
+            print('TOPIC_BASE mensaje:', msg)
 
         try:
             estado = json.loads(msg)
@@ -342,7 +466,7 @@ def on_message(client, userdata, msg):
                 disponibilidad['cuando'] = get_timestamp()
 
         except Exception as e:
-            print(f"Error leyendo TOPIC: {e}")
+            print(f"Error leyendo TOPIC_BASE: {e}")
 
     # Si el mensaje es la información de Zigbee2MQTT
     elif msg.topic == TOPIC_INFO:
@@ -355,10 +479,10 @@ def on_message(client, userdata, msg):
                 print('TOPIC_INFO mensaje:', zigbbee_info.keys())
 
         except Exception as e:
-            print(f"Error leyendo TOPIC: {e}")
+            print(f"Error leyendo TOPIC_INFO: {e}")
 
     else:
-        print(f'RECIBIDO msg: {msg}')
+        print(f'RECIBIDO msg de TOPIC-DESCONOCIDO: {msg}')
 
 
 def desconectar_del_broker_mqtt():
@@ -374,14 +498,14 @@ def desconectar_del_broker_mqtt():
     flag_conectado = False
 
 
-def conectar_con_broker_mqtt(address='localhost'):
+def conectar_con_broker_mqtt():
 
     # handlers para eventos asíncronos en el cliente
     client.on_connect   = on_connect
     client.on_subscribe = on_subscribe
     client.on_message   = on_message
 
-    cc = client.connect(address, 1883, 60)
+    cc = client.connect(MQTT_HOST, MQTT_PORT, 60)
     client.loop_start()
 
     if cc == 0:
@@ -405,18 +529,58 @@ def conectar_con_broker_mqtt(address='localhost'):
         return False
 
 
+def update_devices():
+
+    def on_connect(client, userdata, flags, rc):
+        client.subscribe(TOPIC_DEVICES)
+        client.subscribe(TOPIC_GROUPS)
+
+    def on_message(client, userdata, msg):
+
+        global GRUPOS
+        global DEVICES
+
+        if msg.topic == TOPIC_DEVICES:
+            DEVICES = json.loads(msg.payload.decode())
+            if verbose:
+                print(f'--- Recibidos DEVICES:')
+                print( json.dumps(DEVICES, indent=2) )
+                print('--- ')
+
+        elif msg.topic == TOPIC_GROUPS:
+            GRUPOS = json.loads(msg.payload.decode())
+            if verbose:
+                print(f'--- Recibidos GRUPOS:')
+                print( json.dumps(GRUPOS, indent=2) )
+                print('--- ')
+
+        if DEVICES and GRUPOS:
+            tmp_cli.disconnect()
+
+
+    tmp_cli = mqtt.Client()
+    tmp_cli.on_connect = on_connect
+    tmp_cli.on_message = on_message
+
+    tmp_cli.connect(MQTT_HOST, MQTT_PORT, 60)
+
+    # loop_forever se detendrá al completar DEVICES y GRUPOS en on_message()
+    tmp_cli.loop_forever()
+    del tmp_cli
+
+
 if __name__ == "__main__":
 
-    # Lee desde command line <DEVICE> y <verbose>,
+    # Lee desde command line <ZNAME> y <verbose>,
     # el resto de opciones se analizan en main()
     for opc in sys.argv[1:]:
 
-        if '-d=' in opc:
-            DEVICE = opc.split('=')[-1]
-            if DEVICE.startswith('"') and DEVICE.endswith('"'):
-                DEVICE = DEVICE[1:-1]
-            elif DEVICE.startswith("'") and DEVICE.endswith("'"):
-                DEVICE = DEVICE[1:-1]
+        if '-dev=' in opc:
+            ZNAME = opc.split('=')[-1]
+            if ZNAME.startswith('"') and ZNAME.endswith('"'):
+                ZNAME = ZNAME[1:-1]
+            elif ZNAME.startswith("'") and ZNAME.endswith("'"):
+                ZNAME = ZNAME[1:-1]
 
         elif opc == '-v':
             verbose = True
@@ -425,7 +589,7 @@ if __name__ == "__main__":
             print(__doc__)
             sys.exit()
 
-    init()
+    prepare_zname()
 
     if not conectar_con_broker_mqtt():
         print(False)
