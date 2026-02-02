@@ -71,7 +71,7 @@ scripts:
         responses:      "on, off"
 
 zigbees:
-    # Etiqueta botón        friendly name de un device o de un grupo en zigbee2mqtt
+    # button label          friendly name of a device or group in zigbee2mqtt
     Billy estudio:          estudio_billy_1
     Luces libreria salon:   salon_libreria
 
