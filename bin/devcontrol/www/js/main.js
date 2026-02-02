@@ -199,16 +199,24 @@ function do_zigbee(event){
         bright = prompt('Brightness (1...100-default):');
     }
 
-    let cmd = `zigbee {"target": "${z_id}", "command": "toggle"}`
-    if (bright){
-        cmd = `zigbee {"target": "${z_id}", "command": "on ${bright}"}`
+    let cmd = ''
+    if (STATUS.zigbees[z_id] == 'off'){
+        console.log('-off-');
+        cmd = `zigbee {"target": "${z_id}", "command": "on"}`
+        if (bright){
+            cmd = `zigbee {"target": "${z_id}", "command": "on ${bright}"}`
+        }
+    }else if (STATUS.zigbees[z_id] == 'on'){
+        console.log('-on-');
+        cmd = `zigbee {"target": "${z_id}", "command": "off"}`
     }
 
-    const response = mc.send_cmd( cmd );
-    console.log('response was: ' + response);
-
-    // Button to gray until refresh
-    btn.style.borderColor = 'darkgray';
+    if (cmd){
+        const response = mc.send_cmd( cmd );
+        console.log('response was: ' + response);
+        // Button to gray until refresh
+        btn.style.borderColor = 'darkgray';
+    }
 }
 
 
