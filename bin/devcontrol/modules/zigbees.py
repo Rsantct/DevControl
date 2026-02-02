@@ -10,47 +10,84 @@
 import os
 import sys
 UHOME = os.path.expanduser('~')
-sys.path.append(f'{UHOME}/bin')
+sys.path.append(f'{UHOME}/bin/zigbee_mod')
 sys.path.append(f'{UHOME}/bin/devcontrol/modules')
 
-import subprocess as sp
 import json
 import miscel as mc
 from   fmt import Fmt
+import zigbee as z
 
-import zigbee_control as zc
+
+ZTCOLORMIN = 250
+ZTCOLORMAX = 454
 
 
-def es_grupo(zid):
+def clamp(n, minn=0, maxn=100):
+    return max(minn, min(n, maxn))
 
-    for grupo in zc.GRUPOS:
+
+def is_group(zid):
+    for grupo in z.GRUPOS:
         if zid == grupo.get('friendly_name'):
             return True
-
     return False
 
 
-def init_zc(device, verbose=False):
-    zc.verbose  = verbose
-    zc.ZNAME = device
-    zc.prepare_zname()
-    return zc.conectar_con_broker_mqtt()
+def do_command_device(device, command='state', brightness=100):
+    """ toggle not used from the web interface
+    """
 
+    result = ''
 
-def do_toggle(device):
+    if 'sta' in command:
+        result = z.consultar_status_device(device).get('state', 'unknown')
 
-    result = 'none'
+    elif command == 'on':
+        pyl = {'brightness': brightness}
+        z.enviar_mensaje(device, pyl)
+        result = 'on'
 
-    curr_status = zc.consultar_estado()
-    curr_state = curr_status.get('state')
+    elif command == 'off':
+        pyl = {'state': 'off'}
+        z.enviar_mensaje(device, pyl)
+        result = 'off'
 
-    if curr_state == 'on':
-        if zc.set_luz('off'):
+    elif command == 'toggle':
+
+        curr = z.consultar_status_device(device).get('state')
+
+        if curr == 'on':
+            pyl = {'state': 'off'}
+            z.enviar_mensaje(device, pyl)
             result = 'off'
 
-    elif curr_state == 'off':
-        if zc.set_luz('on'):
+        elif curr == 'off':
+            pyl = {'brightness': brightness}
+            z.enviar_mensaje(device, pyl)
             result = 'on'
+
+    return result
+
+
+def do_command_group(group, command='state', brightness=100):
+    """ toggle not here, it falls under the web interface
+    """
+
+    result = ''
+
+    if 'sta' in command:
+        result = z.consultar_estado_grupo(group)
+
+    elif command == 'on':
+        pyl = {'brightness': brightness}
+        z.enviar_mensaje(group, pyl)
+        result = 'on'
+
+    elif command == 'off':
+        pyl = {'state': 'off'}
+        z.enviar_mensaje(group, pyl)
+        result = 'off'
 
     return result
 
@@ -58,13 +95,11 @@ def do_toggle(device):
 def manage_zigbee(args):
     """
         {'target': element_name, 'command': a command phrase }
+
+        element_name as per entries under config["zigbees"]
+
+        result: an string (on, off, ... etc)
     """
-
-    #### set verbose to True to DEBUG here
-    verbose = False
-    ####
-
-    result = ''
 
     if 'target' not in args:
         return result
@@ -74,51 +109,40 @@ def manage_zigbee(args):
     elem_name = args['target']
     zname     = config.get('zigbees', {}).get(elem_name, '')
     tmp       = args.get('command', '').split(' ')
-    command   = tmp[0]
+    command   = tmp[0] if tmp[0] else 'state'
     args      = tmp[1:]
 
-    if not init_zc(zname, verbose=verbose):
-        print(f'(manage_zigbee) ERROR with {zname}')
-        return f'error with zigbee_id: {zname}'
+    if not zname:
+        return 'target not found'
 
-    if zc.verbose:
-        print('---- DEBUG manage_zigbee()')
+    try:
+        brightness = clamp(int(args[0]))
+    except:
+        brightness = 100
+
+    # brightness mut be in 0...254
+    try:
+        brightness = int(brightness / 100 * 254)
+    except:
+        brightness = 254
+
+    # color_temp must be in ZTCOLORMIN...ZTCOLORMAX
+    try:
+        color_temp = int(color_temp / 100 * (ZTCOLORMAX - ZTCOLORMIN) + ZTCOLORMIN)
+    except Exception as e:
+        color_temp = int((ZTCOLORMIN + ZTCOLORMAX) / 2)
 
 
-    if command == 'toggle':
 
-        result = do_toggle(zname)
+    # Group
+    if is_group(zname):
+        result = do_command_group(zname, command, brightness)
 
-    elif command == 'on':
-
-        try:
-            brillo = int(args[0])
-        except:
-            brillo = None
-
-        if zc.set_luz('on', brillo):
-            result = 'on'
-
-    elif command == 'off':
-
-        if zc.set_luz('off'):
-            result = 'off'
-
-    elif 'sta' in command:
-
-        if es_grupo(zname):
-            result = zc.consultar_estado_grupo(zname)
-
-        else:
-            status = zc.consultar_estado()
-            result = status.get('state', 'unknown')
-
-    zc.desconectar_del_broker_mqtt()
-
-    if zc.verbose:
-        print('----')
+    # Individual device
+    else:
+        result = do_command_device(zname, command, brightness)
 
     return result
 
 
-zc.update_devices()
+z.actualizar_devices_y_grupos()
