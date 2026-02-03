@@ -1,4 +1,4 @@
-# A very simple Home Automation app
+# A very simple, but easy to use, home automation app
 
 If you have a 24x7 Raspberry Pi kind of Linux based micro PC running at home, you may want to use it as a Home Automation server.
 
