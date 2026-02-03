@@ -33,6 +33,8 @@ from    datetime import datetime
 import  zigbee as z
 from    fmt import Fmt
 
+ZTCOLORMIN = 250
+ZTCOLORMAX = 454
 
 def get_timestamp():
     now = datetime.now()
@@ -59,7 +61,7 @@ def set_luz(modo, brillo=100, on_time=None, blink_veces=1, color_temp=80):
 
     def do_blink():
         for _ in range(blink_veces):
-            publicar( 'set', {'effect': 'blink'} )
+            z.enviar_mensaje(ZNAME, {'effect': 'blink'} )
             time.sleep(3)
 
     modo = modo.lower()
@@ -98,7 +100,7 @@ def set_luz(modo, brillo=100, on_time=None, blink_veces=1, color_temp=80):
     else:
         return False
 
-    return publicar( 'set', pyl )
+    return z.enviar_mensaje(ZNAME, pyl )
 
 
 def do_command_line():
@@ -117,7 +119,7 @@ def do_command_line():
             continue
 
         if opc.startswith('stat') or opc == 'estado':
-            return z.consultar_status_device()
+            return z.consultar_status_device(ZNAME, timeout=5)
 
         if 'power' in opc:
             modo = opc.split('=')[-1]
@@ -198,7 +200,7 @@ def set_power_on_behavior(modo):
         print('modo debe ser: on | off')
         return False
 
-    if publicar( 'set', {"power_on_behavior": modo} ):
+    if z.enviar_mensaje( ZNAME, {"power_on_behavior": modo} ):
         return True
     else:
         return False
@@ -207,7 +209,7 @@ def set_power_on_behavior(modo):
 if __name__ == "__main__":
 
     # Lee desde command line <ZNAME> y <verbose>,
-    # el resto de opciones se analizan en main()
+    # el resto de opciones se analizan en do_command_line()
     for opc in sys.argv[1:]:
 
         if '-dev=' in opc:
