@@ -341,32 +341,3 @@ def actualizar_devices_y_grupos():
     # loop_forever se detendrá al completar DEVICES y GRUPOS en on_message()
     tmp_cli.loop_forever()
     del tmp_cli
-
-
-if __name__ == "__main__":
-
-    # Lee desde command line <ZNAME> y <verbose>,
-    # el resto de opciones se analizan en main()
-    for opc in sys.argv[1:]:
-
-        if '-dev=' in opc:
-            ZNAME = opc.split('=')[-1]
-            if ZNAME.startswith('"') and ZNAME.endswith('"'):
-                ZNAME = ZNAME[1:-1]
-            elif ZNAME.startswith("'") and ZNAME.endswith("'"):
-                ZNAME = ZNAME[1:-1]
-
-        elif opc == '-v':
-            verbose = True
-
-        elif opc == '-h' or opc == '--help':
-            print(__doc__)
-            sys.exit()
-
-    resultado = do_command_line()
-
-    if type(resultado) == str:
-        print( resultado )
-    else:
-        print( json.dumps(resultado) )
-
