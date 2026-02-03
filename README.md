@@ -6,6 +6,7 @@ Features
 - Wake On LAN sender to power on some PCs
 - Smart Plugs controller
 - Scripts launcher
+- Zigbee light bulb control (e.g., IKEA models)
 
 On your 24x7 micro PC you'll need:
 
