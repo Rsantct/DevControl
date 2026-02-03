@@ -99,9 +99,9 @@ def do_command_group(group, command='state', brightness=100):
 
             if  any( [s for s in scenes if s.get('id')==1] ):
 
-                print('ESCENA 1')
                 z.enviar_mensaje(group, {'scene_recall': 1})
                 result = 'on'
+                print(f'{Fmt.BLUE}recall scene 1 for: {group}{Fmt.END}')
 
             else:
                 z.enviar_mensaje(group, {'brightness': brightness})
@@ -111,9 +111,9 @@ def do_command_group(group, command='state', brightness=100):
 
             if  any( [s for s in scenes if s.get('id')==0] ):
 
-                print('ESCENA 0')
                 z.enviar_mensaje(group, {'scene_recall': 0})
                 result = 'off'
+                print(f'{Fmt.BLUE}recall scene 0 for: {group}{Fmt.END}')
 
             elif command == 'off':
                 z.enviar_mensaje(group, {'state': 'off'})
