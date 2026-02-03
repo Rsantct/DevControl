@@ -115,11 +115,11 @@ function do_plug_toggle(event){
     const ans = mc.send_cmd( 'plug {"target": "' + plug_id + '", "command": "toggle"}' );
 
 
-    // Highlights the button for a second
+    // Highlights the button for a while
     btn.className = 'ctrl_button_highlighted';
     setTimeout(function(){
             btn.className = 'ctrl_button';
-        }, 1000);
+        }, 4000);
 
     // Button to gray until refresh
     btn.style.borderColor = 'darkgray';
@@ -196,7 +196,7 @@ function do_zigbee(event){
     let bright = null;
 
     if ( STATUS.zigbees[z_id] == 'off' ){
-        bright = prompt('Brightness (1...100)\nDefault is <100> or the one defined in the <SCENE 1>:');
+        bright = prompt('Brightness (1...10)\nDefault is <10> or the one defined in the <SCENE 1>:');
     }
 
     let cmd = ''

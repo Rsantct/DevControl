@@ -23,7 +23,7 @@ ZTCOLORMIN = 250
 ZTCOLORMAX = 454
 
 
-def clamp(n, minn=0, maxn=100):
+def clamp(n, minn=0, maxn=10):
     return max(minn, min(n, maxn))
 
 
@@ -146,13 +146,13 @@ def manage_zigbee(args):
         return 'target not found'
 
     try:
-        brightness = clamp(int(args[0]))
+        brightness = clamp( int(args[0]), 1, 10)
     except:
-        brightness = 100
+        brightness = 10
 
     # brightness mut be in 0...254
     try:
-        brightness = int(brightness / 100 * 254)
+        brightness = int(brightness / 10 * 254)
     except:
         brightness = 254
 
