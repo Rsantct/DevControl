@@ -196,7 +196,7 @@ function do_zigbee(event){
     let bright = null;
 
     if ( STATUS.zigbees[z_id] == 'off' ){
-        bright = prompt('Brightness (1...100-default):');
+        bright = prompt('Brightness (1...100)\nDefault is <100> or the one defined in the <SCENE 1>:');
     }
 
     let cmd = ''
