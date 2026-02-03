@@ -49,6 +49,9 @@ def read_config():
         if 'scripts' not in config:
             config["scripts"] = {}
 
+        if 'zigbees' not in config:
+            config["zigbees"] = {}
+
     except Exception as e:
         print(f'(devcontrol) ERROR reading devcontrol.yml: {str(e)}')
 
@@ -175,5 +178,6 @@ def dump_status():
 
     if not tries:
         print(f'{Fmt.BOLD}(miscel.dump_status) ERROR{Fmt.END}')
+
 
 init()

@@ -196,24 +196,32 @@ function do_zigbee(event){
     let bright = null;
 
     if ( STATUS.zigbees[z_id] == 'off' ){
-        bright = prompt('Brightness (1...100-default):');
+        bright = prompt('Brightness (1...100)\nDefault is <100> or the one defined in the <SCENE 1>:');
     }
 
-    let cmd = `zigbee {"target": "${z_id}", "command": "toggle"}`
-    if (bright){
-        cmd = `zigbee {"target": "${z_id}", "command": "on ${bright}"}`
+    let cmd = ''
+    if (STATUS.zigbees[z_id] == 'off'){
+        console.log('-off-');
+        cmd = `zigbee {"target": "${z_id}", "command": "on"}`
+        if (bright){
+            cmd = `zigbee {"target": "${z_id}", "command": "on ${bright}"}`
+        }
+    }else if (STATUS.zigbees[z_id] == 'on'){
+        console.log('-on-');
+        cmd = `zigbee {"target": "${z_id}", "command": "off"}`
     }
 
-    const response = mc.send_cmd( cmd );
-    console.log('response was: ' + response);
-
-    // Button to gray until refresh
-    btn.style.borderColor = 'darkgray';
+    if (cmd){
+        const response = mc.send_cmd( cmd );
+        console.log('response was: ' + response);
+        // Button to gray until refresh
+        btn.style.borderColor = 'darkgray';
+    }
 }
 
 
 function fill_in_zigbee_buttons(zigbees) {
-    mc.make_section('div_zigbees', 'Zigbee devives', zigbees, do_zigbee);
+    mc.make_section('div_zigbees', 'Zigbee lights', zigbees, do_zigbee);
 }
 
 

@@ -84,6 +84,8 @@ class Fmt:
     BRIGHTCYAN      = '\033[96m'
     BRIGHTWHITE     = '\033[97m'
 
+    BGYELLOW        = '\033[43m'
+
     BOLD            = '\033[1m'
     UNDERLINE       = '\033[4m'
     BLINK           = '\033[5m'

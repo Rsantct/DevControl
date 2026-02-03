@@ -1,4 +1,4 @@
-# A very simple Home Automation app
+# A very simple, but easy to use, home automation app
 
 If you have a 24x7 Raspberry Pi kind of Linux based micro PC running at home, you may want to use it as a Home Automation server.
 
@@ -6,6 +6,7 @@ Features
 - Wake On LAN sender to power on some PCs
 - Smart Plugs controller
 - Scripts launcher
+- Zigbee light bulb control (e.g., IKEA models)
 
 On your 24x7 micro PC you'll need:
 
