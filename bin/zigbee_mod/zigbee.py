@@ -113,7 +113,7 @@ def consultar_estado_grupo(gname='', timeout_dev=3):
         return ''
 
 
-def consultar_status_device(device='', timeout=3):
+def consultar_status_device(device='', timeout=5):
 
     global ZNAME, estado
 
