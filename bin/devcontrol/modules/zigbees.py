@@ -34,6 +34,18 @@ def is_group(zid):
     return False
 
 
+def get_group_scenes(group):
+
+    scenes = []
+
+    group_found = next((g for g in z.GRUPOS if g['friendly_name'] == group), None)
+
+    if group_found:
+        scenes = group_found.get('scenes', [])
+
+    return scenes
+
+
 def do_command_device(device, command='state', brightness=100):
     """ toggle not used from the web interface
     """
@@ -74,20 +86,38 @@ def do_command_group(group, command='state', brightness=100):
     """ toggle not here, it falls under the web interface
     """
 
+    scenes = get_group_scenes(group)
+
     result = ''
 
     if 'sta' in command:
         result = z.consultar_estado_grupo(group)
 
-    elif command == 'on':
-        pyl = {'brightness': brightness}
-        z.enviar_mensaje(group, pyl)
-        result = 'on'
+    else:
 
-    elif command == 'off':
-        pyl = {'state': 'off'}
-        z.enviar_mensaje(group, pyl)
-        result = 'off'
+        if command == 'on':
+
+            if  any( [s for s in scenes if s.get('id')==1] ):
+
+                print('ESCENA 1')
+                z.enviar_mensaje(group, {'scene_recall': 1})
+                result = 'on'
+
+            else:
+                z.enviar_mensaje(group, {'brightness': brightness})
+                result = 'on'
+
+        elif command == 'off':
+
+            if  any( [s for s in scenes if s.get('id')==0] ):
+
+                print('ESCENA 0')
+                z.enviar_mensaje(group, {'scene_recall': 0})
+                result = 'off'
+
+            elif command == 'off':
+                z.enviar_mensaje(group, {'state': 'off'})
+                result = 'off'
 
     return result
 
