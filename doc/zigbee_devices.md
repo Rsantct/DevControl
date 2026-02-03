@@ -259,3 +259,25 @@ Haciendo 6 encendidos consecutivos a ritmo tranquilo la dejamos encendida en el 
 
     journalctl -u zigbee2mqtt.service -f
 
+# How to ensure switching OFF daily
+
+You can prepare `shome` user cronjob:
+    
+    shome@rpi3clac:~ $ crontab -l
+    # m h  dom mon dow   command
+    
+    00 02 *  *  *  mosquitto_pub -h localhost -t "zigbee2mqtt/estudio_billy_1/set" -m '{"state": "off"}'
+    00 02 *  *  *  mosquitto_pub -h localhost -t "zigbee2mqtt/salon_libreria_izq/set" -m '{"state": "off"}'
+    00 02 *  *  *  mosquitto_pub -h localhost -t "zigbee2mqtt/salon_libreria_der/set" -m '{"state": "off"}'
+
+# How to ensure the light bulbs behavior after a power outage
+
+To determine the behavior of light bulbs when they receive power after a power outage you can use the WEB INTERFACE
+
+You can also use the terminal:
+
+    shome@rpi3clac:~ $ zigbee_control.py -dev='estudio_billy_1' power=off
+    true
+    shome@rpi3clac:~ $ zigbee_control.py -dev='estudio_billy_1' state
+    {"brightness": 25, "level_config": {"current_level_startup": 121}, "linkquality": 200, "power_on_behavior": "off", "state": "off", "update": {"installed_version": 16777220, "latest_version": 16777220, "state": "idle"}}
+
