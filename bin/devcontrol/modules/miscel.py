@@ -11,8 +11,8 @@ import  os
 import  yaml
 import  json
 from    time import  strftime, sleep, time
-from    fmt import Fmt
 
+from    fmt import Fmt
 import  wol
 import  plugs
 import  scripts
@@ -25,9 +25,17 @@ CFGPATH     = f'{_MY_DIR}/../devcontrol.yml'
 STATUSPATH  = f'{_MY_DIR}/../.devcontrol'
 CONFIG      = {}
 
+
 def init():
-    global CONFIG
+    global CONFIG, STATUS
     CONFIG = read_config()
+    STATUS = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {} }
+
+
+def do_log(cmd, res):
+
+    with open(LOGPATH, 'a') as f:
+        f.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd}; {res}\n')
 
 
 def read_config():
@@ -94,32 +102,17 @@ def read_config():
     return config
 
 
-def get_config(jsonarg):
-    """
-        Available jsonarg values:
-
-            { "section":  devices | scripts | zegbees | refresh }
-    """
+def get_config(section):
 
     res = {}
 
-    if 'section' in jsonarg:
-
-        target = jsonarg["section"]
-
-        if target in ['devices', 'scripts', 'zigbees', 'refresh']:
-            res = read_config().get(target, {})
+    if section in ['devices', 'scripts', 'refresh']:
+        res = read_config().get(section, {})
 
     return res
 
 
-def do_log(cmd, res):
-
-    with open(LOGPATH, 'a') as f:
-        f.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd}; {res}\n')
-
-
-def read_status():
+def read_status_from_disk():
 
     st = {}
 
@@ -140,12 +133,37 @@ def read_status():
     return st
 
 
-def dump_status():
+def dump_status_to_disk():
 
-    wol_keys     = CONFIG["devices"]["wol"].keys()
-    plug_keys    = CONFIG["devices"]["plugs"].keys()
-    scripts_keys = CONFIG["scripts"].keys()
-    zigbees_keys = CONFIG["zigbees"].keys()
+    tries = 3
+    while tries:
+
+        try:
+            with open(STATUSPATH, 'w') as f:
+                f.write( json.dumps(STATUS) )
+            break
+        except:
+            tries -= 1
+            sleep(.2)
+
+    if not tries:
+        print(f'{Fmt.RED}(miscel.dump_status_to_disk) ERROR{Fmt.END}')
+        return False
+
+    else:
+        return True
+
+
+def refresh_all_status():
+    """ This takes a while
+    """
+
+    global STATUS
+
+    wol_keys     = CONFIG.get("devices", {}).get("wol",   {}).keys()
+    plug_keys    = CONFIG.get("devices", {}).get("plugs", {}).keys()
+    zigbees_keys = CONFIG.get("devices", {}).get("zigbees", {}).keys()
+    scripts_keys = CONFIG.get("scripts", {}).keys()
 
     st = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {} }
 
@@ -165,19 +183,7 @@ def dump_status():
         ans = zigbees.manage_zigbee( {"target": z_id, "command": "status"} )
         st["zigbees"][z_id] = ans
 
-    tries = 3
-    while tries:
-
-        try:
-            with open(STATUSPATH, 'w') as f:
-                f.write( json.dumps(st) )
-            break
-        except:
-            tries -= 1
-            sleep(.2)
-
-    if not tries:
-        print(f'{Fmt.BOLD}(miscel.dump_status) ERROR{Fmt.END}')
+    STATUS = st
 
 
 init()
