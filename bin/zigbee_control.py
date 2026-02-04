@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """
-    Gestión de dispositivo Zigbee **EXPERIMETAL**
+    Gestión de dispositivo Zigbee command line
+    (EXPERIMETAL)
 
-    Uso:    control_zigbee.py  [-v] -dev=ZIGBEE_DEV  ...comando...
+    Uso:
+        control_zigbee.py  get_devices
+
+        control_zigbee.py  [-v] -dev=ZIGBEE_DEV  ...comando...
 
         -v                  respuesta verbose
+
 
         estado
         demo
@@ -221,6 +226,14 @@ if __name__ == "__main__":
 
         elif opc == '-v':
             verbose = True
+
+        elif 'get_devices' in opc:
+            z.actualizar_devices_y_grupos()
+            devices = z.DEVICES
+            devices = [d.get('friendly_name', '') for d in devices]
+            devices.remove('Coordinator')
+            print(devices)
+            sys.exit()
 
         elif opc == '-h' or opc == '--help':
             print(__doc__)
