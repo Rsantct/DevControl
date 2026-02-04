@@ -28,13 +28,14 @@ devices:
 
     # PCs to sent wake on lan magic packets
     wol:
-        # id:        mac
-        Media PC:    90:2b:34:5c:12:34
-        Audio PC:    90:2b:34:5c:56:78
+        # button label   mac address
+        Media PC:        90:2b:34:5c:12:34
+        Audio PC:        90:2b:34:5c:56:78
 
     # Smart plugs to switch on/off
     plugs:
 
+        # button label
         Amplifíer:
 
             protocol:           shelly
@@ -53,11 +54,18 @@ devices:
             protocol:           shelly
             ip:                 192.168.1.199
 
+    zigbees:
+        # button label          friendly name of a device or group in zigbee2mqtt
+        Billy estudio:          estudio_billy_1
+        Luces libreria salon:   salon_libreria
+
+
 # Scripts
 #           All values MUST have surrounding quotes.
 #           `status_cmd` and `responses` sections are optional.
 scripts:
 
+    # button label
     Dyn BM6 - amp toggle:
 
         button_cmd:     "echo 'amp_switch toggle' | nc -N localhost 9991"
@@ -69,9 +77,3 @@ scripts:
         button_cmd:     "echo 'amp_switch toggle' | nc -N atinker.local 9991"
         status_cmd:     "echo 'amp_switch state'  | nc -N atinker.local 9991"
         responses:      "on, off"
-
-zigbees:
-    # button label          friendly name of a device or group in zigbee2mqtt
-    Billy estudio:          estudio_billy_1
-    Luces libreria salon:   salon_libreria
-
