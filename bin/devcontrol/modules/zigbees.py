@@ -137,7 +137,7 @@ def manage_zigbee(args):
     config = mc.read_config()
 
     elem_name = args['target']
-    zname     = config.get('zigbees', {}).get(elem_name, '')
+    zname     = config.get('devices', {}).get('zigbees', {}).get(elem_name, '')
     tmp       = args.get('command', '').split(' ')
     command   = tmp[0] if tmp[0] else 'state'
     args      = tmp[1:]
