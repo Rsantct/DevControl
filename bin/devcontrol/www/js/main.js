@@ -227,7 +227,7 @@ function fill_in_zigbee_buttons(zigbees) {
 
 function zigbees_refresh(){
 
-    for (const z_id in zigbees) {
+    for (const z_id in devices.zigbees) {
 
         const btn = document.getElementById('bt_' + z_id);
 
@@ -260,12 +260,11 @@ if ( mc.try_connection() ) {
 
     var devices = mc.send_cmd( 'get_config {"section": "devices"}' );
     var scripts = mc.send_cmd( 'get_config {"section": "scripts"}' );
-    var zigbees = mc.send_cmd( 'get_config {"section": "zigbees"}' );
 
     fill_in_wol_buttons(devices.wol);
     fill_in_plug_buttons(devices.plugs);
+    fill_in_zigbee_buttons(devices.zigbees);
     fill_in_scripts_buttons(scripts);
-    fill_in_zigbee_buttons(zigbees);
 
     // PAGE REFRESH
 

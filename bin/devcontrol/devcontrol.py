@@ -22,8 +22,8 @@ sys.path.append(f'{UHOME}/bin')
 sys.path.append(f'{UHOME}/bin/devcontrol/modules')
 
 import  json
-import  threading
 from    time import sleep, time
+import  threading
 
 from    modules import wol
 from    modules import plugs
@@ -35,10 +35,11 @@ from    modules.fmt import Fmt
 
 def init():
 
-    def loop_dump_status():
+    def loop_refresh_and_dump_all_status():
         pause = mc.CONFIG["refresh"]["backend_update_interval"]
         while True:
-            mc.dump_status()
+            mc.refresh_all_status()
+            mc.dump_status_to_disk()
             sleep(pause)
 
     if os.path.exists(mc.LOGPATH) and os.path.getsize(mc.LOGPATH) > 10e6:
@@ -49,16 +50,35 @@ def init():
     plugs.shelly.set_configured_schedules()
 
     # Loop status auto-update
-    j1 = threading.Thread( target=loop_dump_status )
+    j1 = threading.Thread( target=loop_refresh_and_dump_all_status )
     j1.start()
 
 
 # Interface function to plug this on server.py
 def do( cmd_phrase ):
     """
-        It is expected to receive a command folowed by a json arguments block
+        It is expected to receive a prefix name folowed by a json arguments block,
+        example:
 
-            command {'target': xxxx, ... }
+            plugs {'target': xxxx, 'command': command }
+
+            prefix:             command:
+            -------             ---------
+
+            plug
+                    shelly      on off toggle status
+
+            script              run/send   status
+
+            wol                 send ping
+
+            zigbee              on off toggle status
+
+        OR
+            get_config          { 'section': section_name }
+
+        OR
+            hello
     """
 
     result = 'NACK'
@@ -68,9 +88,9 @@ def do( cmd_phrase ):
 
     try:
 
-        cmd  = cmd_phrase.strip().split()[0]
+        prefix  = cmd_phrase.strip().split()[0]
 
-        tail = cmd_phrase[ len(cmd): ].strip()
+        tail    = cmd_phrase.strip()[ len(prefix): ].strip()
 
         if tail:
             args = json.loads( tail )
@@ -82,29 +102,44 @@ def do( cmd_phrase ):
         return 'Error'
 
 
-    if 'section' in args and cmd == 'get_config':
-        result = mc.get_config(args)
+    if prefix == 'get_config' and 'section' in args:
+        result = mc.get_config( args["section"] )
 
-    elif cmd == 'get_status':
-        result = mc.read_status()
+    elif prefix == 'get_status':
+        result = mc.STATUS
 
-    elif 'target' in args:
+    elif 'target' in args.keys():
 
-        if   cmd == 'wol':
+        if   prefix == 'wol':
             result = wol.manage_wol(args)
 
-        elif cmd == 'plug':
+        elif prefix == 'plug':
             result = plugs.manage_plug(args)
 
-        elif cmd == 'script':
+        elif prefix == 'script':
             result = scripts.manage_script(args)
 
-        elif cmd == 'zigbee':
+        elif prefix == 'zigbee':
             result = zigbees.manage_zigbee(args)
 
+        # Save the status:
+        if 'command' in args.keys() and \
+            not ('sta' in args["command"] or 'sched' in args["command"]):
 
-    # Select what to log
-    if cmd == 'get_config':
+            section = {
+                'wol':      'wol',
+                'plug':     'plugs',
+                'script':   'scripts',
+                'zigbee':   'zigbees'
+            }.get(prefix)
+
+            mc.STATUS[section][args['target']] = result
+
+            if mc.dump_status_to_disk():
+                print(f'{Fmt.BLUE}(devcontrol) dumping status to disk{Fmt.END}')
+
+    # Select when to log
+    if prefix == 'get_config':
         pass
     elif 'command' in args and args["command"] in ('state', 'status', 'ping'):
         pass
