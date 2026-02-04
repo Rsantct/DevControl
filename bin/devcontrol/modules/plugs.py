@@ -12,6 +12,7 @@ import sys
 UHOME = os.path.expanduser('~')
 sys.path.append(f'{UHOME}/bin')
 sys.path.append(f'{UHOME}/bin/devcontrol/modules')
+sys.path.append(f'{UHOME}/bin/devcontrol/modules/plugs_mod')
 
 import miscel as mc
 import shelly
