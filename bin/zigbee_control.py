@@ -30,7 +30,8 @@
 """
 import  sys
 import  os
-sys.path.append(f'{os.path.expanduser("~")}/bin/zigbee_mod')
+sys.path.append(f'{os.path.expanduser("~")}/bin/devcontrol/modules')
+sys.path.append(f'{os.path.expanduser("~")}/bin/devcontrol/modules/devices_mod')
 
 import  json
 import  time
