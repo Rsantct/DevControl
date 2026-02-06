@@ -11,168 +11,143 @@ import os
 import sys
 UHOME = os.path.expanduser('~')
 sys.path.append(f'{UHOME}/bin/zigbee_mod')
-sys.path.append(f'{UHOME}/bin/devcontrol/modules')
+sys.path.append(f'{UHOME}/bin/devcontrol/modules/devices_mod')
 
 import json
-import miscel as mc
-from   fmt import Fmt
-import zigbee as z
+from   fmt      import Fmt
+import miscel   as mc
+import zigbee   as z
 
 
-ZTCOLORMIN = 250
-ZTCOLORMAX = 454
+BRIGHTNESSMAX = 254
+ZTCOLORMIN    = 250
+ZTCOLORMAX    = 454
 
 
 def clamp(n, minn=0, maxn=10):
     return max(minn, min(n, maxn))
 
 
-def is_group(zid):
-    for grupo in z.GRUPOS:
-        if zid == grupo.get('friendly_name'):
-            return True
-    return False
+def get_scene_on_off(zlabel):
+
+    scenes      = mc.CONFIG.get('devices', {}).get('zigbees', {})[zlabel].get("scenes", [])
+    scenes_off = [s for s in scenes if s.get('name')=='off']
+    scenes_on  = [s for s in scenes if s.get('name')=='on' ]
+
+    # We use the 1st one if any
+    if scenes_off:
+        scene_off = scenes_off[0]
+    else:
+        scene_off = {}
+
+    if scenes_on:
+        scene_on = scenes_on[0]
+    else:
+        scene_on = {}
+
+    return scene_on, scene_off
 
 
-def get_group_scenes(group):
-
-    scenes = []
-
-    group_found = next((g for g in z.GRUPOS if g['friendly_name'] == group), None)
-
-    if group_found:
-        scenes = group_found.get('scenes', [])
-
-    return scenes
-
-
-def do_command_device(device, command='state', brightness=100):
-    """ toggle not used from the web interface
-    """
-
-    result = ''
-
-    if 'sta' in command:
-        result = z.consultar_status_device(device).get('state', 'unknown')
-
-    elif command == 'on':
-        pyl = {'brightness': brightness}
-        z.enviar_mensaje(device, pyl)
-        result = 'on'
-
-    elif command == 'off':
-        pyl = {'state': 'off'}
-        z.enviar_mensaje(device, pyl)
-        result = 'off'
-
-    elif command == 'toggle':
-
-        curr = z.consultar_status_device(device).get('state')
-
-        if curr == 'on':
-            pyl = {'state': 'off'}
-            z.enviar_mensaje(device, pyl)
-            result = 'off'
-
-        elif curr == 'off':
-            pyl = {'brightness': brightness}
-            z.enviar_mensaje(device, pyl)
-            result = 'on'
-
-    return result
-
-
-def do_command_group(group, command='state', brightness=100):
+def do_command(zlabel, zname, command='state', brightness=0):
     """ toggle not here, it falls under the web interface
     """
-
-    scenes = get_group_scenes(group)
-
     result = ''
 
+    # status
     if 'sta' in command:
-        result = z.consultar_estado_grupo(group)
 
+        if z.is_group(zname):
+            result = z.consultar_estado_grupo(zname)
+        else:
+            result = z.consultar_status_device(zname).get('state', 'unknown')
+
+    # on / off
     else:
+
+        scene_on, scene_off = get_scene_on_off(zlabel)
 
         if command == 'on':
 
-            if  any( [s for s in scenes if s.get('id')==1] ):
-
-                z.enviar_mensaje(group, {'scene_recall': 1})
-                result = 'on'
-                print(f'{Fmt.BLUE}recall scene 1 for: {group}{Fmt.END}')
+            if brightness:
+                z.enviar_mensaje(zname, {'brightness': brightness})
+                print(f'{Fmt.BLUE}{zname}: brightness {brightness}/{BRIGHTNESSMAX}{Fmt.END}')
 
             else:
-                z.enviar_mensaje(group, {'brightness': brightness})
-                result = 'on'
+
+                if  scene_on:
+                    z.enviar_mensaje(zname, {'scene_recall': scene_on['id']})
+                    print(f'{Fmt.BLUE}{zname}: recall scene <on>{Fmt.END}')
+
+                else:
+                    z.enviar_mensaje(zname, {'brightness': int(BRIGHTNESSMAX / 2)})
+                    print(f'{Fmt.BLUE}{zname}: brightness medium because no specied and scene <on> not found{Fmt.END}')
+
+            result = 'on'
 
         elif command == 'off':
 
-            if  any( [s for s in scenes if s.get('id')==0] ):
+            if scene_off:
 
-                z.enviar_mensaje(group, {'scene_recall': 0})
-                result = 'off'
-                print(f'{Fmt.BLUE}recall scene 0 for: {group}{Fmt.END}')
+                z.enviar_mensaje(zname, {'scene_recall': scene_off['id']})
+                print(f'{Fmt.BLUE}{zname}: recall scene <off>{Fmt.END}')
 
             elif command == 'off':
-                z.enviar_mensaje(group, {'state': 'off'})
-                result = 'off'
+                z.enviar_mensaje(zname, {'state': 'off'})
+
+            result = 'off'
 
     return result
 
 
 def manage_zigbee(args):
     """
-        {'target': element_name, 'command': a command phrase }
+        {'target': zlabel, 'command': a command phrase }
 
-        element_name as per entries under config["zigbees"]
+        zlabel must match a label entrie under config/devives/zigbees
 
-        result: an string (on, off, ... etc)
+        result: an string (on, off, '', ... or whatever descriptor)
     """
+
+    result = ''
 
     if 'target' not in args:
         return result
 
-    config = mc.read_config()
+    zlabel    = args['target']
 
-    elem_name = args['target']
-    zname     = config.get('devices', {}).get('zigbees', {}).get(elem_name, '')
+    # zname is the actual name under zigbee2mqtt
+    tmp       = mc.CONFIG.get('devices', {}).get('zigbees', {}).get(zlabel, {})
+    zname     = tmp.get('friendly_name')
+    if not zname:
+        return 'target not found in Zigbee2MQTT'
+
     tmp       = args.get('command', '').split(' ')
     command   = tmp[0] if tmp[0] else 'state'
     args      = tmp[1:]
 
-    if not zname:
-        return 'target not found'
+    if args:
+        # Currently only brigthness as arg values
+        brightness = args[0]
+        # brightness must come in 1...10
+        try:
+            brightness = clamp( int(args[0]), 1, 10)
+        except:
+            brightness = 0
 
-    try:
-        brightness = clamp( int(args[0]), 1, 10)
-    except:
-        brightness = 10
-
-    # brightness mut be in 0...254
+    # zigbee2mqtt brightness must be in 0...254
     try:
         brightness = int(brightness / 10 * 254)
     except:
-        brightness = 254
+        brightness = 0
 
-    # color_temp must be in ZTCOLORMIN...ZTCOLORMAX
+    # STILL NOT IN USE
+    # color_temp comes in (1...10) and must be in ZTCOLORMIN...ZTCOLORMAX
     try:
-        color_temp = int(color_temp / 100 * (ZTCOLORMAX - ZTCOLORMIN) + ZTCOLORMIN)
+        color_temp = int(color_temp / 10 * (ZTCOLORMAX - ZTCOLORMIN) + ZTCOLORMIN)
     except Exception as e:
         color_temp = int((ZTCOLORMIN + ZTCOLORMAX) / 2)
 
-
-
-    # Group
-    if is_group(zname):
-        result = do_command_group(zname, command, brightness)
-
-    # Individual device
-    else:
-        result = do_command_device(zname, command, brightness)
+    # Do process
+    result = do_command(zlabel, zname, command, brightness)
 
     return result
-
-
-z.actualizar_devices_y_grupos()

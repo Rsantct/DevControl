@@ -196,7 +196,7 @@ function do_zigbee(event){
     let bright = null;
 
     if ( STATUS.zigbees[z_id] == 'off' ){
-        bright = prompt('Brightness (1...10)\nDefault is <10> or the one defined in the <SCENE 1>:');
+        bright = prompt('Brightness (1...10)\nDefault is the one defined in the SCENE \'on\'\nor 5 if not defined.');
     }
 
     let cmd = ''
@@ -267,9 +267,8 @@ if ( mc.try_connection() ) {
     fill_in_scripts_buttons(scripts);
 
     // PAGE REFRESH
-
     const tmp = mc.send_cmd( 'get_config {"section": "refresh"}' );
-    REFRESH_INTERVAL = tmp.web_polling_interval;
+    REFRESH_INTERVAL = tmp.polling_interval;
     do_refresh();
     setInterval( do_refresh, REFRESH_INTERVAL * 1000);
 }

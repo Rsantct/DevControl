@@ -12,10 +12,11 @@ import sys
 UHOME = os.path.expanduser('~')
 sys.path.append(f'{UHOME}/bin')
 sys.path.append(f'{UHOME}/bin/devcontrol/modules')
-sys.path.append(f'{UHOME}/bin/devcontrol/modules/plugs_mod')
+sys.path.append(f'{UHOME}/bin/devcontrol/modules/devices_mod')
+
+import shelly
 
 import miscel as mc
-import shelly
 
 
 def manage_plug(args):
@@ -24,7 +25,7 @@ def manage_plug(args):
 
     plug_id = args["target"]
 
-    plugs = mc.read_config()["devices"]["plugs"]
+    plugs = mc.CONFIG["devices"]["plugs"]
 
 
     if plug_id not in plugs:
@@ -41,3 +42,4 @@ def manage_plug(args):
         result = 'unknown plug protocol'
 
     return result
+

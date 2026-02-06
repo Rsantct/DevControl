@@ -8,8 +8,14 @@ from    fmt import Fmt
 MQTT_HOST = "localhost"
 MQTT_PORT = 1883
 
+#   QoS:
+#   0 (At most once):   El mensaje se envía una vez y no se confirma.
+#                       Es el más rápido y ligero suele usarse en redes locales estables.
+#   1 (At least once):  Asegura que el mensaje llegue, aunque pueda repetirse.
+#   2 (Exactly once):   Garantiza que llegue exactamente una vez (más lento,
+#                       requiere más "papeleo" entre cliente y broker).
 QoS_TOPIC_BASE  = 0
-QoS_TOPIC_SET   = 1
+QoS_TOPIC_SET   = 2
 QoS_TOPIC_GET   = 0
 QoS_TOPIC_INFO  = 0
 
@@ -22,7 +28,7 @@ TOPIC_DEVICES = "zigbee2mqtt/bridge/devices"
 DEVICES       = {}
 # Grupos
 TOPIC_GROUPS  = "zigbee2mqtt/bridge/groups"
-GRUPOS        = {}
+GROUPS        = {}
 
 client          = mqtt.Client()
 ZNAME           = ''
@@ -30,8 +36,19 @@ verbose         = False
 estado          = {}
 
 
+def _init():
+    actualizar_devices_y_grupos()
+
+
 def clamp(n, minn=0, maxn=100):
     return max(minn, min(n, maxn))
+
+
+def is_group(zid):
+    for grupo in GROUPS:
+        if zid == grupo.get('friendly_name'):
+            return True
+    return False
 
 
 def prepare_topics(zname=''):
@@ -56,7 +73,7 @@ def get_miembros_de_grupo(gname=''):
 
     miembros = []
 
-    for grupo in GRUPOS:
+    for grupo in GROUPS:
         if grupo.get('friendly_name', '') == gname:
             for m in grupo.get('members', []):
                 miembros.append( {'ieee_address': m.get('ieee_address', '')} )
@@ -189,12 +206,6 @@ def on_connect(client, userdata, flags, rc):
         # Nos suscribimos para en adelante recibir respuestas '/get'
         # [( "TOPIC_1", QoS ), ( "TOPIC_2", QoS ), ....]
         #
-        #   QoS:
-        #   0 (At most once):   El mensaje se envía una vez y no se confirma.
-        #                       Es el más rápido y ligero suele usarse en redes locales estables.
-        #   1 (At least once):  Asegura que el mensaje llegue, aunque pueda repetirse.
-        #   2 (Exactly once):   Garantiza que llegue exactamente una vez (más lento,
-        #                       requiere más "papeleo" entre cliente y broker).
         client.subscribe( [ (TOPIC_BASE,  QoS_TOPIC_BASE),
                             (TOPIC_INFO,  QoS_TOPIC_INFO)
                           ]
@@ -311,7 +322,7 @@ def actualizar_devices_y_grupos():
 
     def on_message(client, userdata, msg):
 
-        global GRUPOS
+        global GROUPS
         global DEVICES
 
         if msg.topic == TOPIC_DEVICES:
@@ -322,13 +333,13 @@ def actualizar_devices_y_grupos():
                 print('--- ')
 
         elif msg.topic == TOPIC_GROUPS:
-            GRUPOS = json.loads(msg.payload.decode())
+            GROUPS = json.loads(msg.payload.decode())
             if verbose:
-                print(f'--- Recibidos GRUPOS:')
-                print( json.dumps(GRUPOS, indent=2) )
+                print(f'--- Recibidos GROUPS:')
+                print( json.dumps(GROUPS, indent=2) )
                 print('--- ')
 
-        if DEVICES and GRUPOS:
+        if DEVICES and GROUPS:
             tmp_cli.disconnect()
 
 
@@ -338,6 +349,9 @@ def actualizar_devices_y_grupos():
 
     tmp_cli.connect(MQTT_HOST, MQTT_PORT, 60)
 
-    # loop_forever se detendrá al completar DEVICES y GRUPOS en on_message()
+    # loop_forever se detendrá al completar DEVICES y GROUPS en on_message()
     tmp_cli.loop_forever()
     del tmp_cli
+
+
+_init()
