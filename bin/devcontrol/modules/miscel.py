@@ -10,9 +10,9 @@
 import  os
 import  yaml
 import  json
-from    time import  strftime, sleep, time
+from    time    import  strftime, sleep, time
 
-from    fmt import Fmt
+from    fmt     import Fmt
 import  wol
 import  plugs
 import  scripts
@@ -27,15 +27,78 @@ CONFIG      = {}
 
 
 def init():
+
     global CONFIG, STATUS
+
     CONFIG = read_config()
+
     STATUS = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {} }
 
 
 def do_log(cmd, res):
-
     with open(LOGPATH, 'a') as f:
         f.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd}; {res}\n')
+
+
+def get_section(section):
+    """ This is for web clients. We only allow to get config data
+        for devices, scripts or the refresh.web_polling_interval
+    """
+
+    res = {}
+
+    if section in ['devices', 'scripts']:
+        res = CONFIG.get(section, {})
+
+    elif section == 'refresh':
+        # web frontend resfres intervel
+        res['polling_interval'] = CONFIG.get('refresh').get('web_polling_interval', 3)
+
+    return res
+
+
+def get_zname_scenes(zname):
+    """ get_zname_scenes('salon_libreria')
+        Out[3]: [{'id': 0, 'name': 'off'}, {'id': 1, 'name': 'on'}]
+    """
+
+    def group_scenes(group):
+        return group.get('scenes', [])
+
+
+    def device_scenes(device):
+        """ this is more complex than group scenes
+        """
+        scenes = []
+
+        try:
+            for k, v in device.get('endpoints', {}).items():
+                tmp = v.get('scenes')
+                if tmp:
+                    scenes = tmp
+                    break
+
+        except Exception as e:
+            print(f'{Fmt.RED}(miscel.get_zname_scenes) ERROR: {e}{Fmt.BOLD}')
+
+        return scenes
+
+
+    scenes = []
+
+    return scenes
+
+    if is_group(zname):
+        z_found = next((x for x in zigbees.z.GROUPS  if x['friendly_name'] == zname), None)
+        if z_found:
+            scenes = group_scenes(z_found)
+
+    else:
+        z_found = next((x for x in zigbees.z.DEVICES if x['friendly_name'] == zname), None)
+        if z_found:
+            scenes = device_scenes(z_found)
+
+    return scenes
 
 
 def read_config():
@@ -54,15 +117,22 @@ def read_config():
         if 'plugs' not in config["devices"]:
             config["devices"]["plugs"] = {}
 
+        if 'zigbees' not in config["devices"]:
+            config["devices"]["zigbees"] = {}
+
         if 'scripts' not in config:
             config["scripts"] = {}
 
-        if 'zigbees' not in config:
-            config["zigbees"] = {}
 
     except Exception as e:
         print(f'(devcontrol) ERROR reading devcontrol.yml: {str(e)}')
 
+
+    # Refactor the Zigbees section and append scenes for each item
+    for k, zname in config["devices"]["zigbees"].items():
+        new_content = {'friendly_name': zname}
+        #new_content["scenes"] = get_zname_scenes(zname)
+        config["devices"]["zigbees"][k] = new_content
 
     # Script status responses allow space or comma separated values
     for script, values in config["scripts"].items():
@@ -100,16 +170,6 @@ def read_config():
 
 
     return config
-
-
-def get_config(section):
-
-    res = {}
-
-    if section in ['devices', 'scripts', 'refresh']:
-        res = read_config().get(section, {})
-
-    return res
 
 
 def read_status_from_disk():
