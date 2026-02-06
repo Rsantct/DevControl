@@ -22,15 +22,15 @@ sys.path.append(f'{UHOME}/bin')
 sys.path.append(f'{UHOME}/bin/devcontrol/modules')
 
 import  json
-from    time import sleep, time
+from    time    import sleep, time
 import  threading
 
-from    modules import wol
-from    modules import plugs
-from    modules import scripts
-from    modules import zigbees
-from    modules import miscel as mc
-from    modules.fmt import Fmt
+from    fmt     import Fmt
+import  miscel  as mc
+import  wol
+import  plugs
+import  scripts
+import  zigbees
 
 
 def init():
@@ -103,7 +103,7 @@ def do( cmd_phrase ):
 
 
     if prefix == 'get_config' and 'section' in args:
-        result = mc.get_config( args["section"] )
+        result = mc.get_section( args["section"] )
 
     elif prefix == 'get_status':
         result = mc.STATUS
