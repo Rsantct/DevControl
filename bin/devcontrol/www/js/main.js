@@ -267,9 +267,8 @@ if ( mc.try_connection() ) {
     fill_in_scripts_buttons(scripts);
 
     // PAGE REFRESH
-
     const tmp = mc.send_cmd( 'get_config {"section": "refresh"}' );
-    REFRESH_INTERVAL = tmp.web_polling_interval;
+    REFRESH_INTERVAL = tmp.polling_interval;
     do_refresh();
     setInterval( do_refresh, REFRESH_INTERVAL * 1000);
 }
