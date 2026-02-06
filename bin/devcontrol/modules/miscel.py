@@ -86,9 +86,7 @@ def get_zname_scenes(zname):
 
     scenes = []
 
-    return scenes
-
-    if is_group(zname):
+    if zigbees.z.is_group(zname):
         z_found = next((x for x in zigbees.z.GROUPS  if x['friendly_name'] == zname), None)
         if z_found:
             scenes = group_scenes(z_found)
@@ -131,7 +129,7 @@ def read_config():
     # Refactor the Zigbees section and append scenes for each item
     for k, zname in config["devices"]["zigbees"].items():
         new_content = {'friendly_name': zname}
-        #new_content["scenes"] = get_zname_scenes(zname)
+        new_content["scenes"] = get_zname_scenes(zname)
         config["devices"]["zigbees"][k] = new_content
 
     # Script status responses allow space or comma separated values
