@@ -20,7 +20,7 @@ import  requests
 from    requests.auth   import HTTPDigestAuth
 import  threading
 
-import miscel as mc
+import  miscel as mc
 
 
 def cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
@@ -71,10 +71,6 @@ def cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
         except Exception as e:
             ans = f'request error: {str(e)}'
 
-        # Logging no status commands
-        if 'status' not in http_command.lower():
-            mc.do_log(http_command, ans)
-
         if verbose:
             print()
             print('--- url:')
@@ -87,7 +83,7 @@ def cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
         return ans
 
 
-    COMMS = mc.read_config()["comms"]["shelly"]
+    COMMS = mc.CONFIG["comms"]["shelly"]
 
     u = 'admin'
     p = COMMS["pass"]
@@ -151,7 +147,7 @@ def set_configured_schedules():
         return url_cmd
 
 
-    plugs = mc.read_config()["devices"]["plugs"]
+    plugs = mc.CONFIG["devices"]["plugs"]
 
 
     for plug_id, props in plugs.items():
@@ -279,12 +275,10 @@ def manage_plug(args):
     if type(delay) != int:
         return 'delay (seconds) must be integer'
 
-    config = mc.read_config()
-
-    if plug_id not in config["devices"]["plugs"]:
+    if plug_id not in mc.CONFIG["devices"]["plugs"]:
         return f'\'{plug_id}\' not configured'
 
-    host  = config["devices"]["plugs"][ plug_id ]["ip"]
+    host  = mc.CONFIG["devices"]["plugs"][ plug_id ]["ip"]
 
     if command == 'toggle':
         plug_cmd = 'rpc/Switch.Toggle?id=0'
