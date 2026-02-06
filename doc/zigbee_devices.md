@@ -17,24 +17,27 @@ MQTT server Mosquitto is installed from the regular Debian package.
 
 The rest of the software is kept under a dedicated Linux user, here we use **`/home/shome`**
 
-    shome@rpi3clac:~ $ tree -L 3 /home/shome
+    shome@rpi3clac:~ $ tree /home/shome
     /home/shome
     ├── bin
     │   │
     │   ├── devcontrol
-    │   │   ├── modules
-    │   │   │   └── zigbee.py   (our zigbee web backend for DevControl)
-    │   │   ...
+    │   │   │
+    │   │   ├── devcontrol.py
+    │   │   │
+    │   │   └── modules
+    │   │       ├── zigbees.py       (our zigbee backend for the DevControl web frontend)
+    │   │       │
+    │   │       └── devices_mod/
+    │   │           └── zigbee.py    (our low level zigbee Python module)
     │   │
     │   ├── zigbee_control.py  (for testing purposes)
-    │   │
-    │   └── zigbee_mod/
-    │       └── zigbee.py      (our zigbee Python module)
+    │   ...
     │
-    └── zigbee2mqtt            (The Zigbee2MQTT server software is installed here)
+    └── zigbee2mqtt  (The Zigbee2MQTT server package is installed here)
         │
         ├── data
-        │   └── configuration.yaml
+        │   └── configuration.yaml    (the only file we need to edit)
         ...
 
 
