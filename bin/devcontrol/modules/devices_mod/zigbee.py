@@ -8,8 +8,14 @@ from    fmt import Fmt
 MQTT_HOST = "localhost"
 MQTT_PORT = 1883
 
+#   QoS:
+#   0 (At most once):   El mensaje se envía una vez y no se confirma.
+#                       Es el más rápido y ligero suele usarse en redes locales estables.
+#   1 (At least once):  Asegura que el mensaje llegue, aunque pueda repetirse.
+#   2 (Exactly once):   Garantiza que llegue exactamente una vez (más lento,
+#                       requiere más "papeleo" entre cliente y broker).
 QoS_TOPIC_BASE  = 0
-QoS_TOPIC_SET   = 1
+QoS_TOPIC_SET   = 2
 QoS_TOPIC_GET   = 0
 QoS_TOPIC_INFO  = 0
 
@@ -200,12 +206,6 @@ def on_connect(client, userdata, flags, rc):
         # Nos suscribimos para en adelante recibir respuestas '/get'
         # [( "TOPIC_1", QoS ), ( "TOPIC_2", QoS ), ....]
         #
-        #   QoS:
-        #   0 (At most once):   El mensaje se envía una vez y no se confirma.
-        #                       Es el más rápido y ligero suele usarse en redes locales estables.
-        #   1 (At least once):  Asegura que el mensaje llegue, aunque pueda repetirse.
-        #   2 (Exactly once):   Garantiza que llegue exactamente una vez (más lento,
-        #                       requiere más "papeleo" entre cliente y broker).
         client.subscribe( [ (TOPIC_BASE,  QoS_TOPIC_BASE),
                             (TOPIC_INFO,  QoS_TOPIC_INFO)
                           ]
