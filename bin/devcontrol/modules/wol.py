@@ -16,6 +16,7 @@ sys.path.append(f'{UHOME}/bin/devcontrol/modules')
 import json
 import subprocess as sp
 import platform
+
 import miscel as mc
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -128,17 +129,15 @@ def manage_wol(args):
     if 'target' not in args:
         return 'NACK'
 
-    config = mc.read_config()
-
     if 'target' not in args or 'command' not in args:
         return 'NACK'
 
     wol_id = args["target"]
 
-    if wol_id not in config["devices"]["wol"]:
+    if wol_id not in mc.CONFIG["devices"]["wol"]:
         return f'\'{wol_id}\' not configured'
 
-    mac = config["devices"]["wol"][ wol_id ]
+    mac = mc.CONFIG["devices"]["wol"][ wol_id ]
 
     if args["command"] == 'send':
         result = send_wol(mac)
