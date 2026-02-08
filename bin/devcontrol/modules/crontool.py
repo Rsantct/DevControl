@@ -18,30 +18,38 @@ def write_cron_prettified(cron, simulate=False):
          - Comments are moved from the job line to the line above the job
     """
 
+    result = False
+
     lines = cron.render().splitlines()
 
-    padded_lines = []
-    for line in lines:
+    try:
+        padded_lines = []
+        for line in lines:
 
-        # Pad minute if it is a digit
-        new_line = re.sub(r'^(\d)\s', r'0\1 ', line)
+            # Pad minute if it is a digit
+            new_line = re.sub(r'^(\d)\s', r'0\1 ', line)
 
-        # Pad hour if it is a digit
-        new_line = re.sub(r'^(\S+)\s(\d)\s', r'\1 0\2 ', new_line)
+            # Pad hour if it is a digit
+            new_line = re.sub(r'^(\S+)\s(\d)\s', r'\1 0\2 ', new_line)
 
-        # Move comment
-        if '#' in new_line and not new_line.strip().startswith('#'):
-            i = new_line.index('#')
-            job = new_line[:i].strip()
-            cmt = new_line[i:].strip()
-            padded_lines.append(cmt)
-            padded_lines.append(job)
+            # Move comment
+            if '#' in new_line and not new_line.strip().startswith('#'):
+                i = new_line.index('#')
+                job = new_line[:i].strip()
+                cmt = new_line[i:].strip()
+                padded_lines.append(cmt)
+                padded_lines.append(job)
 
-        else:
-            padded_lines.append(new_line)
+            else:
+                padded_lines.append(new_line)
 
+        final_cron_str = "\n".join(padded_lines) + "\n"
 
-    final_cron_str = "\n".join(padded_lines) + "\n"
+        result = True
+
+    except Exception as e:
+        print(f'(write_cron_prettified) ERROR: {e}')
+
 
     if simulate:
         print('\n---- SIMULATION ----')
@@ -49,9 +57,16 @@ def write_cron_prettified(cron, simulate=False):
         print()
 
     else:
-        process = subprocess.Popen(['crontab', '-'], stdin=subprocess.PIPE)
-        process.communicate(input=final_cron_str.encode())
-        #print("✅ (crontool) Crontab saved (with zero padding minute and hour)")
+        try:
+            process = subprocess.Popen(['crontab', '-'], stdin=subprocess.PIPE)
+            process.communicate(input=final_cron_str.encode())
+            result = True
+            #print("✅ (crontool) Crontab saved (with zero padding minute and hour)")
+
+        except Exception as e:
+            print(f'(write_cron_prettified) ERROR: {e}')
+
+    return result
 
 
 def get_cron():
@@ -84,13 +99,15 @@ def job_exists(patterns=()):
     return False
 
 
-def add_new_job(cron, command, comment=None, schedule="0 0 * * *", simulate=False):
-    """ schedule must in standard format 'min hour day month dow'
+def add_new_job(cron, command, comment=None, schedule="0 0 * * *"):
+    """ Schedule must in standard format 'min hour day month dow'
 
-        returns a dictionary with the modified cron object and result details
+        Returns a dictionary with the modified cron object and result details
+
+        The cron object (took by reference) will result modified in place
     """
     report = ''
-    sucess = False
+    success = False
 
     # schedule string must be cleaned of extra spaces:
     schedule = " ".join(schedule.split())
@@ -111,13 +128,15 @@ def add_new_job(cron, command, comment=None, schedule="0 0 * * *", simulate=Fals
             print(f"❌ (crontool.add_new_job) ERROR: {e}")
             report = f'ERROR: {e}'
 
-    return {'cron': cron, 'success': success, 'report': report}
+    return {'success': success, 'report': report}
 
 
-def modify_jobs( cron, patterns=(), new_command=None, new_schedule=None, simulate=False):
+def modify_jobs( cron, patterns=(), new_command=None, new_schedule=None):
     """ Modify ALL jobs matching by command all the pattern in the given tuple
 
-        returns a dictionary with the modified cron object and result details
+        Returns a dictionary with result details
+
+        The cron object (took by reference) will result modified in place
     """
 
     # schedule string must be cleaned of extra spaces:
@@ -153,7 +172,7 @@ def modify_jobs( cron, patterns=(), new_command=None, new_schedule=None, simulat
             if success:
                 report.append( f"job modified: {job.slices} {job.command}" )
 
-    return { 'cron': cron, 'jobs_found': found, 'success': success, 'report': report}
+    return {'jobs_found': found, 'success': success, 'report': report}
 
 
 def list_all_jobs():
