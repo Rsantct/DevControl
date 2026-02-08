@@ -55,6 +55,7 @@ def init():
     # Loop status auto-update
     j1 = threading.Thread( target=loop_refresh_and_dump_all_status )
     j1.start()
+    print ( f"(devcontrol) threading loop for refreshing the status in background ...'" )
 
 
 # Interface function to plug this on server.py
