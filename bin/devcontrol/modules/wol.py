@@ -17,7 +17,7 @@ import json
 import subprocess as sp
 import platform
 
-import miscel as mc
+import common as cm
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 MYARP_PATH = f'{THIS_DIR}/.wol.table'
@@ -134,10 +134,10 @@ def manage_wol(args):
 
     wol_id = args["target"]
 
-    if wol_id not in mc.CONFIG["devices"]["wol"]:
+    if wol_id not in cm.CONFIG["devices"]["wol"]:
         return f'\'{wol_id}\' not configured'
 
-    mac = mc.CONFIG["devices"]["wol"][ wol_id ]
+    mac = cm.CONFIG["devices"]["wol"][ wol_id ]
 
     if args["command"] == 'send':
         result = send_wol(mac)
