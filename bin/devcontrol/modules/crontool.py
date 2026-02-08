@@ -75,7 +75,7 @@ def get_cron():
     return CronTab(user=True)
 
 
-def job_exists(patterns=()):
+def job_exists(cron=None, patterns=()):
     """
         Check if there is a job whose command contains ALL the strings in 'patterns'.
 
@@ -86,7 +86,8 @@ def job_exists(patterns=()):
                 so we discard this method of searching.
     """
 
-    cron = get_cron()
+    if not cron:
+        cron = get_cron()
 
     # single string --> tuple so that the loop works the same
     if isinstance(patterns, str):
@@ -113,7 +114,7 @@ def add_new_job(cron, command, comment=None, schedule="0 0 * * *"):
     schedule = " ".join(schedule.split())
 
     # Avoid duplicates
-    if job_exists(command):
+    if job_exists(cron, command):
         print("❌ (crontool.add_new_job) job command exists, NOT added")
         report = f'ERROR: job command exists, NOT added.'
 
@@ -173,6 +174,52 @@ def modify_jobs( cron, patterns=(), new_command=None, new_schedule=None):
                 report.append( f"job modified: {job.slices} {job.command}" )
 
     return {'jobs_found': found, 'success': success, 'report': report}
+
+
+def remove_jobs(cron=None, patterns=(), matching_mode='all', verbose=False):
+    """ Remove all jobs matching the given patterns.
+
+        Returns the number of removed jobs
+    """
+    removed = 0
+
+    if not patterns:
+        return removed
+
+    if not cron:
+        cron = CronTab(user=True)
+
+    if isinstance(patterns, str):
+        patterns = (patterns,)
+
+    initial_count = len(cron)
+
+    # list(cron) makes a copy so that the list does not change
+    # while iteration can remove a job
+    for job in list(cron):
+
+        if matching_mode == 'all':
+            if all(p in job.command for p in patterns):
+                cron.remove(job)
+                removed += 1
+                if verbose:
+                    print(f"🗑️  Removing: {job.command}")
+
+        elif matching_mode == 'any':
+            if any(p in job.command for p in patterns):
+                cron.remove(job)
+                removed += 1
+                if verbose:
+                    print(f"🗑️  Removing: {job.command}")
+
+
+    if verbose:
+        if len(cron) < initial_count:
+            print(f"✅ Removed {initial_count - len(cron)} jobs")
+        else:
+            print("ℹ️  Not matching jobs")
+
+    return removed
 
 
 def list_all_jobs():
