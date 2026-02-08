@@ -4,10 +4,11 @@
 # This file is part of 'DevControl'
 # a very simple Home Automation app.
 
-""" miscellaneous
+""" common functions
 """
 
 import  os
+import  sys
 import  yaml
 import  json
 from    time    import  strftime, sleep, time
@@ -17,6 +18,7 @@ import  wol
 import  plugs
 import  scripts
 import  zigbees
+import  crontool
 
 _MY_DIR      = os.path.dirname(__file__)
 
@@ -33,6 +35,12 @@ def init():
     CONFIG = read_config()
 
     STATUS = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {} }
+
+    # set the configured Zigbee scheduling to the user crontab
+    SIMULATE_CRONTAB = False
+    if set_zigbees_schedule_to_crontab(simulate=SIMULATE_CRONTAB):
+        if not SIMULATE_CRONTAB:
+            print(f'{Fmt.BLUE}(common.py) Zigbee scheduling dumped to the user crontab.{Fmt.END}')
 
 
 def do_log(cmd, res):
@@ -101,6 +109,27 @@ def get_zname_scenes(zname):
 
 def read_config():
 
+    def refactor_zegbee_items():
+
+        # replace 'zigbee_name' with 'friendly_name'
+        for k, v in config["devices"]["zigbees"].items():
+            config["devices"]["zigbees"][k]['friendly_name'] = v['zigbee_name']
+            del  config["devices"]["zigbees"][k]['zigbee_name']
+
+        # append 'scenes' for each item
+        for k, v in config["devices"]["zigbees"].items():
+            zname = v['friendly_name']
+            config["devices"]["zigbees"][k]["scenes"] = get_zname_scenes(zname)
+
+        # append zigbee propierty 'is_group'
+        for k, v in config["devices"]["zigbees"].items():
+            zname = v['friendly_name']
+            if zigbees.z.is_group(zname):
+                config["devices"]["zigbees"][k]["is_group"] = True
+            else:
+                config["devices"]["zigbees"][k]["is_group"] = False
+
+
     config = {  'devices':  { 'plugs':{}, 'wol':{} },
                 'scripts':  {}
              }
@@ -125,12 +154,8 @@ def read_config():
     except Exception as e:
         print(f'(devcontrol) ERROR reading devcontrol.yml: {str(e)}')
 
-
-    # Refactor the Zigbees section and append scenes for each item
-    for k, zname in config["devices"]["zigbees"].items():
-        new_content = {'friendly_name': zname}
-        new_content["scenes"] = get_zname_scenes(zname)
-        config["devices"]["zigbees"][k] = new_content
+    # Refactor the Zegbbe items
+    refactor_zegbee_items()
 
     # Script status responses allow space or comma separated values
     for script, values in config["scripts"].items():
@@ -244,4 +269,122 @@ def refresh_all_status():
     STATUS = st
 
 
-init()
+def set_zigbees_schedule_to_crontab(simulate=True):
+    """ Set the configured Zigbee labels scheduling to the user crontab
+
+        return: True if all schedules were loaded to crontab,
+                else False
+    """
+
+    def make_cmd(zname, mode='off'):
+        cmd = f'mosquitto_pub -h localhost -t "zigbee2mqtt/{zname}/set" -m \'{{"state": "{mode}"}}\''
+        return cmd
+
+
+    def make_cmt(zlabel, zname, mode):
+        return f'Zigbee: {zname} ({zlabel}) --> {mode.upper()}'
+
+
+    def update_cron(cron, zlabel, zname, schedules, is_group):
+        """ process schedulling fo a Zigbee label entry
+            return: True or False
+        """
+
+        results = []
+
+        for sch_name, sch_slice in schedules.items():
+
+            if sch_name == 'switch_off':
+                mode = 'off'
+            elif sch_name == 'switch_on':
+                mode = 'on'
+
+            cmd = make_cmd(zname,  mode)
+            cmt = make_cmt(zlabel, zname, mode)
+
+            if crontool.job_exists( cron, patterns=(zname, f'"{mode}"') ):
+
+                res = crontool.modify_jobs(
+                    cron,
+                    patterns=(zname, f'"{mode}"'),
+                    new_command=cmd,
+                    new_schedule=sch_slice,
+                )
+
+            else:
+
+                res = crontool.add_new_job(
+                    cron,
+                    command=cmd,
+                    schedule=sch_slice,
+                    comment=cmt,
+                )
+
+            # DEBUG
+            #print(res["success"], sch_name, zname, zlabel)
+            results.append( res["success"] )
+
+        return all(results)
+
+
+    my_cron = crontool.get_cron()
+    if simulate:
+        print('-------- ORIGINAL:')
+        print(my_cron)
+
+    results = []
+
+
+    # First off all let's remove any job for each Zigbee under config.yml
+    for zlabel, data in CONFIG['devices']['zigbees'].items():
+        zname     = data.get('friendly_name', '')
+        crontool.remove_jobs( cron=my_cron, patterns=(zname,) )
+
+    if simulate:
+        print('-------- BORRADO:')
+        print(my_cron)
+
+    # Now update the configurez schedules
+    for zlabel, data in CONFIG['devices']['zigbees'].items():
+
+        schedules = data.get('schedule', {})
+        zname     = data.get('friendly_name', '')
+        is_group  = data.get('is_group', False)
+
+
+        res = False
+
+        # Groups
+        if is_group:
+
+            zmembers = zigbees.z.get_miembros_de_grupo(zname)
+            zmembers = [ x.get('friendly_name', '') for x in zmembers]
+
+            for zmember in zmembers:
+                res = update_cron(my_cron, zlabel, zmember, schedules, is_group)
+
+        # Individual devices
+        else:
+
+            res = update_cron(my_cron, zlabel, zname, schedules, is_group)
+
+        results.append(res)
+
+    if simulate:
+        print('-------- UPDATED:')
+        print(my_cron)
+
+    if all( results ):
+        if crontool.write_cron_prettified(my_cron, simulate=simulate):
+            return True
+        else:
+            return False
+    else:
+        print(f'{Fmt.RED}Zigbee schedulling to crontab FAILED{Fmt.END}')
+        return False
+
+
+if __name__ == "__main__":
+
+    print('(common.py) running standalone')
+    init()

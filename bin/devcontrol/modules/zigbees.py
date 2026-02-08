@@ -15,7 +15,7 @@ sys.path.append(f'{UHOME}/bin/devcontrol/modules/devices_mod')
 
 import json
 from   fmt      import Fmt
-import miscel   as mc
+import common   as cm
 import zigbee   as z
 
 
@@ -30,7 +30,7 @@ def clamp(n, minn=0, maxn=10):
 
 def get_scene_on_off(zlabel):
 
-    scenes      = mc.CONFIG.get('devices', {}).get('zigbees', {})[zlabel].get("scenes", [])
+    scenes      = cm.CONFIG.get('devices', {}).get('zigbees', {})[zlabel].get("scenes", [])
     scenes_off = [s for s in scenes if s.get('name')=='off']
     scenes_on  = [s for s in scenes if s.get('name')=='on' ]
 
@@ -116,7 +116,7 @@ def manage_zigbee(args):
     zlabel    = args['target']
 
     # zname is the actual name under zigbee2mqtt
-    tmp       = mc.CONFIG.get('devices', {}).get('zigbees', {}).get(zlabel, {})
+    tmp       = cm.CONFIG.get('devices', {}).get('zigbees', {}).get(zlabel, {})
     zname     = tmp.get('friendly_name')
     if not zname:
         return 'target not found in Zigbee2MQTT'

@@ -15,7 +15,7 @@ sys.path.append(f'{UHOME}/bin/devcontrol/modules')
 
 import subprocess as sp
 
-import miscel as mc
+import common as cm
 
 
 def manage_script(args):
@@ -33,7 +33,7 @@ def manage_script(args):
 
     script_id = args["target"]
 
-    if script_id not in mc.CONFIG["scripts"]:
+    if script_id not in cm.CONFIG["scripts"]:
         return f'\'{script_id}\' not configured'
 
     if 'command' not in args:
@@ -42,7 +42,7 @@ def manage_script(args):
 
     if args["command"] in ('run', 'send'):
 
-        cmd = mc.CONFIG["scripts"][ script_id ]["button_cmd"]
+        cmd = cm.CONFIG["scripts"][ script_id ]["button_cmd"]
 
         try:
             result = sp.check_output(cmd, shell=True).decode().strip()
@@ -54,7 +54,7 @@ def manage_script(args):
 
         try:
 
-            cmd = mc.CONFIG["scripts"][ script_id ]["status_cmd"]
+            cmd = cm.CONFIG["scripts"][ script_id ]["status_cmd"]
 
             try:
                 result = sp.check_output(cmd, shell=True).decode().strip()

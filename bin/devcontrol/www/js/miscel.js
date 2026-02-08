@@ -142,9 +142,20 @@ export function make_section(div_id, section_title, section_items, btn_handler){
 
         butn_cell.appendChild(btn);
 
+        // display Zigbees schedule
+        if ( div_id == 'div_zigbees' ){
+
+            const schedules = section_items[item].schedule;
+
+            const sched_str = sched_dict_2_string( schedules );
+
+            info_cell.innerHTML = sched_str;
+
+        }
+
+        // display plug device schedule
         if (div_id == 'div_plugs'){
 
-            // display plug device schedule
             const schedules = send_cmd( 'plug {"target": "' + item + '", "command": "schedule", "schedule": "nice_list"}' );
 
             if ( Array.isArray(schedules) ){
@@ -162,4 +173,41 @@ export function make_section(div_id, section_title, section_items, btn_handler){
     document.getElementById(div_id).appendChild(table)
 }
 
+function sched_dict_2_string( d ){
 
+    //  d = {
+    //      "switch_off": "00  11  02   * * *",
+    //      "switch_on": ""                     // this will be discarded
+    //  }
+
+    // Convert to array and  filer empty values
+    const resultados = Object.entries(d)
+      .filter(([_, val]) => val.trim() !== "") // discarded if empty
+      .map(([key, cronValue]) => {
+
+        const parts = cronValue.trim().split(/\s+/);
+        const action = key.split('_')[1].toUpperCase();
+
+        // Logic for 6 parts (sec min hour ...) or 5 parts (min hour ...)
+        let timeStr, remaining;
+
+        if (parts.length >= 6) {
+          // 00(sec) 11(min) 02(hour) -> 02:11
+          timeStr = `${parts[2]}:${parts[1]}`;
+          remaining = parts.slice(3).join(" ");
+        } else {
+          // 11(min) 02(hour) -> 02:11
+          timeStr = `${parts[1]}:${parts[0]}`;
+          remaining = parts.slice(2).join(" ");
+        }
+
+        return `${action}: ${timeStr} ${remaining}`;
+      });
+
+    let txt = '';
+    resultados.forEach(res => {
+        txt += res + '\n';
+    });
+
+    return txt;
+}

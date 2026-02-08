@@ -20,7 +20,7 @@ import  requests
 from    requests.auth   import HTTPDigestAuth
 import  threading
 
-import  miscel as mc
+import  common as cm
 
 
 def cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
@@ -83,7 +83,7 @@ def cmd_to_plug(host, plug_cmd, delay=0, verbose=False):
         return ans
 
 
-    COMMS = mc.CONFIG["comms"]["shelly"]
+    COMMS = cm.CONFIG["comms"]["shelly"]
 
     u = 'admin'
     p = COMMS["pass"]
@@ -147,7 +147,7 @@ def set_configured_schedules():
         return url_cmd
 
 
-    plugs = mc.CONFIG["devices"]["plugs"]
+    plugs = cm.CONFIG["devices"]["plugs"]
 
 
     for plug_id, props in plugs.items():
@@ -275,10 +275,10 @@ def manage_plug(args):
     if type(delay) != int:
         return 'delay (seconds) must be integer'
 
-    if plug_id not in mc.CONFIG["devices"]["plugs"]:
+    if plug_id not in cm.CONFIG["devices"]["plugs"]:
         return f'\'{plug_id}\' not configured'
 
-    host  = mc.CONFIG["devices"]["plugs"][ plug_id ]["ip"]
+    host  = cm.CONFIG["devices"]["plugs"][ plug_id ]["ip"]
 
     if command == 'toggle':
         plug_cmd = 'rpc/Switch.Toggle?id=0'

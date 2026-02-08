@@ -16,7 +16,7 @@ sys.path.append(f'{UHOME}/bin/devcontrol/modules/devices_mod')
 
 import shelly
 
-import miscel as mc
+import common as cm
 
 
 def manage_plug(args):
@@ -25,7 +25,7 @@ def manage_plug(args):
 
     plug_id = args["target"]
 
-    plugs = mc.CONFIG["devices"]["plugs"]
+    plugs = cm.CONFIG["devices"]["plugs"]
 
 
     if plug_id not in plugs:
