@@ -26,7 +26,7 @@ from    time    import sleep, time
 import  threading
 
 from    fmt     import Fmt
-import  miscel  as mc
+import  common  as cm
 import  wol
 import  plugs
 import  scripts
@@ -36,15 +36,18 @@ import  zigbees
 def init():
 
     def loop_refresh_and_dump_all_status():
-        pause = mc.CONFIG["refresh"]["backend_update_interval"]
+        pause = cm.CONFIG["refresh"]["backend_update_interval"]
         while True:
-            mc.refresh_all_status()
-            mc.dump_status_to_disk()
+            cm.refresh_all_status()
+            cm.dump_status_to_disk()
             sleep(pause)
 
-    if os.path.exists(mc.LOGPATH) and os.path.getsize(mc.LOGPATH) > 10e6:
-        print ( f"(devcontrol) log file exceeds ~ 10 MB '{mc.LOGPATH}'" )
-    print ( f"(devcontrol) logging commands in '{mc.LOGPATH}'" )
+    # Common needs to prepare CONFIG and other tasks
+    cm.init()
+
+    if os.path.exists(cm.LOGPATH) and os.path.getsize(cm.LOGPATH) > 10e6:
+        print ( f"(devcontrol) log file exceeds ~ 10 MB '{cm.LOGPATH}'" )
+    print ( f"(devcontrol) logging commands in '{cm.LOGPATH}'" )
 
     # Loading the configured plug schedules (currently only Shelly)
     plugs.shelly.set_configured_schedules()
@@ -103,10 +106,10 @@ def do( cmd_phrase ):
 
 
     if prefix == 'get_config' and 'section' in args:
-        result = mc.get_section( args["section"] )
+        result = cm.get_section( args["section"] )
 
     elif prefix == 'get_status':
-        result = mc.STATUS
+        result = cm.STATUS
 
     elif 'target' in args.keys():
 
@@ -133,9 +136,9 @@ def do( cmd_phrase ):
                 'zigbee':   'zigbees'
             }.get(prefix)
 
-            mc.STATUS[section][args['target']] = result
+            cm.STATUS[section][args['target']] = result
 
-            if mc.dump_status_to_disk():
+            if cm.dump_status_to_disk():
                 print(f'{Fmt.BLUE}(devcontrol) dumping status to disk{Fmt.END}')
 
     # Select when to log
@@ -144,7 +147,7 @@ def do( cmd_phrase ):
     elif 'command' in args and args["command"] in ('state', 'status', 'ping'):
         pass
     else:
-        mc.do_log(cmd_phrase, result)
+        cm.do_log(cmd_phrase, result)
 
     return json.dumps(result)
 
