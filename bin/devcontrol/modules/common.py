@@ -17,6 +17,7 @@ import  wol
 import  plugs
 import  scripts
 import  zigbees
+import  crontool
 
 _MY_DIR      = os.path.dirname(__file__)
 
@@ -33,6 +34,9 @@ def init():
     CONFIG = read_config()
 
     STATUS = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {} }
+
+    # set the configured Zigbee scheduling to the user crontab
+    set_zigbees_schedule_to_crontab(simulate=True)
 
 
 def do_log(cmd, res):
@@ -101,6 +105,27 @@ def get_zname_scenes(zname):
 
 def read_config():
 
+    def refactor_zegbee_items():
+
+        # replace 'zigbee_name' with 'friendly_name'
+        for k, v in config["devices"]["zigbees"].items():
+            config["devices"]["zigbees"][k]['friendly_name'] = v['zigbee_name']
+            del  config["devices"]["zigbees"][k]['zigbee_name']
+
+        # append 'scenes' for each item
+        for k, v in config["devices"]["zigbees"].items():
+            zname = v['friendly_name']
+            config["devices"]["zigbees"][k]["scenes"] = get_zname_scenes(zname)
+
+        # append zigbee propierty 'is_group'
+        for k, v in config["devices"]["zigbees"].items():
+            zname = v['friendly_name']
+            if zigbees.z.is_group(zname):
+                config["devices"]["zigbees"][k]["is_group"] = True
+            else:
+                config["devices"]["zigbees"][k]["is_group"] = False
+
+
     config = {  'devices':  { 'plugs':{}, 'wol':{} },
                 'scripts':  {}
              }
@@ -125,12 +150,8 @@ def read_config():
     except Exception as e:
         print(f'(devcontrol) ERROR reading devcontrol.yml: {str(e)}')
 
-
-    # Refactor the Zigbees section and append scenes for each item
-    for k, zname in config["devices"]["zigbees"].items():
-        new_content = {'friendly_name': zname}
-        new_content["scenes"] = get_zname_scenes(zname)
-        config["devices"]["zigbees"][k] = new_content
+    # Refactor the Zegbbe items
+    refactor_zegbee_items()
 
     # Script status responses allow space or comma separated values
     for script, values in config["scripts"].items():
@@ -244,4 +265,80 @@ def refresh_all_status():
     STATUS = st
 
 
-init()
+def set_zigbees_schedule_to_crontab(simulate=True):
+    """ set the configured Zigbee scheduling to the user crontab
+    """
+
+    def make_cmd(zname, mode='off'):
+        cmd = f'mosquitto_pub -h localhost -t "zigbee2mqtt/{zname}/set" -m \'{{"state": "{mode}"}}\''
+        return cmd
+
+
+    def make_cmt(zlabel, zname, mode, is_group):
+        if is_group:
+            return f'Zigbee: {zlabel} / {zname} --> {mode.upper()}'
+        else:
+            return f'Zigbee: {zlabel} --> {mode.upper()}'
+
+
+    def update_cron(zlabel, zname, schedules, is_group):
+
+        for sch_name, sch_slice in schedules.items():
+
+            if sch_name == 'switch_off':
+                mode = 'off'
+            elif sch_name == 'switch_on':
+                mode = 'on'
+
+            cmd = make_cmd(zname=zname, mode=mode)
+            cmt = make_cmt(zlabel, zname, mode, is_group)
+
+            if crontool.job_exists( patterns=(zname, f'"{mode}"') ):
+
+                res = crontool.modify_jobs(
+                    my_cron,
+                    patterns=(zname, f'"{mode}"'),
+                    new_command=cmd,
+                    new_schedule=sch_slice,
+                    simulate=simulate
+                )
+
+            else:
+
+                res = crontool.add_new_job(
+                    my_cron,
+                    command=cmd,
+                    schedule=sch_slice,
+                    comment=cmt,
+                    simulate=simulate
+                )
+
+        print(1111, res["success"], sch_name, zname, zlabel)
+
+    my_cron = crontool.get_cron()
+
+    for zlabel, data in CONFIG['devices']['zigbees'].items():
+
+        schedules = data.get('schedule', {})
+        zname     = data.get('friendly_name', '')
+        is_group  = data.get('is_group', False)
+
+        # Groups
+        if is_group:
+
+            zmembers = zigbees.z.get_miembros_de_grupo(zname)
+            zmembers = [ x.get('friendly_name', '') for x in zmembers]
+
+            for zmember in zmembers:
+                update_cron(zlabel, zmember, schedules, is_group)
+
+        # Individual devices
+        else:
+
+            update_cron(zlabel, zname, schedules, is_group)
+
+
+if __name__ == "__main__":
+
+    print('common runnig standalone')
+    init()
