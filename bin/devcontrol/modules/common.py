@@ -4,10 +4,11 @@
 # This file is part of 'DevControl'
 # a very simple Home Automation app.
 
-""" miscellaneous
+""" common functions
 """
 
 import  os
+import  sys
 import  yaml
 import  json
 from    time    import  strftime, sleep, time
@@ -36,8 +37,10 @@ def init():
     STATUS = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {} }
 
     # set the configured Zigbee scheduling to the user crontab
-    if set_zigbees_schedule_to_crontab(simulate=False):
-        print(f'{Fmt.BLUE}(common.py) Zigbee scheduling dumped to the user crontab.{Fmt.END}')
+    SIMULATE_CRONTAB = False
+    if set_zigbees_schedule_to_crontab(simulate=SIMULATE_CRONTAB):
+        if not SIMULATE_CRONTAB:
+            print(f'{Fmt.BLUE}(common.py) Zigbee scheduling dumped to the user crontab.{Fmt.END}')
 
 
 def do_log(cmd, res):
@@ -282,7 +285,7 @@ def set_zigbees_schedule_to_crontab(simulate=True):
         return f'Zigbee: {zname} ({zlabel}) --> {mode.upper()}'
 
 
-    def update_cron(zlabel, zname, schedules, is_group):
+    def update_cron(cron, zlabel, zname, schedules, is_group):
         """ process schedulling fo a Zigbee label entry
             return: True or False
         """
@@ -299,10 +302,10 @@ def set_zigbees_schedule_to_crontab(simulate=True):
             cmd = make_cmd(zname,  mode)
             cmt = make_cmt(zlabel, zname, mode)
 
-            if crontool.job_exists( patterns=(zname, f'"{mode}"') ):
+            if crontool.job_exists( cron, patterns=(zname, f'"{mode}"') ):
 
                 res = crontool.modify_jobs(
-                    my_cron,
+                    cron,
                     patterns=(zname, f'"{mode}"'),
                     new_command=cmd,
                     new_schedule=sch_slice,
@@ -311,7 +314,7 @@ def set_zigbees_schedule_to_crontab(simulate=True):
             else:
 
                 res = crontool.add_new_job(
-                    my_cron,
+                    cron,
                     command=cmd,
                     schedule=sch_slice,
                     comment=cmt,
@@ -325,14 +328,29 @@ def set_zigbees_schedule_to_crontab(simulate=True):
 
 
     my_cron = crontool.get_cron()
+    if simulate:
+        print('-------- ORIGINAL:')
+        print(my_cron)
 
     results = []
 
+
+    # First off all let's remove any job for each Zigbee under config.yml
+    for zlabel, data in CONFIG['devices']['zigbees'].items():
+        zname     = data.get('friendly_name', '')
+        crontool.remove_jobs( cron=my_cron, patterns=(zname,) )
+
+    if simulate:
+        print('-------- BORRADO:')
+        print(my_cron)
+
+    # Now update the configurez schedules
     for zlabel, data in CONFIG['devices']['zigbees'].items():
 
         schedules = data.get('schedule', {})
         zname     = data.get('friendly_name', '')
         is_group  = data.get('is_group', False)
+
 
         res = False
 
@@ -343,14 +361,18 @@ def set_zigbees_schedule_to_crontab(simulate=True):
             zmembers = [ x.get('friendly_name', '') for x in zmembers]
 
             for zmember in zmembers:
-                res = update_cron(zlabel, zmember, schedules, is_group)
+                res = update_cron(my_cron, zlabel, zmember, schedules, is_group)
 
         # Individual devices
         else:
 
-            res = update_cron(zlabel, zname, schedules, is_group)
+            res = update_cron(my_cron, zlabel, zname, schedules, is_group)
 
         results.append(res)
+
+    if simulate:
+        print('-------- UPDATED:')
+        print(my_cron)
 
     if all( results ):
         if crontool.write_cron_prettified(my_cron, simulate=simulate):
