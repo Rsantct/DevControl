@@ -36,7 +36,8 @@ def init():
     STATUS = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {} }
 
     # set the configured Zigbee scheduling to the user crontab
-    set_zigbees_schedule_to_crontab(simulate=True)
+    if set_zigbees_schedule_to_crontab(simulate=False):
+        print(f'{Fmt.BLUE}(common.py) Zigbee scheduling dumped to the user crontab.{Fmt.END}')
 
 
 def do_log(cmd, res):
@@ -266,7 +267,10 @@ def refresh_all_status():
 
 
 def set_zigbees_schedule_to_crontab(simulate=True):
-    """ set the configured Zigbee scheduling to the user crontab
+    """ Set the configured Zigbee labels scheduling to the user crontab
+
+        return: True if all schedules were loaded to crontab,
+                else False
     """
 
     def make_cmd(zname, mode='off'):
@@ -274,14 +278,16 @@ def set_zigbees_schedule_to_crontab(simulate=True):
         return cmd
 
 
-    def make_cmt(zlabel, zname, mode, is_group):
-        if is_group:
-            return f'Zigbee: {zlabel} / {zname} --> {mode.upper()}'
-        else:
-            return f'Zigbee: {zlabel} --> {mode.upper()}'
+    def make_cmt(zlabel, zname, mode):
+        return f'Zigbee: {zname} ({zlabel}) --> {mode.upper()}'
 
 
     def update_cron(zlabel, zname, schedules, is_group):
+        """ process schedulling fo a Zigbee label entry
+            return: True or False
+        """
+
+        results = []
 
         for sch_name, sch_slice in schedules.items():
 
@@ -290,8 +296,8 @@ def set_zigbees_schedule_to_crontab(simulate=True):
             elif sch_name == 'switch_on':
                 mode = 'on'
 
-            cmd = make_cmd(zname=zname, mode=mode)
-            cmt = make_cmt(zlabel, zname, mode, is_group)
+            cmd = make_cmd(zname,  mode)
+            cmt = make_cmt(zlabel, zname, mode)
 
             if crontool.job_exists( patterns=(zname, f'"{mode}"') ):
 
@@ -300,7 +306,6 @@ def set_zigbees_schedule_to_crontab(simulate=True):
                     patterns=(zname, f'"{mode}"'),
                     new_command=cmd,
                     new_schedule=sch_slice,
-                    simulate=simulate
                 )
 
             else:
@@ -310,18 +315,26 @@ def set_zigbees_schedule_to_crontab(simulate=True):
                     command=cmd,
                     schedule=sch_slice,
                     comment=cmt,
-                    simulate=simulate
                 )
 
-        print(1111, res["success"], sch_name, zname, zlabel)
+            # DEBUG
+            #print(res["success"], sch_name, zname, zlabel)
+            results.append( res["success"] )
+
+        return all(results)
+
 
     my_cron = crontool.get_cron()
+
+    results = []
 
     for zlabel, data in CONFIG['devices']['zigbees'].items():
 
         schedules = data.get('schedule', {})
         zname     = data.get('friendly_name', '')
         is_group  = data.get('is_group', False)
+
+        res = False
 
         # Groups
         if is_group:
@@ -330,15 +343,26 @@ def set_zigbees_schedule_to_crontab(simulate=True):
             zmembers = [ x.get('friendly_name', '') for x in zmembers]
 
             for zmember in zmembers:
-                update_cron(zlabel, zmember, schedules, is_group)
+                res = update_cron(zlabel, zmember, schedules, is_group)
 
         # Individual devices
         else:
 
-            update_cron(zlabel, zname, schedules, is_group)
+            res = update_cron(zlabel, zname, schedules, is_group)
+
+        results.append(res)
+
+    if all( results ):
+        if crontool.write_cron_prettified(my_cron, simulate=simulate):
+            return True
+        else:
+            return False
+    else:
+        print(f'{Fmt.RED}Zigbee schedulling to crontab FAILED{Fmt.END}')
+        return False
 
 
 if __name__ == "__main__":
 
-    print('common runnig standalone')
+    print('(common.py) running standalone')
     init()
