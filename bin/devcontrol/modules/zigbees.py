@@ -28,6 +28,58 @@ def clamp(n, minn=0, maxn=10):
     return max(minn, min(n, maxn))
 
 
+def color_temp_conversion(uvalue):
+    """ color_temp user values comes in (1...10)
+        it mus converted to the range ZTCOLORMIN...ZTCOLORMAX
+    """
+    try:
+        return int(uvalue / 10 * (ZTCOLORMAX - ZTCOLORMIN) + ZTCOLORMIN)
+    except Exception as e:
+        return int((ZTCOLORMIN + ZTCOLORMAX) / 2)
+
+
+def arg_to_brightness(arg):
+
+    # User brightness values must come in 1...10
+    try:
+        brightness = clamp( int(arg), 1, 10)
+    except:
+        brightness = 0
+
+    # zigbee2mqtt brightness must be in 0...254
+    try:
+        brightness = int(brightness / 10 * 254)
+    except:
+        brightness = 0
+
+    return brightness
+
+
+def arg_to_timer(arg):
+    """ User timer values comes as a negative integer string format,
+        in minutes by default.
+    """
+    M = 60
+
+    if arg[-1].lower() == 's':
+        M = 1
+
+    elif arg[-1].isdigit() or arg[-1].lower() == 'm':
+        M = 60
+
+    elif arg[-1].lower() == 'h':
+        M = 3600
+
+    try:
+        # keep only numeric chars
+        arg = "".join(filter(str.isdigit, arg))
+        return int( abs(int(arg) * M) )
+
+    except Exception as e:
+        print(f'{Fmt.RED}(zigbees.arg_to_timer) ERROR: {e}{Fmt.END}')
+        return 0
+
+
 def get_scene_on_off(zlabel):
 
     scenes      = cm.CONFIG.get('devices', {}).get('zigbees', {})[zlabel].get("scenes", [])
@@ -48,9 +100,10 @@ def get_scene_on_off(zlabel):
     return scene_on, scene_off
 
 
-def do_command(zlabel, zname, command='state', brightness=0):
+def do_command(zlabel, zname, command='state', brightness=0, timer=0):
     """ toggle not here, it falls under the web interface
     """
+
     result = ''
 
     # status
@@ -69,8 +122,8 @@ def do_command(zlabel, zname, command='state', brightness=0):
         if command == 'on':
 
             if brightness:
-                z.enviar_mensaje(zname, {'brightness': brightness})
                 print(f'{Fmt.BLUE}{zname}: brightness {brightness}/{BRIGHTNESSMAX}{Fmt.END}')
+                z.enviar_mensaje(zname, {'brightness': brightness})
 
             else:
 
@@ -81,6 +134,11 @@ def do_command(zlabel, zname, command='state', brightness=0):
                 else:
                     z.enviar_mensaje(zname, {'brightness': int(BRIGHTNESSMAX / 2)})
                     print(f'{Fmt.BLUE}{zname}: brightness medium because no specied and scene <on> not found{Fmt.END}')
+
+            if timer:
+                cm.sleep(.5)
+                print(f'{Fmt.BLUE}{zname}: timer {timer} seconds.{Fmt.END}')
+                z.enviar_mensaje(zname, {'state': 'on', 'on_time': timer})
 
             result = 'on'
 
@@ -110,6 +168,7 @@ def manage_zigbee(args):
 
     result = ''
 
+    # The target
     if 'target' not in args:
         return result
 
@@ -121,33 +180,29 @@ def manage_zigbee(args):
     if not zname:
         return 'target not found in Zigbee2MQTT'
 
+    # Reading the command and args
     tmp       = args.get('command', '').split(' ')
     command   = tmp[0] if tmp[0] else 'state'
     args      = tmp[1:]
 
-    if args:
-        # Currently only brigthness as arg values
-        brightness = args[0]
-        # brightness must come in 1...10
-        try:
-            brightness = clamp( int(args[0]), 1, 10)
-        except:
-            brightness = 0
+    brightness  = 0
+    timer       = 0
 
-    # zigbee2mqtt brightness must be in 0...254
-    try:
-        brightness = int(brightness / 10 * 254)
-    except:
-        brightness = 0
+    for arg in args:
 
-    # STILL NOT IN USE
-    # color_temp comes in (1...10) and must be in ZTCOLORMIN...ZTCOLORMAX
-    try:
-        color_temp = int(color_temp / 10 * (ZTCOLORMAX - ZTCOLORMIN) + ZTCOLORMIN)
-    except Exception as e:
-        color_temp = int((ZTCOLORMIN + ZTCOLORMAX) / 2)
+        if cm.is_integer(arg):
+
+            if int(arg) > 0:
+                brightness = arg_to_brightness(arg)
+
+            elif int(arg) < 0:
+                timer = arg_to_timer(arg)
+
+        elif arg[0] == '-':
+            timer = arg_to_timer(arg)
+
 
     # Do process
-    result = do_command(zlabel, zname, command, brightness)
+    result = do_command(zlabel, zname, command, brightness, timer)
 
     return result
