@@ -29,6 +29,15 @@ CONFIG      = {}
 
 
 def init():
+    """ You must call this from the main program after import common,
+        BUT DO NOT call this inside this module.
+
+        This way you avoid circular imports issues if other modules
+        imported here also import this module.
+
+        If you execute this  module from command line,
+        then __main__ will do it for you, se below.
+    """
 
     global CONFIG, STATUS
 
@@ -38,7 +47,7 @@ def init():
 
     # set the configured Zigbee scheduling to the user crontab
     SIMULATE_CRONTAB = False
-    if set_zigbees_schedule_to_crontab(simulate=SIMULATE_CRONTAB):
+    if dump_zigbees_schedule_to_crontab(simulate=SIMULATE_CRONTAB):
         if not SIMULATE_CRONTAB:
             print(f'{Fmt.BLUE}(common.py) Zigbee scheduling dumped to the user crontab.{Fmt.END}')
 
@@ -269,8 +278,8 @@ def refresh_all_status():
     STATUS = st
 
 
-def set_zigbees_schedule_to_crontab(simulate=True):
-    """ Set the configured Zigbee labels scheduling to the user crontab
+def dump_zigbees_schedule_to_crontab(simulate=True):
+    """ Dump the configured Zigbee labels scheduling to the user crontab
 
         return: True if all schedules were loaded to crontab,
                 else False
