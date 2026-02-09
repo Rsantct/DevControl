@@ -196,7 +196,18 @@ function do_zigbee(event){
     let bright = null;
 
     if ( STATUS.zigbees[z_id] == 'off' ){
-        bright = prompt('Brightness (1...10)\nDefault is the one defined in the SCENE \'on\'\nor 5 if not defined.');
+        const msg =`
+Brightness (1...10)
+    Default is the one defined in the SCENE \'on\'
+    or 5 if not defined.
+
+Timer:
+    -Ns\t  (N seconds)
+    -Nm\t  (N minutes)
+    -N \t  (N minutes)
+    -Nh\t  (N hours)`;
+
+        bright = prompt(msg);
     }
 
     let cmd = ''
