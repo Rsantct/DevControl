@@ -45,9 +45,10 @@ def init():
     # Common needs to prepare CONFIG and other tasks
     cm.init()
 
+    # Notice about logging
     if os.path.exists(cm.LOGPATH) and os.path.getsize(cm.LOGPATH) > 10e6:
-        print ( f"(devcontrol) log file exceeds ~ 10 MB '{cm.LOGPATH}'" )
-    print ( f"(devcontrol) logging commands in '{cm.LOGPATH}'" )
+        print ( f"(devcontrol.py) log file exceeds ~ 10 MB '{cm.LOGPATH}'" )
+    print ( f"(devcontrol.py) logging commands in '{cm.LOGPATH}'" )
 
     # Loading the configured plug schedules (currently only Shelly)
     plugs.shelly.set_configured_schedules()
@@ -55,7 +56,7 @@ def init():
     # Loop status auto-update
     j1 = threading.Thread( target=loop_refresh_and_dump_all_status )
     j1.start()
-    print ( f"(devcontrol) threading loop for refreshing the status in background ...'" )
+    print ( f"(devcontrol.py) threading loop for refreshing the status in background ...'" )
 
 
 # Interface function to plug this on server.py
@@ -85,11 +86,11 @@ def do( cmd_phrase ):
             hello
     """
 
-    result = 'NACK'
-
-    if cmd_phrase == 'hello':
+    # Ping response
+    if cmd_phrase in ('hello', 'ping'):
         return 'hi!'
 
+    # Reading the command phrase
     try:
 
         prefix  = cmd_phrase.strip().split()[0]
@@ -102,47 +103,55 @@ def do( cmd_phrase ):
             args = {}
 
     except Exception as e:
-        print(f'ERROR READING COMMAND: {str(e)}')
+        print(f'(devcontrol.py) ERROR reading command: {str(e)}')
         return 'Error'
 
+    # Processing the command phrase and saving common.STATUS
+    result = 'NACK'
 
-    if prefix == 'get_config' and 'section' in args:
-        result = cm.get_section( args["section"] )
+    try:
 
-    elif prefix == 'get_status':
-        result = cm.STATUS
+        if prefix == 'get_config' and 'section' in args:
+            result = cm.get_section( args["section"] )
 
-    elif 'target' in args.keys():
+        elif prefix == 'get_status':
+            result = cm.STATUS
 
-        if   prefix == 'wol':
-            result = wol.manage_wol(args)
+        elif 'target' in args.keys():
 
-        elif prefix == 'plug':
-            result = plugs.manage_plug(args)
+            if   prefix == 'wol':
+                result = wol.manage_wol(args)
 
-        elif prefix == 'script':
-            result = scripts.manage_script(args)
+            elif prefix == 'plug':
+                result = plugs.manage_plug(args)
 
-        elif prefix == 'zigbee':
-            result = zigbees.manage_zigbee(args)
+            elif prefix == 'script':
+                result = scripts.manage_script(args)
 
-        # Save the status:
-        if 'command' in args.keys() and \
-            not ('sta' in args["command"] or 'sched' in args["command"]):
+            elif prefix == 'zigbee':
+                result = zigbees.manage_zigbee(args)
 
-            section = {
-                'wol':      'wol',
-                'plug':     'plugs',
-                'script':   'scripts',
-                'zigbee':   'zigbees'
-            }.get(prefix)
+            # Save the status:
+            if 'command' in args.keys() and \
+                not ('sta' in args["command"] or 'sched' in args["command"]):
 
-            cm.STATUS[section][args['target']] = result
+                section = {
+                    'wol':      'wol',
+                    'plug':     'plugs',
+                    'script':   'scripts',
+                    'zigbee':   'zigbees'
+                }.get(prefix)
 
-            if cm.dump_status_to_disk():
-                print(f'{Fmt.BLUE}(devcontrol) dumping status to disk{Fmt.END}')
+                cm.STATUS[section][args['target']] = result
 
-    # Select when to log
+                if cm.dump_status_to_disk():
+                    print(f'{Fmt.BLUE}(devcontrol.py) dumping status to disk{Fmt.END}')
+
+    except Exception as e:
+        print(f'{Fmt.RED}(devcontrol.py) ERROR processing command phrase{Fmt.END}')
+
+
+    # Select what to log
     if prefix == 'get_config':
         pass
     elif 'command' in args and args["command"] in ('state', 'status', 'ping'):
