@@ -52,6 +52,10 @@ def init():
             print(f'{Fmt.BLUE}(common.py) Zigbee scheduling dumped to the user crontab.{Fmt.END}')
 
 
+def clamp(n, minn=0, maxn=10):
+    return max(minn, min(n, maxn))
+
+
 def do_log(cmd, res):
     with open(LOGPATH, 'a') as f:
         f.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd}; {res}\n')
