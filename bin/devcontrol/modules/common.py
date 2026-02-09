@@ -384,6 +384,14 @@ def set_zigbees_schedule_to_crontab(simulate=True):
         return False
 
 
+def is_integer(string):
+    try:
+        int(string)
+        return True
+    except:
+        return False
+
+
 if __name__ == "__main__":
 
     print('(common.py) running standalone')
