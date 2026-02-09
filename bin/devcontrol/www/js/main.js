@@ -17,6 +17,22 @@ const WAIT_4_WOL = 30;
 
 var STATUS = {};
 
+// Prompt message when switching on a Zigbee:
+const zigbee_on_msg =`
+Brightness:  1...10
+    Leave blank for default brightness
+
+Timer:
+    -Ns\t  (N seconds)
+    -Nm\t  (N minutes)
+    -N \t  (N minutes)
+    -Nh\t  (N hours)
+
+You can enter one or both parameters, for example
+for brighness 3 and timer 1/2 h:
+
+    3  -0.5h`;
+
 // WOL PCs
 function do_wol(event){
 
@@ -196,18 +212,7 @@ function do_zigbee(event){
     let bright = null;
 
     if ( STATUS.zigbees[z_id] == 'off' ){
-        const msg =`
-Brightness (1...10)
-    Default is the one defined in the SCENE \'on\'
-    or 5 if not defined.
-
-Timer:
-    -Ns\t  (N seconds)
-    -Nm\t  (N minutes)
-    -N \t  (N minutes)
-    -Nh\t  (N hours)`;
-
-        bright = prompt(msg);
+        bright = prompt(zigbee_on_msg);
     }
 
     let cmd = ''
