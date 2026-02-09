@@ -56,9 +56,17 @@ def arg_to_brightness(arg):
 
 
 def arg_to_timer(arg):
-    """ User timer values comes as a negative integer string format,
+    """ User timer values comes as a negative integer or float string format,
         in minutes by default.
+
+        arg         timer
+        ---         -----
+        -25s        25 sec
+        -10         10 min
+        -1.5m       90 sec
+        -0.5h       30 min
     """
+
     M = 60
 
     if arg[-1].lower() == 's':
@@ -71,9 +79,9 @@ def arg_to_timer(arg):
         M = 3600
 
     try:
-        # keep only numeric chars
-        arg = "".join(filter(str.isdigit, arg))
-        return int( abs(int(arg) * M) )
+        # keep only numeric chars and decimal dot
+        arg = "".join(filter(lambda x: x.isdigit() or x == ".", arg))
+        return int( abs(round(float(arg), 1) * M) )
 
     except Exception as e:
         print(f'{Fmt.RED}(zigbees.arg_to_timer) ERROR: {e}{Fmt.END}')
