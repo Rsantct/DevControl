@@ -14,7 +14,7 @@
         estado
         demo
 
-        power_on=on|off     configural el comportamiento al recibir alimentación
+        power_on=on|off     configura el comportamiento al recibir alimentación
 
 
         blink [N]           parpadea N veces (1 por defecto)
@@ -142,7 +142,7 @@ def do_command_line():
             color_temp = opc.split('=')[-1]
             color_temp = clamp( int(color_temp), 0, 100 )
 
-        elif 'temp' in opc or 'time' in opc:
+        elif ('tempo' in opc or 'time' in opc) and '=' in opc:
             temporizador = opc.split('=')[-1]
 
         elif opc == 'off':
