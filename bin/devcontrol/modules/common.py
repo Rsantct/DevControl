@@ -100,7 +100,7 @@ def get_zname_scenes(zname):
                     break
 
         except Exception as e:
-            print(f'{Fmt.RED}(miscel.get_zname_scenes) ERROR: {e}{Fmt.BOLD}')
+            print(f'{Fmt.RED}(common.get_zname_scenes) ERROR: {e}{Fmt.BOLD}')
 
         return scenes
 
@@ -191,17 +191,17 @@ def read_config():
     # Backend update interval 3...10 seconds, default 5.
     tmp = config["refresh"].get("backend_update_interval", 5)
     if tmp < 3:
-        print(f'{Fmt.RED}(devcontrol) `backend_update_interval` forced to minimum 3 seconds.{Fmt.END}')
+        print(f'{Fmt.RED}(common) `backend_update_interval` forced to minimum 3 seconds.{Fmt.END}')
     elif tmp > 30:
-        print(f'{Fmt.RED}(devcontrol) `backend_update_interval` forced to maximun 10 seconds.{Fmt.END}')
+        print(f'{Fmt.RED}(common) `backend_update_interval` forced to maximun 10 seconds.{Fmt.END}')
     config["refresh"]["backend_update_interval"] = min(max(3, tmp), 10)
 
     # Web client polling interval 2...10 seconds, default 3.
     tmp = config["refresh"].get("web_polling_interval", 3)
     if tmp < 3:
-        print(f'{Fmt.RED}(devcontrol) `web_polling_interval` forced to minimum 2 seconds.{Fmt.END}')
+        print(f'{Fmt.RED}(common) `web_polling_interval` forced to minimum 2 seconds.{Fmt.END}')
     elif tmp > 30:
-        print(f'{Fmt.RED}(devcontrol) `web_polling_interval` forced to maximun 10 seconds.{Fmt.END}')
+        print(f'{Fmt.RED}(common) `web_polling_interval` forced to maximun 10 seconds.{Fmt.END}')
     config["refresh"]["web_polling_interval"] = min(max(2, tmp), 10)
 
 
@@ -224,7 +224,7 @@ def read_status_from_disk():
             sleep(.1)
 
     if not tries:
-        print(f'{Fmt.BOLD}(miscel.read_status) ERROR{Fmt.END}')
+        print(f'{Fmt.BOLD}(common.read_status) ERROR{Fmt.END}')
 
     return st
 
@@ -243,10 +243,11 @@ def dump_status_to_disk():
             sleep(.2)
 
     if not tries:
-        print(f'{Fmt.RED}(miscel.dump_status_to_disk) ERROR{Fmt.END}')
+        print(f'{Fmt.RED}(common.dump_status_to_disk) ERROR{Fmt.END}')
         return False
 
     else:
+        print(f'{Fmt.BLUE}(common) dumping status to disk{Fmt.END}')
         return True
 
 
