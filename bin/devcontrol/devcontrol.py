@@ -106,10 +106,11 @@ def do( cmd_phrase ):
         print(f'(devcontrol.py) ERROR reading command: {str(e)}')
         return 'Error'
 
+
     # Processing the command phrase and saving common.STATUS
     result = 'NACK'
 
-    do_save_status = False
+    do_save_status = False  # flag to save the statu
     try:
 
         if prefix == 'get_config' and 'section' in args:
@@ -132,7 +133,7 @@ def do( cmd_phrase ):
             elif prefix == 'zigbee':
                 result = zigbees.manage_zigbee(args)
 
-            # Save the status flag:
+            # set the flag to save the status later:
             if 'command' in args.keys() and \
                 not ('sta' in args["command"] or 'sched' in args["command"]):
                     do_save_status = True
@@ -140,8 +141,10 @@ def do( cmd_phrase ):
     except Exception as e:
         print(f'{Fmt.RED}(devcontrol.py) ERROR processing command phrase: {e}{Fmt.END}')
 
-    # Save the status if the flag is set
+
+    # Save the status of the modified section:
     if do_save_status:
+
         section = {
             'wol':      'wol',
             'plug':     'plugs',
@@ -151,8 +154,8 @@ def do( cmd_phrase ):
 
         cm.STATUS[section][args['target']] = result
 
-        if cm.dump_status_to_disk():
-            print(f'{Fmt.BLUE}(devcontrol.py) dumping status to disk{Fmt.END}')
+        cm.dump_status_to_disk()
+
 
     # Select what to log
     if prefix == 'get_config':
