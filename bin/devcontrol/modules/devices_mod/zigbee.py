@@ -40,10 +40,6 @@ def _init():
     actualizar_devices_y_grupos()
 
 
-def clamp(n, minn=0, maxn=100):
-    return max(minn, min(n, maxn))
-
-
 def is_group(zid):
     for grupo in GROUPS:
         if zid == grupo.get('friendly_name'):

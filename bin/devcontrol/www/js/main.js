@@ -209,21 +209,21 @@ function do_zigbee(event){
         return;
     }
 
-    let bright = null;
+    let params = null;
 
     if ( STATUS.zigbees[z_id] == 'off' ){
-        bright = prompt(zigbee_on_msg);
+        params = prompt(zigbee_on_msg);
     }
 
     let cmd = ''
     if (STATUS.zigbees[z_id] == 'off'){
-        console.log('-off-');
+        console.log('current state: off');
         cmd = `zigbee {"target": "${z_id}", "command": "on"}`
-        if (bright){
-            cmd = `zigbee {"target": "${z_id}", "command": "on ${bright}"}`
+        if (params){
+            cmd = `zigbee {"target": "${z_id}", "command": "on ${params}"}`
         }
     }else if (STATUS.zigbees[z_id] == 'on'){
-        console.log('-on-');
+        console.log('current state: on');
         cmd = `zigbee {"target": "${z_id}", "command": "off"}`
     }
 
@@ -250,6 +250,12 @@ function zigbees_refresh(){
         // Button color
         const onoff = STATUS.zigbees[z_id];
         mc.btn_color(btn, onoff);
+
+        // Info cell (PENDING)
+        const timer = STATUS.zigbees[z_id]['timer'];
+        if (timer){
+            document.getElementById('info_' + z_id).innerHTML += '<br>' + timer;
+        }
     }
 }
 

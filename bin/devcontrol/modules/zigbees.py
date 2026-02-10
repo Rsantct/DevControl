@@ -24,10 +24,6 @@ ZTCOLORMIN    = 250
 ZTCOLORMAX    = 454
 
 
-def clamp(n, minn=0, maxn=10):
-    return max(minn, min(n, maxn))
-
-
 def color_temp_conversion(uvalue):
     """ color_temp user values comes in (1...10)
         it mus converted to the range ZTCOLORMIN...ZTCOLORMAX
@@ -42,7 +38,7 @@ def arg_to_brightness(arg):
 
     # User brightness values must come in 1...10
     try:
-        brightness = clamp( int(arg), 1, 10)
+        brightness = cm.clamp( int(arg), 1, 10)
     except:
         brightness = 0
 
@@ -189,7 +185,7 @@ def manage_zigbee(args):
         return 'target not found in Zigbee2MQTT'
 
     # Reading the command and args
-    tmp       = args.get('command', '').split(' ')
+    tmp       = args.get('command', '').split()
     command   = tmp[0] if tmp[0] else 'state'
     args      = tmp[1:]
 
@@ -208,7 +204,6 @@ def manage_zigbee(args):
 
         elif arg[0] == '-':
             timer = arg_to_timer(arg)
-
 
     # Do process
     result = do_command(zlabel, zname, command, brightness, timer)
