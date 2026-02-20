@@ -1,15 +1,22 @@
 # Zigbee devices
 
-This is intended to manage Zigbeee smart lights, we use IKEA TRADFRI here.
+This is intended to manage Zigbeee smart lights, here we we use IKEA TRADFRI devices.
 
-## General view:
+## General view of needed componentes:
 
+- Zigbee devices: lightbulbs, etc
 - USB Zigbee adapter, for example: Sonoff ZBDongle-P (or E)  
-- Zigbee2MQTT: interfaza between your Zigbee network and the MQTT broker
-- The MQTT broker server, we use Mosquitto.
-- Python module for the MQTT protocol
+- Zigbee2MQTT: the interface between your Zigbee network and the MQTT broker
+- An standard MQTT broker server, we use Mosquitto.
+- paho-mqtt: a Python module for the MQTT comms protocol
+- This DevControl software
 
-All commands are sent to / received from the MQTT broker.
+## Features:
+- Simple ON/OFF management based on predefined 'scenes' under the zigbee2mqtt web interface. 
+- Also you can easily modify the brightness and set a timer to automatically switch off
+- `crontab` integration for schedulling switch on/off
+
+All commands are sent to or received from the MQTT broker.
 
 ## Environment
 
@@ -262,17 +269,6 @@ Haciendo 6 encendidos consecutivos a ritmo tranquilo la dejamos encendida en el 
 
     journalctl -u zigbee2mqtt.service -f
 
-# How to ensure switching OFF daily
-
-You can prepare `shome` user cronjob:
-    
-    shome@rpi3clac:~ $ crontab -l
-    # m h  dom mon dow   command
-    
-    00 02 *  *  *  mosquitto_pub -h localhost -t "zigbee2mqtt/estudio_billy_1/set" -m '{"state": "off"}'
-    00 02 *  *  *  mosquitto_pub -h localhost -t "zigbee2mqtt/salon_libreria_izq/set" -m '{"state": "off"}'
-    00 02 *  *  *  mosquitto_pub -h localhost -t "zigbee2mqtt/salon_libreria_der/set" -m '{"state": "off"}'
-
 # How to ensure the light bulbs behavior after a power outage
 
 To determine the behavior of light bulbs when they receive power after a power outage you can use the WEB INTERFACE
@@ -283,4 +279,21 @@ You can also use the terminal:
     true
     shome@rpi3clac:~ $ zigbee_control.py -dev='estudio_billy_1' state
     {"brightness": 25, "level_config": {"current_level_startup": 121}, "linkquality": 200, "power_on_behavior": "off", "state": "off", "update": {"installed_version": 16777220, "latest_version": 16777220, "state": "idle"}}
+    
+# How to ensure switching OFF daily
+
+Zigbee light devices has not scheduling support, so we use the system user `crontab`.
+
+You can schedule jobs under `devcontrol.yml`, see the provided sample file. The system will autmatically maintain jobs under your `crontab`
+
+Or you can prepare manually cron jobs:
+    
+    shome@rpi3clac:~ $ crontab -l
+    # m h  dom mon dow   command
+    
+    00 02 *  *  *  mosquitto_pub -h localhost -t "zigbee2mqtt/estudio_billy_1/set" -m '{"state": "off"}'
+    00 02 *  *  *  mosquitto_pub -h localhost -t "zigbee2mqtt/salon_libreria_izq/set" -m '{"state": "off"}'
+    00 02 *  *  *  mosquitto_pub -h localhost -t "zigbee2mqtt/salon_libreria_der/set" -m '{"state": "off"}'
+
+
 

@@ -41,6 +41,7 @@ devices:
             protocol:           shelly
             ip:                 192.168.1.58
 
+            # Scheduling is supported under the Shelly device itself
             # Set `override` to remove the existing device schedule or `extend` to keep it
             schedule_mode:      override
             schedule:
@@ -54,10 +55,21 @@ devices:
             protocol:           shelly
             ip:                 192.168.1.199
 
+    # Zigbee devices
     zigbees:
-        # button label          friendly name of a device or group in zigbee2mqtt
-        Billy estudio:          estudio_billy_1
-        Luces libreria salon:   salon_libreria
+
+        # Button label
+        Libreria salon:
+
+            # friendly name of a device or group in zigbee2mqtt
+            zigbee_name:        salon_libreria
+
+            # Scheduling relies on Linux cron
+            schedule:
+            #                   Linux cron timespec has 5 fields, example:
+            #                   min hou dom mon  dow
+            #                   30  00   *   *   0,1,2,3,4,5,6
+                switch_off:     00  01   *   *   *
 
 
 # Scripts

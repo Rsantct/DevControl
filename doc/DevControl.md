@@ -1,4 +1,12 @@
-# DevControl as a system service, with auto restart
+# DevControl overview
+
+To run DevControl you need:
+
+- prepare your configuration in **`bin/devcontrol/devcontrol.yml`** (see the example file)
+- run `bin/devcontrol_srv.py`, this is better done as a system service, see below.
+- navigate to `http://your_server_ip:8081`
+
+# The DevControl system service
 
 Prepare the Systemd unit file:
 
