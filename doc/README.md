@@ -14,7 +14,7 @@ Modules needed:
 
 ### Node.js
 
-Install Node.js
+The web server needs Node.js
 
     sudo apt update && sudo apt install nodejs npm
 
