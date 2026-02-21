@@ -113,7 +113,8 @@ export function btn_color(btn, onoff=null){
 
 export async function make_section(div_id, section_title, section_items, btn_handler){
 
-    if ( ! section_items ){
+    if ( ! section_items || ! isPlainObject(section_items) ){
+        console.error(`Error: ${section_title} not a valid objet:`, section_items);
         return;
     }
 
