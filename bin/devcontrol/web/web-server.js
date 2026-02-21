@@ -12,10 +12,23 @@ const yaml = require('js-yaml');
 const os = require('os');
 
 const app = express();
-const PORT_WEB = 8081;
+var   WEB_PORT = 8085;
 const BACKEND_TIMEOUT = 500
 
 const CONFIG_PATH = path.join(os.homedir(), 'bin/devcontrol/devcontrol.yml');
+var   CONFIG = {}
+
+// Load config yaml
+try {
+    const fileContents = fs.readFileSync(CONFIG_PATH, 'utf8');
+    CONFIG = yaml.load(fileContents);
+    //console.log(CONFIG);
+    WEB_PORT = CONFIG.web_port;
+
+} catch (e) {
+    console.error("error reading YAML:", e);
+    return null;
+}
 
 
 // Command line option '-v' VERBOSE
@@ -28,28 +41,17 @@ process.argv.slice(2).forEach(opt => {
 });
 
 
-function getConfig() {
-    try {
-        const fileContents = fs.readFileSync(CONFIG_PATH, 'utf8');
-        return yaml.load(fileContents);
-    } catch (e) {
-        console.error("Error reading YAML:", e);
-        return null;
-    }
-}
-
 // tcp bridge (promised to use async/await)
 function systemSocket(cmd) {
+
     return new Promise((resolve, reject) => {
-        const config = getConfig();
-        if (!config) return reject("Cannot load config");
 
         const client = new net.Socket();
         let response = '';
 
         client.setTimeout(BACKEND_TIMEOUT);
 
-        client.connect(config.server_port, config.server_addr, () => {
+        client.connect(CONFIG.server_port, CONFIG.server_addr, () => {
             client.write(cmd);
         });
 
@@ -80,7 +82,7 @@ app.post('/api/command', async (req, res) => {
     const { command } = req.body;
 
     if (!command) {
-        return res.status(400).json({ error: "No command found" });
+        return res.status(400).json({ error: "no command found" });
     }
 
     try {
@@ -98,12 +100,13 @@ app.post('/api/command', async (req, res) => {
             res.send(result);
         }
     } catch (error) {
-        res.status(500).json({ error: "Backend error", detail: error });
+        console.log(error);
+        res.status(500).json({ error: "backend error" });
     }
 });
 
 
-app.listen(PORT_WEB, () => {
-    console.log(`Node.js server active at port ${PORT_WEB}`);
+app.listen(WEB_PORT, () => {
+    console.log(`Node.js server active at port ${WEB_PORT}`);
     console.log(`Reading config at: ${CONFIG_PATH}`);
 });
