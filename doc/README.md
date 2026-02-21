@@ -20,6 +20,42 @@ The web server needs Node.js
 
     sudo apt update && sudo apt install nodejs npm
 
+On the first time, once you have this repo under your `~/bin/` folder, you'll need to prepare the Node.js modules (Express)
+
+    cd bin/devcontrol/web
+    npm install
+
+This will create a new sub-directory `node_modules`:
+
+    bin/devcontrol/web
+    ├── node_modules            <<<<<
+    ├── package.json
+    ├── public
+    └── web-server.js
+
+#### testing the web server
+
+Navigate to http://YOURSERVERHOSTNAME.local:8081
+
+Run in a terminal:
+
+    cd bin/devcontrol/web
+    node web-server.js -v
+    (verbose mode)
+    Node.js server active at port 8081
+    Reading config at: /home/shome/bin/devcontrol/devcontrol.yml
+    Rx: hello
+    Tx: hi!
+
+
+### Download the DevControl app
+
+    mkdir -p ~/bin
+    mkdir -p ~/Downloads
+    cd ~/Downnloads
+    wget https://github.com/Rsantct/DevControl/archive/refs/heads/main.zip
+    unzip main.zip
+    cp -r DevControl-main/bin/* ~/bin/
 
 ## The DevControl backend service
 
@@ -91,11 +127,6 @@ Feb 06 23:19:30 rpi3clac systemd[1]: Started devcontrol.service - Servidor TCP D
 
 ## The DevControl web service
 
-On the first time, once you have this repo under your `~/bin/` folder, you'll need to prepare the Node.js modules (Express)
-
-    cd bin/devcontrol/web
-    npm install
-
 The web server will run as a user Systemd service
 
 `sudo nano /etc/systemd/system/devcontrol-web.service`
@@ -138,3 +169,23 @@ To see logs in real time:
 To run DevControl prepare your configuration in **`bin/devcontrol/devcontrol.yml`** (see the example file)
 
 Having the backend and web services both running (see above), then navigate to **`http://your_server_ip:8081`**
+
+# Troubleshooting
+
+If you need to monitor and debug the backend:
+
+- stop the backend service
+- run it in a terminal in vervose mode: `python3 bin/devcontrol_srv.py -v`
+
+Example:
+    
+    shome@rpi3clac:~ $ python3 bin/devcontrol_srv.py -v
+    (devcontrol.py) logging commands in '/home/shome/bin/devcontrol/modules/../devcontrol.log'
+    (devcontrol.py) threading loop for refreshing the status in background ...'
+    (devcontrol) will run 'devcontrol' module at 0.0.0.0:9950 ...
+    (devcontrol) Rx: hello
+    (devcontrol) Tx: hi!
+
+
+
+
