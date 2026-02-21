@@ -1,4 +1,4 @@
-## Notes on schedulling for devices
+## Notes on scheduling for devices
 
 See **`devcontrol.yml`** for scheduling syntax.
 
