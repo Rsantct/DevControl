@@ -2,7 +2,7 @@
 
 ## A SoC computer
 
-Like Raspberry Pi 3
+Like Raspberry Pim, any model
 
 ## Software packages
 
