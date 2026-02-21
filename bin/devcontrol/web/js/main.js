@@ -17,9 +17,11 @@ var WOL_REFRESH_COUNT = {};
 const WAIT_4_WOL = 30;
 
 var STATUS = {};
-var devices = {};
-var scripts = {};
-var show_warning = false
+var DEVICES = {};
+var SCRIPTS = {};
+var SHOW_WARNING = false
+var UI_INITIALIZED = false;
+
 
 // Prompt message when switching on a Zigbee:
 const zigbee_on_msg =`
@@ -70,7 +72,7 @@ async function do_wol(event){
 
 
 async function fill_in_wol_buttons(wol_devices) {
-    // Usamos wol_devices (el parámetro), no la variable global devices
+    // Usamos wol_devices (el parámetro), no la variable global DEVICES
     await mc.make_section('div_wol', 'Wake On LAN PCs', wol_devices, do_wol);
 
     for (const wol_id in wol_devices){
@@ -81,7 +83,7 @@ async function fill_in_wol_buttons(wol_devices) {
 
 function wol_refresh(){
 
-    for (const wol_id in devices.wol) {
+    for (const wol_id in DEVICES.wol) {
 
         const btn = document.getElementById('bt_' + wol_id);
 
@@ -156,7 +158,7 @@ async function fill_in_plug_buttons(plugs_data) {
 
 function plugs_refresh(){
 
-    for (const plug_id in devices.plugs) {
+    for (const plug_id in DEVICES.plugs) {
 
         const btn = document.getElementById('bt_' + plug_id);
 
@@ -194,7 +196,7 @@ async function fill_in_scripts_buttons(scripts_data) {
 
 function scripts_refresh(){
 
-    for (const script_id in scripts) {
+    for (const script_id in SCRIPTS) {
 
         const btn = document.getElementById('bt_' + script_id);
 
@@ -255,7 +257,7 @@ async function fill_in_zigbee_buttons(zigbees_data) {
 
 function zigbees_refresh(){
 
-    for (const z_id in devices.zigbees) {
+    for (const z_id in DEVICES.zigbees) {
 
         const btn = document.getElementById('bt_' + z_id);
 
@@ -281,10 +283,10 @@ async function do_refresh() {
 
     if (await mc.try_connection()) {
 
-        if ( show_warning ){
+        if ( SHOW_WARNING ){
             mc.display_warning_and_hide_sections(false);
         }
-        show_warning = false;
+        SHOW_WARNING = false;
 
         STATUS = await mc.send_cmd('get_status');
 
@@ -297,44 +299,71 @@ async function do_refresh() {
             zigbees_refresh();
         }
     }else{
-        show_warning = true;
+        SHOW_WARNING = true;
     }
 
-    if ( show_warning ){
+    if ( SHOW_WARNING ){
         mc.display_warning_and_hide_sections(true);
     }
 }
 
 
 // --- MAIN ---
-(async () => {
 
-    if (await mc.try_connection()) {
+async function startApp() {
 
-        devices = await mc.send_cmd('get_config {"section": "devices"}');
-        scripts = await mc.send_cmd('get_config {"section": "scripts"}');
+    const isConnected = await mc.try_connection();
+    if (! isConnected ) {
+        console.log("Servidor not detectes. Retrying in 5 s ...");
+        setTimeout(startApp, 5000); // w/o location.reload()
+        return;
+    }
 
-        await fill_in_wol_buttons(devices.wol);
-        await fill_in_plug_buttons(devices.plugs);
-        await fill_in_zigbee_buttons(devices.zigbees);
-        await fill_in_scripts_buttons(scripts);
+    if (! UI_INITIALIZED) {
+        const success = await setupSystem();
+        if (!success) {
+            setTimeout(startApp, 5000);
+            return;
+        }
+    }
 
-        const conf_refresh = await mc.send_cmd('get_config {"section": "refresh"}');
+    startPolling();
+}
 
-        REFRESH_INTERVAL = conf_refresh.polling_interval || 5;
+async function setupSystem() {
+    try {
 
-        async function pulse() {
-            await do_refresh();
-            // next pulse only when do_refresh ends (either successfull or timeout)
-            setTimeout(pulse, REFRESH_INTERVAL * 1000);
+        DEVICES     = await mc.send_cmd('get_config {"section": "devices"}');
+        SCRIPTS     = await mc.send_cmd('get_config {"section": "scripts"}');
+        const conf  = await mc.send_cmd('get_config {"section": "refresh"}');
+
+        if (!mc.isPlainObject(DEVICES) || !mc.isPlainObject(SCRIPTS)) {
+            throw new Error("Bad config data");
         }
 
-        pulse();
+        REFRESH_INTERVAL = conf.polling_interval || 5;
 
-    } else {
-        show_warning = true;
-        mc.display_warning_and_hide_sections(true);
-        // If try_connection fails 1st time, loop to reload every 5 s
-        setTimeout(() => location.reload(), 5000);
+        await fill_in_wol_buttons(DEVICES.wol);
+        await fill_in_plug_buttons(DEVICES.plugs);
+        await fill_in_zigbee_buttons(DEVICES.zigbees);
+        await fill_in_scripts_buttons(SCRIPTS);
+
+        UI_INITIALIZED = true;
+
+        return true;
+
+    } catch (error) {
+        console.error("Error building the UI:", error);
+        return false;
     }
-})();
+}
+
+function startPolling() {
+    // Here we use an autoexec function so that the first refresh is inmediate
+    (async function pulse() {
+        await do_refresh();
+        setTimeout(pulse, REFRESH_INTERVAL * 1000);
+    })();
+}
+
+startApp();
