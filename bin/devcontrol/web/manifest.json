@@ -1,0 +1,27 @@
+{
+  "short_name": "DevControl",
+  "name": "DevControl Home Automation App",
+  "description": "A very simple, but easy to use, home automation app",
+  "icons": [
+    {
+      "src": "./site-icons/android-chrome-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "./site-icons/android-chrome-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "./site-icons/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180",
+      "purpose": "any"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
