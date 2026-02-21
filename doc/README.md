@@ -1,10 +1,3 @@
-# DevControl overview
-
-To run DevControl prepare your configuration in **`bin/devcontrol/devcontrol.yml`** (see the example file)
-
-Having the backend and web services both running (see below), then navigate to **`http://your_server_ip:8081`**
-
-
 # Requirements
 
 ## A SoC computer
@@ -139,3 +132,9 @@ To check:
 To see logs in real time:
 
     sudo journalctl -u devcontrol-web.service -f
+
+# Run DevControl
+
+To run DevControl prepare your configuration in **`bin/devcontrol/devcontrol.yml`** (see the example file)
+
+Having the backend and web services both running (see above), then navigate to **`http://your_server_ip:8081`**
