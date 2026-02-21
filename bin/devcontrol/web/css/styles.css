@@ -69,3 +69,37 @@ table#table_zigbees { border-radius: 10px/10px; }
     font-size:1.15em;
     display: inline;
 }
+
+/* Contenedor base de advertencias */
+#div_warnings {
+    display: none; /* Se activa desde JS */
+    padding: 15px 20px;
+    margin: 20px auto;
+    max-width: 600px;
+    border-radius: 8px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+/* Estilo específico para Errores de Conexión */
+.warning_box_error {
+    background-color: #fde8e8;
+    color: #9b1c1c;
+    border: 1px solid #f8b4b4;
+    border-left: 5px solid #e02424; /* Un detalle elegante */
+}
+
+/* Animación opcional para el Timeout (indica espera) */
+.warning_timeout {
+    animation: pulse-bg 2s infinite;
+}
+
+@keyframes pulse-bg {
+    0% { background-color: #fde8e8; }
+    50% { background-color: #f9d2d2; }
+    100% { background-color: #fde8e8; }
+}
