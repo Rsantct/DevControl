@@ -11,73 +11,81 @@ export function isPlainObject(x) {
 }
 
 
-export function send_cmd( cmd ) {
+export async function send_cmd(cmd) {
+    // Si la petición tarda más de 4 segundos, la cancelamos
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-    cmd = encodeURIComponent(cmd);
-    const url = '/php/main.php?command=' + cmd;
+    try {
+        const response = await fetch('/api/command', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ command: cmd }),
+            signal: controller.signal
+        });
 
-    const miPET = new XMLHttpRequest();
-    let respuTxt = '';
+        clearTimeout(timeoutId);
 
-    try {                    // ASYNC
-        miPET.open("POST", url, false);
-        miPET.send();
-        respuTxt = miPET.responseText;
-    }
-    catch(err) {
-        respuTxt = JSON.stringify( {"autorizado": false, "razon": err.message} );
-    }
+        if (!response.ok) throw new Error('backend error');
 
+        const respuTxt = await response.text();
 
-    // JSON ANSWER
-    try{
-        const respuJson = JSON.parse(respuTxt.replaceAll(': null', ': ""'));
-        //console.log('envia_com respuJson:', respuJson);
-        return respuJson
+        try {
+            return JSON.parse(respuTxt.replaceAll(': null', ': ""'));
 
-    // TEXT ANSWER
-    }catch{
-
-        if( respuTxt.toLowerCase().includes('connection refused') ){
-            respuTxt = 'server connection error';
+        } catch {
+            if (respuTxt.toLowerCase().includes('refused')){
+                return 'server error'
+            }else{
+                return respuTxt;
+            }
         }
 
-        // alert(respuTxt);
-        return respuTxt;
+    } catch (err) {
+        // Differ on timeout or network error
+        if (err.name === 'AbortError') {
+            return 'server timeout';
+        }
+        return JSON.stringify({ error: true, reason: err.message });
     }
 }
 
 
-export function try_connection() {
+export async function try_connection() {
+    const tmp = await send_cmd('hello');
+    if (tmp == 'hi!') {
+        return true
+    }else{
+        return false
+    }
+}
 
-    let res = false
 
-    const tmp = send_cmd( 'hello' );
+export function display_warning_and_hide_sections(yes=false, isTimeout=false){
 
-    if ( typeof tmp == 'string' && tmp.includes('connection error') ) {
+    const warningDiv = document.getElementById("div_warnings");
+    const sections = ["div_wol", "div_plugs", "div_scripts", "div_zigbees"];
 
-        document.getElementById("div_wol").style.display     = 'none';
-        document.getElementById("div_plugs").style.display   = 'none';
-        document.getElementById("div_scripts").style.display = 'none';
-        document.getElementById("div_zigbees").style.display    = 'none';
+    if (yes){
 
-        document.getElementById("div_warnings").style.display = 'block';
-        document.getElementById("div_warnings").innerHTML = tmp;
+        warningDiv.style.display = 'block';
+        sections.forEach(id => document.getElementById(id).style.display = 'none');
+
+        warningDiv.className = 'warning_box_error';
+
+        if (isTimeout) {
+            warningDiv.classList.add('warning_timeout');
+            warningDiv.innerHTML = `⚠️ <b>Timeout:</b> time out ...`;
+
+        } else {
+            warningDiv.innerHTML = `❌ <b>Error:</b> no response from backend`;
+        }
 
     }else{
 
-        document.getElementById("div_wol").style.display     = 'block';
-        document.getElementById("div_plugs").style.display   = 'block';
-        document.getElementById("div_scripts").style.display = 'block';
-        document.getElementById("div_zigbees").style.display    = 'block';
-
-        document.getElementById("div_warnings").style.display = 'none';
-        document.getElementById("div_warnings").innerHTML = '';
-
-        res = true
+        warningDiv.style.display = 'none';
+        sections.forEach(id => document.getElementById(id).style.display = 'block');
     }
-
-    return res
 }
 
 
@@ -103,7 +111,7 @@ export function btn_color(btn, onoff=null){
 }
 
 
-export function make_section(div_id, section_title, section_items, btn_handler){
+export async function make_section(div_id, section_title, section_items, btn_handler){
 
     if ( ! section_items ){
         return;
@@ -156,7 +164,7 @@ export function make_section(div_id, section_title, section_items, btn_handler){
         // display plug device schedule
         if (div_id == 'div_plugs'){
 
-            const schedules = send_cmd( 'plug {"target": "' + item + '", "command": "schedule", "schedule": "nice_list"}' );
+            const schedules = await send_cmd( 'plug {"target": "' + item + '", "command": "schedule", "schedule": "nice_list"}' );
 
             if ( Array.isArray(schedules) ){
 
