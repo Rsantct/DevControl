@@ -69,46 +69,45 @@ Description=Servidor TCP DevControl
 After=network.target zigbee2mqtt.service
 
 [Service]
-# Ejecutar como el usuario específico
+# Run as specific user
 User=shome
 Group=shome
 
-# Directorio de trabajo (donde reside el script)
 WorkingDirectory=/home/shome/bin/
 
-# Comando para iniciar el script.
-# Se recomienda usar la ruta absoluta al intérprete de Python.
-# En caso de un entorno virtual poner algo como /home/shome/venv/bin/python
+# Use absolute path
+# In case of virtual env, use something like /home/username/.env/bin/python3
 ExecStart=/usr/bin/python3 /home/shome/bin/devcontrol_srv.py
 
-# Reiniciar automáticamente si el script falla
+# Restart if failure
 Restart=always
 RestartSec=10
 
-# Captura la salida estándar y de errores en el log del sistema
+# Capture stdout, stderr and errors to journalctrl
 #StandardOutput=journal
 #StandardError=journal
-# no imprimir constantantemente, pero los errores seguirán en journalctrl:
+# Capture only errors:
 StandardOutput=null
 StandardError=inherit
 
 [Install]
+# regular multiuser usage
 WantedBy=multi-user.target
 ```
 
-Recargar systemd para que conozca el nuevo servicio:
+Reload Systemd in order to know about the new service:
 
 `sudo systemctl daemon-reload`
 
-Habilitar para que arranque con el sistema:
+Enable on system startup
 
 `sudo systemctl enable devcontrol.service`
 
-Arrancar el servicio ahora mismo:
+Start now:
 
 `sudo systemctl start devcontrol.service`
 
-Comprobar:
+Check:
 ```
 sudo systemctl status devcontrol.service
 ● devcontrol.service - Servidor TCP DevControl
