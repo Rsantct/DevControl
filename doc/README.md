@@ -2,7 +2,7 @@
 
 ## A SoC computer
 
-Like Raspberry Pim, any model
+Like Raspberry Pi, any model attached to your Wifi or Eth
 
 ## Software packages
 
