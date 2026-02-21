@@ -12,7 +12,7 @@ const yaml = require('js-yaml');
 const os = require('os');
 
 const app = express();
-const PORT_WEB = 8082;
+const PORT_WEB = 8081;
 const BACKEND_TIMEOUT = 500
 
 const CONFIG_PATH = path.join(os.homedir(), 'bin/devcontrol/devcontrol.yml');
