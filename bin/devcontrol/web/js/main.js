@@ -6,16 +6,20 @@
 
 import * as mc from "./miscel.js";
 
-// seconds
+// Default page refresh in seconds
 var REFRESH_INTERVAL = 5;
 
 // Object to keep the different wol info cells until waiting counter expired,
 // while waiting for PC to be `up` after sending a WOL packet
 var WOL_REFRESH_COUNT = {};
+
 // Seconds to keep `waiting for response` after sending a WOL packet
 const WAIT_4_WOL = 30;
 
 var STATUS = {};
+var devices = {};
+var scripts = {};
+var show_warning = false
 
 // Prompt message when switching on a Zigbee:
 const zigbee_on_msg =`
@@ -34,7 +38,7 @@ for brighness 3 and timer 1/2 h:
     3  -0.5h`;
 
 // WOL PCs
-function do_wol(event){
+async function do_wol(event){
 
     if ( ! confirm('Please CONFIRM to send WOL packet') ){
             return;
@@ -45,7 +49,7 @@ function do_wol(event){
     // example 'bt_Amplifier'
     const wol_id = btn.id.slice(3,);
 
-    const ans = mc.send_cmd( 'wol {"target": "' + wol_id + '", "command":"send"}' );
+    const ans = await mc.send_cmd( 'wol {"target": "' + wol_id + '", "command":"send"}' );
 
     // Highlights the button for a second
     btn.className = 'ctrl_button_highlighted';
@@ -65,12 +69,11 @@ function do_wol(event){
 }
 
 
-function fill_in_wol_buttons(wol_devices) {
+async function fill_in_wol_buttons(wol_devices) {
+    // Usamos wol_devices (el parámetro), no la variable global devices
+    await mc.make_section('div_wol', 'Wake On LAN PCs', wol_devices, do_wol);
 
-    mc.make_section('div_wol', 'Wake On LAN PCs', devices.wol, do_wol);
-
-    // initializes the counter for all WOL devices
-    for (const wol_id in devices.wol){
+    for (const wol_id in wol_devices){
         WOL_REFRESH_COUNT[wol_id] = 0;
     }
 }
@@ -83,6 +86,10 @@ function wol_refresh(){
         const btn = document.getElementById('bt_' + wol_id);
 
         const ping = STATUS.wol[wol_id];
+
+        if (!ping){
+            continue;
+        }
 
         const is_Up = ping.includes('on') || ping.includes('up') || ping == '1';
 
@@ -108,7 +115,7 @@ function wol_refresh(){
 }
 
 // PLUGS
-function do_plug_toggle(event){
+async function do_plug_toggle(event){
 
     const btn = event.target;
 
@@ -128,7 +135,7 @@ function do_plug_toggle(event){
         return;
     }
 
-    const ans = mc.send_cmd( 'plug {"target": "' + plug_id + '", "command": "toggle"}' );
+    const ans = await mc.send_cmd( 'plug {"target": "' + plug_id + '", "command": "toggle"}' );
 
 
     // Highlights the button for a while
@@ -142,8 +149,8 @@ function do_plug_toggle(event){
 }
 
 
-function fill_in_plug_buttons(plugs) {
-    mc.make_section('div_plugs', 'Smart Plugs', devices.plugs, do_plug_toggle);
+async function fill_in_plug_buttons(plugs_data) {
+    await mc.make_section('div_plugs', 'Smart Plugs', plugs_data, do_plug_toggle);
 }
 
 
@@ -161,7 +168,7 @@ function plugs_refresh(){
 
 
 // SCRIPTS
-function do_script(event){
+async function do_script(event){
 
     if ( ! confirm('Please CONFIRM to RUN the script') ){
         return;
@@ -172,7 +179,7 @@ function do_script(event){
     // example 'bt_Amplifier'
     const script_id = btn.id.slice(3,);
 
-    const response = mc.send_cmd( 'script {"target": "' + script_id + '", "command": "run"}' );
+    const response = await mc.send_cmd( 'script {"target": "' + script_id + '", "command": "run"}' );
     //alert('response was: ' + response);
 
     // Button to gray until refresh
@@ -180,8 +187,8 @@ function do_script(event){
 }
 
 
-function fill_in_scripts_buttons(scripts) {
-    mc.make_section('div_scripts', 'Scripts', scripts, do_script);
+async function fill_in_scripts_buttons(scripts_data) {
+    await mc.make_section('div_scripts', 'Scripts', scripts_data, do_script);
 }
 
 
@@ -193,13 +200,18 @@ function scripts_refresh(){
 
         // Button color
         const onoff = STATUS.scripts[script_id];
+
+        if (!onoff){
+            continue
+        }
+
         mc.btn_color(btn, onoff);
     }
 }
 
 
 // ZIGBEES
-function do_zigbee(event){
+async function do_zigbee(event){
 
     // example 'bt_Amplifier'
     const btn = event.target;
@@ -228,7 +240,7 @@ function do_zigbee(event){
     }
 
     if (cmd){
-        const response = mc.send_cmd( cmd );
+        const response = await mc.send_cmd( cmd );
         console.log('response was: ' + response);
         // Button to gray until refresh
         btn.style.borderColor = 'darkgray';
@@ -236,8 +248,8 @@ function do_zigbee(event){
 }
 
 
-function fill_in_zigbee_buttons(zigbees) {
-    mc.make_section('div_zigbees', 'Zigbee lights', zigbees, do_zigbee);
+async function fill_in_zigbee_buttons(zigbees_data) {
+    await mc.make_section('div_zigbees', 'Zigbee lights', zigbees_data, do_zigbee);
 }
 
 
@@ -249,6 +261,11 @@ function zigbees_refresh(){
 
         // Button color
         const onoff = STATUS.zigbees[z_id];
+
+        if (!onoff){
+            continue
+        }
+
         mc.btn_color(btn, onoff);
 
         // Info cell (PENDING)
@@ -260,37 +277,64 @@ function zigbees_refresh(){
 }
 
 
-// MAIN
+async function do_refresh() {
 
-function do_refresh() {
+    if (await mc.try_connection()) {
 
-    if ( mc.try_connection() ) {
+        if ( show_warning ){
+            mc.display_warning_and_hide_sections(false);
+        }
+        show_warning = false;
 
-        STATUS = mc.send_cmd( 'get_status' );
+        STATUS = await mc.send_cmd('get_status');
 
-        if ( mc.isPlainObject(STATUS) ) {
+        //console.log('get_status:', STATUS);
+
+        if (mc.isPlainObject(STATUS)) {
             wol_refresh();
             plugs_refresh();
             scripts_refresh();
             zigbees_refresh();
         }
+    }else{
+        show_warning = true;
+    }
+
+    if ( show_warning ){
+        mc.display_warning_and_hide_sections(true);
     }
 }
 
 
-if ( mc.try_connection() ) {
+// --- MAIN ---
+(async () => {
 
-    var devices = mc.send_cmd( 'get_config {"section": "devices"}' );
-    var scripts = mc.send_cmd( 'get_config {"section": "scripts"}' );
+    if (await mc.try_connection()) {
 
-    fill_in_wol_buttons(devices.wol);
-    fill_in_plug_buttons(devices.plugs);
-    fill_in_zigbee_buttons(devices.zigbees);
-    fill_in_scripts_buttons(scripts);
+        devices = await mc.send_cmd('get_config {"section": "devices"}');
+        scripts = await mc.send_cmd('get_config {"section": "scripts"}');
 
-    // PAGE REFRESH
-    const tmp = mc.send_cmd( 'get_config {"section": "refresh"}' );
-    REFRESH_INTERVAL = tmp.polling_interval;
-    do_refresh();
-    setInterval( do_refresh, REFRESH_INTERVAL * 1000);
-}
+        await fill_in_wol_buttons(devices.wol);
+        await fill_in_plug_buttons(devices.plugs);
+        await fill_in_zigbee_buttons(devices.zigbees);
+        await fill_in_scripts_buttons(scripts);
+
+        const conf_refresh = await mc.send_cmd('get_config {"section": "refresh"}');
+
+        REFRESH_INTERVAL = conf_refresh.polling_interval || 5;
+
+        async function pulse() {
+            await do_refresh();
+            // next pulse only when do_refresh ends (either successfull or timeout)
+            setTimeout(pulse, REFRESH_INTERVAL * 1000);
+        }
+
+        pulse();
+
+    } else {
+        show_warning = true;
+        mc.display_warning_and_hide_sections(true);
+        // If try_connection fails 1st time, loop to reload every 5 s
+        setTimeout(() => location.reload(), 5000);
+    }
+})();
