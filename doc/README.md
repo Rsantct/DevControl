@@ -4,6 +4,16 @@
 
 Like Raspberry Pi, any model attached to your Wifi or Eth
 
+### User environment
+
+Just prepare an user for smart home automation, for example:
+
+    sudo adduser shome
+
+Login an continue as follow.
+
+For installing packages requiring `sudo` , use instead a regular sudoer like `pi` in Raspberry Pi 
+
 ## Software packages
 
 ### Python 3
