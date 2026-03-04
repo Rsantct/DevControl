@@ -62,6 +62,7 @@ devices:
 
             # friendly name of a device or group in zigbee2mqtt
             zigbee_name:        salon_libreria
+            default_brightness: 33
 
             # Scheduling relies on Linux cron
             schedule:
