@@ -125,19 +125,28 @@ def do_command(zlabel, zname, command='state', brightness=0, timer=0):
 
         if command == 'on':
 
+            # Use brightness if given
             if brightness:
-                print(f'{Fmt.BLUE}{zname}: brightness {brightness}/{BRIGHTNESSMAX}{Fmt.END}')
                 z.enviar_mensaje(zname, {'brightness': brightness})
+                print(f'{Fmt.BLUE}{zname}: brightness {brightness}/{BRIGHTNESSMAX}{Fmt.END}')
 
             else:
 
+                # Use scene if defined
                 if  scene_on:
                     z.enviar_mensaje(zname, {'scene_recall': scene_on['id']})
                     print(f'{Fmt.BLUE}{zname}: recall scene <on>{Fmt.END}')
 
                 else:
-                    z.enviar_mensaje(zname, {'brightness': int(BRIGHTNESSMAX / 2)})
-                    print(f'{Fmt.BLUE}{zname}: brightness medium because no specied and scene <on> not found{Fmt.END}')
+
+                    # Use config default_brightness if defined, or 5/10 as default
+                    default_brightness = cm.CONFIG.get('devices', {}).get('zigbees', {}) \
+                                 .get(zlabel, {}).get('default_brightness', 5)
+
+                    brightness = arg_to_brightness(default_brightness);
+
+                    z.enviar_mensaje(zname, {'brightness': brightness})
+                    print(f'{Fmt.BLUE}{zname}: using default brightness {default_brightness}/10{Fmt.END}')
 
             if timer:
                 cm.sleep(.5)
