@@ -11,9 +11,10 @@ import  os
 import  sys
 import  yaml
 import  json
-from    time    import  strftime, sleep, time
+from    time        import strftime, sleep, time
+from    datetime    import datetime, timezone
 
-from    fmt     import Fmt
+from    fmt         import Fmt
 import  wol
 import  plugs
 import  scripts
@@ -52,13 +53,20 @@ def init():
             print(f'{Fmt.BLUE}(common.py) Zigbee scheduling dumped to the user crontab.{Fmt.END}')
 
 
+def get_now_iso():
+    """ ISO with (Z)ulu for Javascript: 2026-03-10T13:14:15Z
+    """
+    now = datetime.now(timezone.utc)
+    return now.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
 def clamp(n, minn=0, maxn=10):
     return max(minn, min(n, maxn))
 
 
 def do_log(cmd, res):
     with open(LOGPATH, 'a') as f:
-        f.write(f'{strftime("%Y/%m/%d %H:%M:%S")}; {cmd}; {res}\n')
+        f.write(f'{get_now_iso()}; {cmd}; {res}\n')
 
 
 def get_section(section):
@@ -236,7 +244,7 @@ def dump_status_to_disk():
 
         try:
             with open(STATUSPATH, 'w') as f:
-                f.write( json.dumps(STATUS) )
+                f.write( json.dumps(STATUS, indent=2) )
             break
         except:
             tries -= 1
@@ -279,6 +287,9 @@ def refresh_all_status():
     for z_id in zigbees_keys:
         ans = zigbees.manage_zigbee( {"target": z_id, "command": "status"} )
         st["zigbees"][z_id] = ans
+
+
+    st["timestamp"] = get_now_iso()
 
     STATUS = st
 
