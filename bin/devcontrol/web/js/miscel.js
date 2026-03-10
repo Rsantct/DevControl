@@ -11,6 +11,14 @@ export function isPlainObject(x) {
 }
 
 
+export function  older_than (timestamp, seconds) {
+    // timestamp must be done in ISO Zulu format example: 2026-03-10T11:48:46Z
+    const ms = seconds * 1000;
+    const delta = new Date() - new Date(timestamp)
+    return delta > ms
+}
+
+
 export async function send_cmd(cmd) {
     // Si la petición tarda más de 4 segundos, la cancelamos
     const controller = new AbortController();
@@ -61,12 +69,13 @@ export async function try_connection() {
 }
 
 
-export function display_warning_and_hide_sections(yes=false, isTimeout=false){
+export function display_warning_and_hide_sections(yes=false, msg=null, isTimeout=false){
 
     const warningDiv = document.getElementById("div_warnings");
     const sections = ["div_wol", "div_plugs", "div_scripts", "div_zigbees"];
 
     if (yes){
+        console.log(msg);
 
         warningDiv.style.display = 'block';
         sections.forEach(id => document.getElementById(id).style.display = 'none');
@@ -78,7 +87,12 @@ export function display_warning_and_hide_sections(yes=false, isTimeout=false){
             warningDiv.innerHTML = `⚠️ <b>Timeout:</b> time out ...`;
 
         } else {
-            warningDiv.innerHTML = `❌ <b>Error:</b> no response from backend`;
+
+            if ( msg ){
+                warningDiv.innerHTML = `<b>Error:</b> ${msg}`;
+            } else {
+                warningDiv.innerHTML = `❌ <b>Error:</b> no response from backend`;
+            }
         }
 
     }else{

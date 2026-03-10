@@ -19,7 +19,6 @@ const WAIT_4_WOL = 30;
 var STATUS = {};
 var DEVICES = {};
 var SCRIPTS = {};
-var SHOW_WARNING = false
 var UI_INITIALIZED = false;
 
 
@@ -281,29 +280,36 @@ function zigbees_refresh(){
 
 async function do_refresh() {
 
+    let warning_msg = '';
+
     if (await mc.try_connection()) {
 
-        if ( SHOW_WARNING ){
-            mc.display_warning_and_hide_sections(false);
-        }
-        SHOW_WARNING = false;
-
         STATUS = await mc.send_cmd('get_status');
-
         //console.log('get_status:', STATUS);
 
-        if (mc.isPlainObject(STATUS)) {
-            wol_refresh();
-            plugs_refresh();
-            scripts_refresh();
-            zigbees_refresh();
-        }
-    }else{
-        SHOW_WARNING = true;
-    }
+        if ( mc.isPlainObject(STATUS) ) {
 
-    if ( SHOW_WARNING ){
-        mc.display_warning_and_hide_sections(true);
+            if ( mc.older_than(STATUS.timestamp, 30) ) {
+                warning_msg = 'received data is obsolete';
+                mc.display_warning_and_hide_sections(true, warning_msg);
+
+            }else{
+                mc.display_warning_and_hide_sections(false);
+
+                wol_refresh();
+                plugs_refresh();
+                scripts_refresh();
+                zigbees_refresh();
+            }
+
+        }else{
+            warning_msg = 'bad received data';
+            mc.display_warning_and_hide_sections(true, warning_msg);
+        }
+
+    }else{
+        warning_msg = 'no response from backend';
+        mc.display_warning_and_hide_sections(true, warning_msg);
     }
 }
 
@@ -314,7 +320,8 @@ async function startApp() {
 
     const isConnected = await mc.try_connection();
     if (! isConnected ) {
-        console.log("Servidor not detectes. Retrying in 5 s ...");
+        const warning_msg = 'Server not detected. Retrying in 5 s ...';
+        mc.display_warning_and_hide_sections(true, warning_msg);
         setTimeout(startApp, 5000); // w/o location.reload()
         return;
     }
