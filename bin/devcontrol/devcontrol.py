@@ -165,7 +165,7 @@ def do( cmd_phrase ):
     else:
         cm.do_log(cmd_phrase, result)
 
-    return json.dumps(result)
+    return json.dumps(result, indent=2)
 
 
 # Things to do first
