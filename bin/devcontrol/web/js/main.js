@@ -72,7 +72,10 @@ async function do_wol(event){
 
 async function fill_in_wol_buttons(wol_devices) {
     // Usamos wol_devices (el parámetro), no la variable global DEVICES
-    await mc.make_section('div_wol', 'Wake On LAN PCs', wol_devices, do_wol);
+
+    const title = 'Wake On LAN PCs';
+    // Leave the title blank
+    await mc.make_section('div_wol', '', wol_devices, do_wol);
 
     for (const wol_id in wol_devices){
         WOL_REFRESH_COUNT[wol_id] = 0;
@@ -151,7 +154,9 @@ async function do_plug_toggle(event){
 
 
 async function fill_in_plug_buttons(plugs_data) {
-    await mc.make_section('div_plugs', 'Smart Plugs', plugs_data, do_plug_toggle);
+    const title = 'Smart Plugs';
+    // Leave the title blank
+    await mc.make_section('div_plugs', '', plugs_data, do_plug_toggle);
 }
 
 
@@ -189,7 +194,9 @@ async function do_script(event){
 
 
 async function fill_in_scripts_buttons(scripts_data) {
-    await mc.make_section('div_scripts', 'Scripts', scripts_data, do_script);
+    const title = 'Scripts';
+    // Leave the title blank
+    await mc.make_section('div_scripts', '', scripts_data, do_script);
 }
 
 
@@ -250,7 +257,9 @@ async function do_zigbee(event){
 
 
 async function fill_in_zigbee_buttons(zigbees_data) {
-    await mc.make_section('div_zigbees', 'Zigbee lights', zigbees_data, do_zigbee);
+    const title = 'Zigbee lights';
+    // Leave the title blank
+    await mc.make_section('div_zigbees', '', zigbees_data, do_zigbee);
 }
 
 
