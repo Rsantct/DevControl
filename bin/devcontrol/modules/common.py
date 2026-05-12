@@ -23,7 +23,8 @@ import  crontool
 
 _MY_DIR      = os.path.dirname(__file__)
 
-LOGPATH     = f'{_MY_DIR}/../devcontrol.log'
+LOGDIR      = f'{_MY_DIR}/../log'
+LOGPATH     = f'{LOGDIR}/devcontrol.log'
 CFGPATH     = f'{_MY_DIR}/../devcontrol.yml'
 STATUSPATH  = f'{_MY_DIR}/../.devcontrol'
 CONFIG      = {}
@@ -42,15 +43,20 @@ def init():
 
     global CONFIG, STATUS
 
+    if not os.path.isdir(LOGDIR):
+        os.mkdir(LOGDIR)
+
     CONFIG = read_config()
 
     STATUS = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {} }
 
-    # set the configured Zigbee scheduling to the user crontab
-    SIMULATE_CRONTAB = False
-    if dump_zigbees_schedule_to_crontab(simulate=SIMULATE_CRONTAB):
-        if not SIMULATE_CRONTAB:
-            print(f'{Fmt.BLUE}(common.py) Zigbee scheduling dumped to the user crontab.{Fmt.END}')
+
+def is_integer(string):
+    try:
+        int(string)
+        return True
+    except:
+        return False
 
 
 def get_now_iso():
@@ -64,9 +70,9 @@ def clamp(n, minn=0, maxn=10):
     return max(minn, min(n, maxn))
 
 
-def do_log(cmd, res):
+def do_log(txt):
     with open(LOGPATH, 'a') as f:
-        f.write(f'{get_now_iso()}; {cmd}; {res}\n')
+        f.write(f'{get_now_iso()}; {txt}\n')
 
 
 def get_section(section):
@@ -255,7 +261,7 @@ def dump_status_to_disk():
         return False
 
     else:
-        print(f'{Fmt.BLUE}(common) dumping status to disk{Fmt.END}')
+        print(f'{Fmt.GRAY}(common) dumping status to disk{Fmt.END}')
         return True
 
 
@@ -311,7 +317,7 @@ def dump_zigbees_schedule_to_crontab(simulate=True):
 
 
     def update_cron(cron, zlabel, zname, schedules, is_group):
-        """ process schedulling fo a Zigbee label entry
+        """ process schedulling for a Zigbee label entry
             return: True or False
         """
 
@@ -345,31 +351,28 @@ def dump_zigbees_schedule_to_crontab(simulate=True):
                     comment=cmt,
                 )
 
-            # DEBUG
-            #print(res["success"], sch_name, zname, zlabel)
             results.append( res["success"] )
 
         return all(results)
 
+    CONFIG = read_config()
 
     my_cron = crontool.get_cron()
-    if simulate:
-        print('-------- ORIGINAL:')
-        print(my_cron)
+    print('\n(common) dump zigbee to crontab ---- ORIGINAL:')
+    print(my_cron)
 
     results = []
 
 
-    # First off all let's remove any job for each Zigbee under config.yml
-    for zlabel, data in CONFIG['devices']['zigbees'].items():
-        zname     = data.get('friendly_name', '')
-        crontool.remove_jobs( cron=my_cron, patterns=(zname,) )
+    ## First off all let's remove any job for each Zigbee under config.yml
+    #for zlabel, data in CONFIG['devices']['zigbees'].items():
+    #    zname     = data.get('friendly_name', '')
+    #    crontool.remove_jobs( cron=my_cron, patterns=(zname,) )
+    #
+    #print('\n(common) dump zigbee to crontab ---- CLEARED:')
+    #print(my_cron)
 
-    if simulate:
-        print('-------- BORRADO:')
-        print(my_cron)
-
-    # Now update the configurez schedules
+    # Now update the configured schedules
     for zlabel, data in CONFIG['devices']['zigbees'].items():
 
         schedules = data.get('schedule', {})
@@ -395,25 +398,35 @@ def dump_zigbees_schedule_to_crontab(simulate=True):
 
         results.append(res)
 
-    if simulate:
-        print('-------- UPDATED:')
-        print(my_cron)
+    print('\n(common) dump zigbee to crontab ---- UPDATED:')
+    print(my_cron)
 
     if all( results ):
-        if crontool.write_cron_prettified(my_cron, simulate=simulate):
-            return True
+
+        if my_cron:
+
+            my_crontab_prettified = crontool.write_cron_prettified(my_cron, simulate=simulate)
+            if my_crontab_prettified:
+                print('\n---- PRETTIFIED CRONTAB:')
+                print(my_crontab_prettified)
+                print('----')
+                do_log('write_cron_prettified; done')
+                return True
+
+            else:
+                print(f'{Fmt.RED}write_cron_prettified failed{Fmt.END}')
+                do_log('write_cron_prettified; failed')
+                return False
+
+        # void crontab
         else:
+            print(f'{Fmt.RED}dump_zigbees_schedule_to_crontab IS EMPTY !!!{Fmt.END}')
+            do_log('dump_zigbees_schedule_to_crontab; skipped because empty crontab')
             return False
+
     else:
-        print(f'{Fmt.RED}Zigbee schedulling to crontab FAILED{Fmt.END}')
-        return False
-
-
-def is_integer(string):
-    try:
-        int(string)
-        return True
-    except:
+        print(f'{Fmt.RED}dump_zigbees_schedule_to_crontab failed{Fmt.END}')
+        do_log('dump_zigbees_schedule_to_crontab; failed')
         return False
 
 
