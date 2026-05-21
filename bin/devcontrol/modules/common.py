@@ -83,7 +83,7 @@ def get_section(section):
 
     res = {}
 
-    if section in ['devices', 'scripts']:
+    if section in ['devices', 'scripts', 'status_daemons']:
         res = CONFIG.get(section, {})
 
     elif section == 'refresh':
@@ -159,7 +159,8 @@ def read_config():
 
 
     config = {  'devices':  { 'plugs':{}, 'wol':{} },
-                'scripts':  {}
+                'scripts':  {},
+                'status_daemons': {}
              }
 
     try:
@@ -177,6 +178,9 @@ def read_config():
 
         if 'scripts' not in config:
             config["scripts"] = {}
+
+        if 'status_daemons' not in config:
+            config["status_daemons"] = {}
 
 
     except Exception as e:
@@ -218,7 +222,6 @@ def read_config():
     elif tmp > 30:
         print(f'{Fmt.RED}(common) `web_polling_interval` forced to maximun 10 seconds.{Fmt.END}')
     config["refresh"]["web_polling_interval"] = min(max(2, tmp), 10)
-
 
     return config
 
