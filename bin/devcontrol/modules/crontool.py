@@ -12,13 +12,25 @@ import re
 from   crontab import CronTab
 
 
+class Fmt:
+    RED     = '\033[31m'
+    BLUE    = '\033[34m'
+    MAGENTA = '\033[35m'
+    CYAN    = '\033[36m'
+    GRAY    = '\033[90m'
+    BOLD    = '\033[1m'
+    END     = '\033[0m'
+
+
 def write_cron_prettified(cron, simulate=False):
-    """ a replacement of cron.write() in order to prettify the crontab:
+    """ A replacement of cron.write() in order to prettify the crontab:
          - Zeropaded figures for minute, and hour
          - Comments are moved from the job line to the line above the job
+
+        return:  the prettified crontrab string or '' if error
     """
 
-    result = False
+    final_cron_str = ''
 
     lines = cron.render().splitlines()
 
@@ -45,28 +57,21 @@ def write_cron_prettified(cron, simulate=False):
 
         final_cron_str = "\n".join(padded_lines) + "\n"
 
-        result = True
-
     except Exception as e:
-        print(f'(write_cron_prettified) ERROR: {e}')
+        print(f'{Fmt.RED}(crontool.write_cron_prettified) formating ERROR: {e}{Fmt.END}')
 
 
-    if simulate:
-        print('\n---- SIMULATION ----')
-        print(final_cron_str)
-        print()
+    if not simulate:
 
-    else:
         try:
             process = subprocess.Popen(['crontab', '-'], stdin=subprocess.PIPE)
             process.communicate(input=final_cron_str.encode())
-            result = True
-            #print("✅ (crontool) Crontab saved (with zero padding minute and hour)")
+            print(f'{Fmt.BLUE}(crontool.write_cron_prettified) crontab saved (with zero padding minutes and hours){Fmt.END}')
 
         except Exception as e:
-            print(f'(write_cron_prettified) ERROR: {e}')
+            print(f'{Fmt.RED}(crontool.write_cron_prettified) dump ERROR: {e}{Fmt.END}')
 
-    return result
+    return final_cron_str
 
 
 def get_cron():
@@ -115,8 +120,8 @@ def add_new_job(cron, command, comment=None, schedule="0 0 * * *"):
 
     # Avoid duplicates
     if job_exists(cron, command):
-        print("❌ (crontool.add_new_job) job command exists, NOT added")
-        report = f'ERROR: job command exists, NOT added.'
+        print(f'{Fmt.GRAY}(crontool.add_new_job) job command exists, NOT added{Fmt.END}')
+        report = 'job command exists, NOT added.'
 
     else:
 
@@ -126,7 +131,7 @@ def add_new_job(cron, command, comment=None, schedule="0 0 * * *"):
             success = True
 
         except Exception as e:
-            print(f"❌ (crontool.add_new_job) ERROR: {e}")
+            print(f'{Fmt.RED}(crontool.add_new_job) ERROR: {e}{Fmt.END}')
             report = f'ERROR: {e}'
 
     return {'success': success, 'report': report}
@@ -147,6 +152,7 @@ def modify_jobs( cron, patterns=(), new_command=None, new_schedule=None):
     report  = []
 
     found = False
+
     for job in cron:
 
         if all(pattern in job.command for pattern in patterns):
@@ -157,7 +163,7 @@ def modify_jobs( cron, patterns=(), new_command=None, new_schedule=None):
                 try:
                     job.set_command(new_command)
                 except Exception as e:
-                    print(f"(crontool.modify_jobs) ERROR: {e}")
+                    print(f'{Fmt.RED}(crontool.modify_jobs) ERROR: {e}{Fmt.END}')
                     report.append( f'[{new_command}] ERROR with new_command: {e}' )
                     success = False
 
@@ -166,7 +172,7 @@ def modify_jobs( cron, patterns=(), new_command=None, new_schedule=None):
                 try:
                     job.setall(new_schedule)
                 except Exception as e:
-                    print(f"(crontool.modify_jobs) ERROR: {e}")
+                    print(f'{Fmt.RED}(crontool.modify_jobs) ERROR: {e}{Fmt.END}')
                     report.append( f'[{new_schedule}] error with new schedule: {e}' )
                     success = False
 
@@ -203,21 +209,20 @@ def remove_jobs(cron=None, patterns=(), matching_mode='all', verbose=False):
                 cron.remove(job)
                 removed += 1
                 if verbose:
-                    print(f"🗑️  Removing: {job.command}")
+                    print(f'{Fmt.BLUE}Removing: {job.command}{Fmt.END}')
 
         elif matching_mode == 'any':
             if any(p in job.command for p in patterns):
                 cron.remove(job)
                 removed += 1
                 if verbose:
-                    print(f"🗑️  Removing: {job.command}")
-
+                    print(f'{Fmt.BLUE}Removing: {job.command}{Fmt.END}')
 
     if verbose:
         if len(cron) < initial_count:
-            print(f"✅ Removed {initial_count - len(cron)} jobs")
+            print(f'{Fmt.BLUE}Removed {initial_count - len(cron)} jobs{Fmt.END}')
         else:
-            print("ℹ️  Not matching jobs")
+            print(f'{Fmt.BLUE}Not matching jobs{Fmt.END}')
 
     return removed
 

@@ -31,6 +31,7 @@ import  wol
 import  plugs
 import  scripts
 import  zigbees
+import  status_daemons
 
 
 def init():
@@ -44,6 +45,9 @@ def init():
 
     # Common needs to prepare CONFIG and other tasks
     cm.init()
+
+    # Dump Zigbee scheduling to the user crontab
+    cm.dump_zigbees_schedule_to_crontab(simulate=False)
 
     # Notice about logging
     if os.path.exists(cm.LOGPATH) and os.path.getsize(cm.LOGPATH) > 10e6:
@@ -82,6 +86,8 @@ def do( cmd_phrase ):
         OR
             get_config          { 'section': section_name }
 
+        OR
+            get_status
         OR
             hello
     """
@@ -163,7 +169,7 @@ def do( cmd_phrase ):
     elif 'command' in args and args["command"] in ('state', 'status', 'ping'):
         pass
     else:
-        cm.do_log(cmd_phrase, result)
+        cm.do_log(f'{cmd_phrase}; {result}')
 
     return json.dumps(result, indent=2)
 
