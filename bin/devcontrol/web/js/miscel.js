@@ -196,6 +196,7 @@ export async function make_section(div_id, section_title, section_items, btn_han
     document.getElementById(div_id).appendChild(table)
 }
 
+
 function sched_dict_2_string( d ){
 
     //  d = {
