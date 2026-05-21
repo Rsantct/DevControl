@@ -1,5 +1,11 @@
 #!/bin/bash
 
+############################################################
+# PROGRAMAR EN CRONTAB, ejemplo:
+#   # Qnas monitor cada 20 minutos
+#   */20 * * * * /home/shome/bin/qnas_get_status.sh
+############################################################
+
 nas_host='qnas.local'
 nas_user='admin'
 # sin passwdord, acceso preparado con ssh-copy-id
@@ -46,8 +52,10 @@ fi
 hdd_state="${ans##* }"      # 'Factive'
 hdd_state="${hdd_state:1}"  # quita la primera letra que viene pegada de lo anterior
 
-# hacemos un json por línea en el archivo de respuestas
+# Timestamp en formato ISO
 timestamp=$(date +%Y-%m-%dT%H:%M:%S)
+
+# hacemos un json por línea en el archivo de respuestas
 json='{"cpu_temp": '$cpu_temp', "hdd_temp": '$hdd_temp', "hdd_state": "'$hdd_state'", "time": "'$timestamp'"}'
 echo $json
 echo $json >> $logpath
