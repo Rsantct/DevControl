@@ -19,6 +19,7 @@ import  wol
 import  plugs
 import  scripts
 import  zigbees
+import  status_daemons
 import  crontool
 
 _MY_DIR      = os.path.dirname(__file__)
@@ -271,12 +272,13 @@ def refresh_all_status():
 
     global STATUS
 
-    wol_keys     = CONFIG.get("devices", {}).get("wol",   {}).keys()
-    plug_keys    = CONFIG.get("devices", {}).get("plugs", {}).keys()
-    zigbees_keys = CONFIG.get("devices", {}).get("zigbees", {}).keys()
-    scripts_keys = CONFIG.get("scripts", {}).keys()
+    wol_keys            = CONFIG.get("devices", {}).get("wol",   {}).keys()
+    plug_keys           = CONFIG.get("devices", {}).get("plugs", {}).keys()
+    zigbees_keys        = CONFIG.get("devices", {}).get("zigbees", {}).keys()
+    scripts_keys        = CONFIG.get("scripts", {}).keys()
+    status_daemons_keys = CONFIG.get('status_daemons', {}).keys()
 
-    st = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {} }
+    st = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {}, 'status_daemons':{} }
 
     for wol_id in wol_keys:
         ans = wol.manage_wol( {"target": wol_id, "command": "ping"} )
@@ -294,6 +296,9 @@ def refresh_all_status():
         ans = zigbees.manage_zigbee( {"target": z_id, "command": "status"} )
         st["zigbees"][z_id] = ans
 
+    for d_id in status_daemons_keys:
+        ans = status_daemons.read_status_deaemon(d_id)
+        st["status_daemons"][d_id] = ans
 
     st["timestamp"] = get_now_iso()
 
