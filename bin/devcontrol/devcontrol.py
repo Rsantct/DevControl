@@ -31,6 +31,7 @@ import  wol
 import  plugs
 import  scripts
 import  zigbees
+import  status_daemons
 
 
 def init():
@@ -85,6 +86,8 @@ def do( cmd_phrase ):
         OR
             get_config          { 'section': section_name }
 
+        OR
+            get_status
         OR
             hello
     """
