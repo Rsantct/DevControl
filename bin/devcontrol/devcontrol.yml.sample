@@ -89,3 +89,7 @@ scripts:
         button_cmd:     "echo 'amp_switch toggle' | nc -N atinker.local 9991"
         status_cmd:     "echo 'amp_switch state'  | nc -N atinker.local 9991"
         responses:      "on, off"
+
+# Other self running daemons (not polling here)
+status_daemons:
+    QNAP TS-228:    /home/shome/bin/qnas/state.log
