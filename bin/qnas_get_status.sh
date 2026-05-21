@@ -47,7 +47,7 @@ hdd_state="${ans##* }"      # 'Factive'
 hdd_state="${hdd_state:1}"  # quita la primera letra que viene pegada de lo anterior
 
 # hacemos un json por línea en el archivo de respuestas
-timestamp=$(date +%Y%m%dT%H%M%S)
+timestamp=$(date +%Y-%m-%dT%H:%M:%S)
 json='{"cpu_temp": '$cpu_temp', "hdd_temp": '$hdd_temp', "hdd_state": "'$hdd_state'", "time": "'$timestamp'"}'
 echo $json
 echo $json >> $logpath
