@@ -49,7 +49,7 @@ def init():
 
     CONFIG = read_config()
 
-    STATUS = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {} }
+    STATUS = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {}, 'status_daemons': {} }
 
 
 def is_integer(string):
