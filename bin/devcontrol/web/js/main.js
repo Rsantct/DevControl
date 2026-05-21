@@ -16,9 +16,10 @@ var WOL_REFRESH_COUNT = {};
 // Seconds to keep `waiting for response` after sending a WOL packet
 const WAIT_4_WOL = 30;
 
-var STATUS = {};
-var DEVICES = {};
-var SCRIPTS = {};
+var STATUS     = {};
+var DEVICES    = {};
+var SCRIPTS    = {};
+var ST_DAEMONS = {};
 var UI_INITIALIZED = false;
 
 
@@ -117,6 +118,7 @@ function wol_refresh(){
         }
     }
 }
+
 
 // PLUGS
 async function do_plug_toggle(event){
@@ -278,7 +280,7 @@ function zigbees_refresh(){
 
         mc.btn_color(btn, onoff);
 
-        // Info cell (PENDING)
+        // Info cell
         const timer = STATUS.zigbees[z_id]['timer'];
         if (timer){
             document.getElementById('info_' + z_id).innerHTML += '<br>' + timer;
@@ -287,6 +289,48 @@ function zigbees_refresh(){
 }
 
 
+// STATUS DAEMONS
+async function fill_in_st_daemons_buttons(st_daemons_data) {
+
+    const title = 'Other devices';
+    // Leave the title blank
+    await mc.make_section('div_status_daemons', '', st_daemons_data, null);
+}
+
+
+function st_daemons_refresh(){
+
+    for (const sd_id in ST_DAEMONS) {
+
+        const st = STATUS["status_daemons"][sd_id];
+        // Example:
+        // "QNAP TS-228"
+        // {cpu_temp: 61, hdd_temp: 42, hdd_state: "active", time: "20260521T221502"}
+
+        if (!st){
+            continue
+        }
+
+        document.getElementById('info_' + sd_id).innerHTML = '';
+
+        const outdated = mc.older_than( st.time, 3600);
+        if (outdated) {
+            document.getElementById('info_' + sd_id).innerHTML = '--';
+            console.log(sd_id, 'OUTDATED timestamp', st.time);
+            return
+        }
+
+        for (const [key, value] of Object.entries(st)) {
+            if (key=='time'){
+                continue
+            }
+            document.getElementById('info_' + sd_id).innerHTML += key + ': ' + value + '<br>';
+        }
+    }
+}
+
+
+// MAIN REFRESH
 async function do_refresh() {
 
     let warning_msg = '';
@@ -309,6 +353,7 @@ async function do_refresh() {
                 plugs_refresh();
                 scripts_refresh();
                 zigbees_refresh();
+                st_daemons_refresh();
             }
 
         }else{
@@ -346,11 +391,13 @@ async function startApp() {
     startPolling();
 }
 
+
 async function setupSystem() {
     try {
 
         DEVICES     = await mc.send_cmd('get_config {"section": "devices"}');
         SCRIPTS     = await mc.send_cmd('get_config {"section": "scripts"}');
+        ST_DAEMONS  = await mc.send_cmd('get_config {"section": "status_daemons"}');
         const conf  = await mc.send_cmd('get_config {"section": "refresh"}');
 
         if (!mc.isPlainObject(DEVICES) || !mc.isPlainObject(SCRIPTS)) {
@@ -363,6 +410,7 @@ async function setupSystem() {
         await fill_in_plug_buttons(DEVICES.plugs);
         await fill_in_zigbee_buttons(DEVICES.zigbees);
         await fill_in_scripts_buttons(SCRIPTS);
+        await fill_in_st_daemons_buttons(ST_DAEMONS);
 
         UI_INITIALIZED = true;
 
@@ -373,6 +421,7 @@ async function setupSystem() {
         return false;
     }
 }
+
 
 function startPolling() {
     // Here we use an autoexec function so that the first refresh is inmediate
