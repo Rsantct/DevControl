@@ -12,7 +12,8 @@ export function isPlainObject(x) {
 
 
 export function  older_than (timestamp, seconds) {
-    // timestamp must be done in ISO Zulu format example: 2026-03-10T11:48:46Z
+    // timestamp must be done in ISO 8601 format, example:
+    // 2026-03-10T11:48:46Z  (Z is optional for Zulu)
     const ms = seconds * 1000;
     const delta = new Date() - new Date(timestamp)
     return delta > ms
