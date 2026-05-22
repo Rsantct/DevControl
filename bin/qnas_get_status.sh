@@ -18,6 +18,7 @@ errpath=$HOME/bin/qnas/state.err
 # comandos
 q_cpu_temp='echo "$(($(cat /sys/class/thermal/thermal_zone0/temp)/1000)) °C"'
 q_hdd_temp='getsysinfo hdtmp 1'
+# OjO esto no es un reflejo real de 'standby'
 q_hdd_status='cat /sys/block/sda/device/power/runtime_status'
 
 # cadena de comandos
@@ -48,7 +49,7 @@ else
     exit 0
 fi
 
-# el estado del HDD viene al final
+# (obsoleto) El estado del HDD viene al final
 hdd_state="${ans##* }"      # 'Factive'
 hdd_state="${hdd_state:1}"  # quita la primera letra que viene pegada de lo anterior
 
@@ -56,6 +57,6 @@ hdd_state="${hdd_state:1}"  # quita la primera letra que viene pegada de lo ante
 timestamp=$(date +%Y-%m-%dT%H:%M:%S)
 
 # hacemos un json por línea en el archivo de respuestas
-json='{"cpu_temp": '$cpu_temp', "hdd_temp": '$hdd_temp', "hdd_state": "'$hdd_state'", "time": "'$timestamp'"}'
+json='{"cpu_temp": '$cpu_temp', "hdd_temp": '$hdd_temp', "time": "'$timestamp'"}'
 echo $json
 echo $json >> $logpath
