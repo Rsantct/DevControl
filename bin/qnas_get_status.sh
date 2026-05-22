@@ -3,7 +3,7 @@
 ############################################################
 # PROGRAMAR EN CRONTAB, ejemplo:
 #   # Qnas monitor cada 20 minutos
-#   */20 * * * * /home/shome/bin/qnas_get_status.sh
+#   */20 * * * * $HOME/bin/qnas_get_status.sh
 ############################################################
 
 nas_host='qnas.local'
@@ -11,9 +11,9 @@ nas_user='admin'
 # sin passwdord, acceso preparado con ssh-copy-id
 
 # Archivos de respuesta
-mkdir -p /home/shome/bin/qnas
-logpath=/home/shome/bin/qnas/state.log
-errpath=/home/shome/bin/qnas/state.err
+mkdir -p $HOME/bin/qnas
+logpath=$HOME/bin/qnas/state.log
+errpath=$HOME/bin/qnas/state.err
 
 # comandos
 q_cpu_temp='echo "$(($(cat /sys/class/thermal/thermal_zone0/temp)/1000)) °C"'
@@ -25,7 +25,7 @@ q_all="$q_cpu_temp"" && ""$q_hdd_temp"" && ""$q_hdd_status"
 
 # respuesta
 # -o BatchMode=yes evita que el comando se quede colgado esperando una interacción si la conexión falla
-ans=$(/usr/bin/ssh -i /home/shome/.ssh/id_ed25519 \
+ans=$(/usr/bin/ssh -i $HOME/.ssh/id_ed25519 \
     -o BatchMode=yes \
     -o IdentitiesOnly=yes \
     -o StrictHostKeyChecking=no \
