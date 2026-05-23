@@ -302,6 +302,15 @@ function st_daemons_refresh(){
 
     for (const sd_id in ST_DAEMONS) {
 
+        const btn = document.getElementById('bt_' + sd_id);
+
+        let outdated_seconds = ST_DAEMONS[sd_id]["outdated_seconds"]
+        if ( ! outdated_seconds ) {
+            outdated_seconds = 60;
+        }
+
+        const alerts = ST_DAEMONS[sd_id]["alerts"];
+
         const st = STATUS["status_daemons"][sd_id];
         // Example:
         // "QNAP TS-228"
@@ -313,18 +322,42 @@ function st_daemons_refresh(){
 
         document.getElementById('info_' + sd_id).innerHTML = '';
 
-        const outdated = mc.older_than( st.time, 3600);
+        const outdated = mc.older_than( st.time, outdated_seconds);
         if (outdated) {
             document.getElementById('info_' + sd_id).innerHTML = '--';
+            mc.btn_color(btn, 'gray');
             console.log(sd_id, 'OUTDATED timestamp', st.time);
             return
         }
 
+        let alert = false;
+
         for (const [key, value] of Object.entries(st)) {
+
             if (key=='time'){
                 continue
             }
-            document.getElementById('info_' + sd_id).innerHTML += key + ': ' + value + '<br>';
+
+            document.getElementById('info_' + sd_id).innerHTML += key + ': ' + value;
+
+            if ( alerts[key].max !== null && value >= alerts[key].max){
+                document.getElementById('info_' + sd_id).innerHTML += ' (max: ' + alerts[key].max + ')';
+                console.log(key, value, 'max alert')
+                alert = true;
+            }
+            if ( alerts[key].min !== null && value >= alerts[key].min){
+                document.getElementById('info_' + sd_id).innerHTML += ' (min: ' + alerts[key].min + ')';
+                console.log(key, value, 'min alert')
+                alert = true;
+            }
+
+            document.getElementById('info_' + sd_id).innerHTML += '<br>';
+        }
+
+        if (alert){
+            mc.btn_color(btn, 'alert');
+        }else{
+            mc.btn_color(btn, 'green');
         }
     }
 }
