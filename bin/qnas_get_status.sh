@@ -43,15 +43,17 @@ ans=$(/usr/bin/ssh -i $HOME/.ssh/id_ed25519 \
 
 # Buscamos secuencias de dígitos para las temperaturas
 if [[ $ans =~ ([0-9]+)\ [^0-9]+([0-9]+) ]]; then
+
     cpu_temp=${BASH_REMATCH[1]}
     hdd_temp=${BASH_REMATCH[2]}
+    # (obsoleto no usado) El estado del HDD viene al final
+    hdd_state="${ans##* }"      # 'Factive'
+    hdd_state="${hdd_state:1}"  # quita la primera letra que viene pegada de lo anterior
+
+# si no hay datos, no escribimos en el log
 else
     exit 0
 fi
-
-# (obsoleto) El estado del HDD viene al final
-hdd_state="${ans##* }"      # 'Factive'
-hdd_state="${hdd_state:1}"  # quita la primera letra que viene pegada de lo anterior
 
 # Timestamp en formato ISO
 timestamp=$(date +%Y-%m-%dT%H:%M:%S)
