@@ -49,7 +49,7 @@ def read_status_deaemon(item):
         return res
 
 
-    st_path = cm.CONFIG["status_daemons"].get(item, {})
+    st_path = cm.CONFIG["status_daemons"].get(item, {}).get('state_path', '')
 
     return read_last_status()
 
