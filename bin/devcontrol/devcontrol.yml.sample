@@ -95,4 +95,13 @@ scripts:
 
 # Other self running daemons (not polling here)
 status_daemons:
-    QNAP TS-228:    /home/shome/bin/qnas/state.log
+    QNAP TS-228:
+        state_path: /home/shome/bin/qnas/state.log
+        outdated_seconds: 1800
+        alerts:
+            cpu_temp:
+                max:    70
+                min:
+            hdd_temp:
+                max:    55
+                min:
