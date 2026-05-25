@@ -69,7 +69,10 @@ devices:
             #                   Linux cron timespec has 5 fields, example:
             #                   min hou dom mon  dow
             #                   30  00   *   *   0,1,2,3,4,5,6
-                switch_off:     00  01   *   *   *
+                switch_on:      00  22   *   *   *
+                switch_off_1:   00  01   *   *   *
+                # switch off is repeated for reliability reasons
+                switch_off_2:   01  01   *   *   *
 
 
 # Scripts
