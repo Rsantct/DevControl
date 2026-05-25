@@ -7,9 +7,10 @@
 """ a cron tool
 """
 
-import subprocess
-import re
-from   crontab import CronTab
+import  subprocess
+import  re
+from    crontab  import CronTab
+from    croniter import croniter
 
 
 class Fmt:
@@ -17,9 +18,20 @@ class Fmt:
     BLUE    = '\033[34m'
     MAGENTA = '\033[35m'
     CYAN    = '\033[36m'
+    GREEN   = '\033[32m'
     GRAY    = '\033[90m'
     BOLD    = '\033[1m'
     END     = '\033[0m'
+
+
+def schedules_match(cron_str_1, cron_str_2):
+    """ croniter avoids problems with zero padding, spaces, etc
+    """
+    try:
+        return croniter.expand(cron_str_1) == croniter.expand(cron_str_2)
+    except Exception as e:
+        print(f'{Fmt.RED}(crontool.schedules_match) "{cron_str_1}" "{cron_str_1}" {str(e)}{Fmt.END}')
+        return False
 
 
 def write_cron_prettified(cron, simulate=False):
@@ -80,7 +92,7 @@ def get_cron():
     return CronTab(user=True)
 
 
-def job_exists(cron=None, patterns=()):
+def job_exists(cron=None, cron_slice='', cmd_patterns=()):
     """
         Check if there is a job whose command contains ALL the strings in 'patterns'.
 
@@ -94,15 +106,35 @@ def job_exists(cron=None, patterns=()):
     if not cron:
         cron = get_cron()
 
-    # single string --> tuple so that the loop works the same
-    if isinstance(patterns, str):
-        patterns = (patterns,)
+    # single string --> tuple so that the loop can work
+    if isinstance(cmd_patterns, str):
+        cmd_patterns = (cmd_patterns,)
+
+    result      = False
+    slice_match = False
+    cmd_match   = False
 
     for job in cron:
-        if all(p in job.command for p in patterns):
-            return True
 
-    return False
+        if schedules_match(cron_slice, str(job.slices)):
+            slice_match = True
+        else:
+            slice_match = False
+
+        if all(cmd_p in job.command for cmd_p in cmd_patterns):
+            cmd_match = True
+        else:
+            cmd_match = False
+
+        result = slice_match and cmd_match
+
+        if result:
+            #print('slice  ', slice_match, cron_slice, '|', str(job.slices))
+            #print('command', cmd_match, cmd_patterns, '|', job.command)
+            #print()
+            break
+
+    return result
 
 
 def add_new_job(cron, command, comment=None, schedule="0 0 * * *"):
@@ -119,8 +151,9 @@ def add_new_job(cron, command, comment=None, schedule="0 0 * * *"):
     schedule = " ".join(schedule.split())
 
     # Avoid duplicates
-    if job_exists(cron, command):
-        print(f'{Fmt.GRAY}(crontool.add_new_job) job command exists, NOT added{Fmt.END}')
+    if job_exists(cron, cron_slice=schedule, cmd_patterns=(command,)):
+
+        print(f'{Fmt.GRAY}(crontool.add_new_job) EXIST: {schedule} {command}{Fmt.END}')
         report = 'job command exists, NOT added.'
 
     else:
@@ -129,16 +162,17 @@ def add_new_job(cron, command, comment=None, schedule="0 0 * * *"):
             job = cron.new(command=command, comment=comment)
             job.setall(schedule)
             success = True
+            print(f'{Fmt.BLUE}(crontool.add_new_job) ADDED: {schedule} {command}{Fmt.END}')
 
         except Exception as e:
-            print(f'{Fmt.RED}(crontool.add_new_job) ERROR: {e}{Fmt.END}')
+            print(f'{Fmt.RED}(crontool.add_new_job) ERROR: {schedule} {command} {e}{Fmt.END}')
             report = f'ERROR: {e}'
 
     return {'success': success, 'report': report}
 
 
-def modify_jobs( cron, patterns=(), new_command=None, new_schedule=None):
-    """ Modify ALL jobs matching by command all the pattern in the given tuple
+def modify_jobs( cron, cron_slice='', cmd_patterns=(), new_command=None, new_schedule=None):
+    """ Modify ALL the jobs matching by command for all the given patterns
 
         Returns a dictionary with result details
 
@@ -155,29 +189,31 @@ def modify_jobs( cron, patterns=(), new_command=None, new_schedule=None):
 
     for job in cron:
 
-        if all(pattern in job.command for pattern in patterns):
+        if all(cmd_pattern in job.command for cmd_pattern in cmd_patterns):
 
-            found   = True
+            if schedules_match(cron_slice, str(job.slices)):
 
-            if new_command:
-                try:
-                    job.set_command(new_command)
-                except Exception as e:
-                    print(f'{Fmt.RED}(crontool.modify_jobs) ERROR: {e}{Fmt.END}')
-                    report.append( f'[{new_command}] ERROR with new_command: {e}' )
-                    success = False
+                found   = True
 
-            if new_schedule:
+                if new_command:
+                    try:
+                        job.set_command(new_command)
+                    except Exception as e:
+                        print(f'{Fmt.RED}(crontool.modify_jobs) ERROR: {e}{Fmt.END}')
+                        report.append( f'[{new_command}] ERROR with new_command: {e}' )
+                        success = False
 
-                try:
-                    job.setall(new_schedule)
-                except Exception as e:
-                    print(f'{Fmt.RED}(crontool.modify_jobs) ERROR: {e}{Fmt.END}')
-                    report.append( f'[{new_schedule}] error with new schedule: {e}' )
-                    success = False
+                if new_schedule:
 
-            if success:
-                report.append( f"job modified: {job.slices} {job.command}" )
+                    try:
+                        job.setall(new_schedule)
+                    except Exception as e:
+                        print(f'{Fmt.RED}(crontool.modify_jobs) ERROR: {e}{Fmt.END}')
+                        report.append( f'[{new_schedule}] error with new schedule: {e}' )
+                        success = False
+
+                if success:
+                    report.append( f"job modified: {job.slices} {job.command}" )
 
     return {'jobs_found': found, 'success': success, 'report': report}
 

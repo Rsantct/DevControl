@@ -115,7 +115,7 @@ def get_zname_scenes(zname):
                     break
 
         except Exception as e:
-            print(f'{Fmt.RED}(common.get_zname_scenes) ERROR: {e}{Fmt.BOLD}')
+            print(f'{Fmt.RED}(common.get_zname_scenes) ERROR: {e}{Fmt.END}')
 
         return scenes
 
@@ -316,11 +316,13 @@ def dump_zigbees_schedule_to_crontab(simulate=True):
     """
 
     def make_cmd(zname, mode='off'):
+        """ cron entry command """
         cmd = f'mosquitto_pub -h localhost -t "zigbee2mqtt/{zname}/set" -m \'{{"state": "{mode}"}}\''
         return cmd
 
 
     def make_cmt(zlabel, zname, mode):
+        """ cron entry comment """
         return f'Zigbee: {zname} ({zlabel}) --> {mode.upper()}'
 
 
@@ -333,19 +335,24 @@ def dump_zigbees_schedule_to_crontab(simulate=True):
 
         for sch_name, sch_slice in schedules.items():
 
-            if sch_name == 'switch_off':
+            # Keep only one space and remove 0-padding so we can compare within crontab.
+            # example:  00    01  *   *   *     --->    00 01 * * *
+            sch_slice = ' '.join(sch_slice.split())
+
+            if 'off' in sch_name:
                 mode = 'off'
-            elif sch_name == 'switch_on':
+            elif 'on' in sch_name:
                 mode = 'on'
 
             cmd = make_cmd(zname,  mode)
             cmt = make_cmt(zlabel, zname, mode)
 
-            if crontool.job_exists( cron, patterns=(zname, f'"{mode}"') ):
+            if crontool.job_exists( cron, cron_slice=sch_slice, cmd_patterns=(zname, f'"{mode}"') ):
 
                 res = crontool.modify_jobs(
                     cron,
-                    patterns=(zname, f'"{mode}"'),
+                    cron_slice=sch_slice,
+                    cmd_patterns=(zname, f'"{mode}"'),
                     new_command=cmd,
                     new_schedule=sch_slice,
                 )
@@ -366,27 +373,31 @@ def dump_zigbees_schedule_to_crontab(simulate=True):
     CONFIG = read_config()
 
     my_cron = crontool.get_cron()
-    print('\n(common) dump zigbee to crontab ---- ORIGINAL:')
+    print(f'{Fmt.MAGENTA}\n(common) dump zigbee to crontab ---- ORIGINAL:')
     print(my_cron)
+    print(f'{Fmt.END}')
 
     results = []
 
 
     ## First off all let's remove any job for each Zigbee under config.yml
-    #for zlabel, data in CONFIG['devices']['zigbees'].items():
-    #    zname     = data.get('friendly_name', '')
-    #    crontool.remove_jobs( cron=my_cron, patterns=(zname,) )
-    #
-    #print('\n(common) dump zigbee to crontab ---- CLEARED:')
-    #print(my_cron)
+    for zlabel, zparams in CONFIG['devices']['zigbees'].items():
+        zname     = zparams.get('friendly_name', '')
+        crontool.remove_jobs( cron=my_cron, patterns=(zname,) )
+
+    print(f'{Fmt.MAGENTA}\n(common) dump zigbee to crontab ---- CLEARED:')
+    print(my_cron)
+    print(f'{Fmt.END}')
 
     # Now update the configured schedules
-    for zlabel, data in CONFIG['devices']['zigbees'].items():
+    for zlabel, zparams in CONFIG['devices']['zigbees'].items():
 
-        schedules = data.get('schedule', {})
-        zname     = data.get('friendly_name', '')
-        is_group  = data.get('is_group', False)
+        schedules = zparams.get('schedule', {})
+        zname     = zparams.get('friendly_name', '')
+        is_group  = zparams.get('is_group', False)
 
+        if not schedules:
+            continue
 
         res = False
 
@@ -406,8 +417,9 @@ def dump_zigbees_schedule_to_crontab(simulate=True):
 
         results.append(res)
 
-    print('\n(common) dump zigbee to crontab ---- UPDATED:')
+    print(f'{Fmt.MAGENTA}\n(common) dump zigbee to crontab ---- UPDATED:')
     print(my_cron)
+    print(f'{Fmt.END}')
 
     if all( results ):
 

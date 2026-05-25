@@ -73,7 +73,7 @@ export async function try_connection() {
 export function display_warning_and_hide_sections(yes=false, msg=null, isTimeout=false){
 
     const warningDiv = document.getElementById("div_warnings");
-    const sections = ["div_wol", "div_plugs", "div_scripts", "div_zigbees"];
+    const sections = ["div_wol", "div_plugs", "div_scripts", "div_zigbees", "div_status_daemons"];
 
     if (yes){
         console.log(msg);
@@ -104,20 +104,32 @@ export function display_warning_and_hide_sections(yes=false, msg=null, isTimeout
 }
 
 
-export function btn_color(btn, onoff=null){
-    // `onoff` values:
-    //          'on'    -->     green
-    //          'off'   -->     red
-    //          other   -->     gray
+export function btn_color(btn, color=null){
+    //        color                         button
+    //                          border      font    background
+    //
+    //  ''      /  gray         gray        gray    gray
+    //  'on'    / 'green'       green       white   gray
+    //  'off'   / 'red'         red         white   gray
+    //  'alert' / 'red-red'     red         white   red
 
 
-    if ( onoff == 'on') {
+    if (color == 'on' || color == 'green') {
         btn.style = 'initial';
         btn.style.borderColor = 'green';
 
-    }else if (onoff == 'off') {
+    }else if (color == 'off' || color == 'red') {
         btn.style = 'initial';
         btn.style.borderColor = 'darkred';
+
+    }else if (color == 'alert' || color == 'red-red') {
+        btn.style = 'initial';
+        btn.style.borderColor = 'darkred';
+        btn.style.backgroundColor = 'maroon';
+
+    }else if (color == 'gray') {
+        btn.style.borderColor = 'darkgray';
+        btn.style.color = 'darkgray';
 
     }else{
         btn.style.borderColor = 'darkgray';
