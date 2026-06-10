@@ -83,14 +83,14 @@ scripts:
     # button label
     Dyn BM6 - amp toggle:
 
-        button_cmd:     "echo 'amp_switch toggle' | nc -N localhost 9991"
-        status_cmd:     "echo 'amp_switch state'  | nc -N localhost 9991"
+        button_cmd:     "echo 'amp_switch toggle' | nc -w 1 -N localhost 9991"
+        status_cmd:     "echo 'amp_switch state'  | nc -w 1 -N localhost 9991"
         responses:      "on, off"
 
     SeasFlat - amp toggle:
 
-        button_cmd:     "echo 'amp_switch toggle' | nc -N atinker.local 9991"
-        status_cmd:     "echo 'amp_switch state'  | nc -N atinker.local 9991"
+        button_cmd:     "echo 'amp_switch toggle' | nc -w 1 -N atinker.local 9991"
+        status_cmd:     "echo 'amp_switch state'  | nc -w 1 -N atinker.local 9991"
         responses:      "on, off"
 
 # Other self running daemons (not polling here)
