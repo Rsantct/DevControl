@@ -283,26 +283,32 @@ def refresh_all_status():
 
     st = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {}, 'status_daemons':{} }
 
+    print(f'{Fmt.GRAY}(common) refresh wol ...{Fmt.END}')
     for wol_id in wol_keys:
         ans = wol.manage_wol( {"target": wol_id, "command": "ping"} )
         st["wol"][wol_id] = ans
 
+    print(f'{Fmt.GRAY}(common) refresh plugs ...{Fmt.END}')
     for plug_id in plug_keys:
         ans = plugs.manage_plug( {"target": plug_id, "command": "status"} )
         st["plugs"][plug_id] = ans
 
+    print(f'{Fmt.GRAY}(common) refresh scripts ...{Fmt.END}')
     for script_id in scripts_keys:
         ans = scripts.manage_script( {"target": script_id, "command": "status"} )
         st["scripts"][script_id] = ans
 
+    print(f'{Fmt.GRAY}(common) refresh zigbees ...{Fmt.END}')
     for z_id in zigbees_keys:
         ans = zigbees.manage_zigbee( {"target": z_id, "command": "status"} )
         st["zigbees"][z_id] = ans
 
+    print(f'{Fmt.GRAY}(common) refresh status_daemons ...{Fmt.END}')
     for d_id in status_daemons_keys:
         ans = status_daemons.read_status_deaemon(d_id)
         st["status_daemons"][d_id] = ans
 
+    print(f'{Fmt.GRAY}(common) getting timestamp ...{Fmt.END}')
     st["timestamp"] = get_now_iso()
 
     STATUS = st
