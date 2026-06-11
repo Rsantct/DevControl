@@ -233,18 +233,20 @@ async function do_zigbee(event){
 
     let params = null;
 
-    if ( STATUS.zigbees[z_id] == 'off' ){
+    const zst = STATUS.zigbees[z_id]["state"]
+
+    if ( zst == 'off' ){
         params = prompt(zigbee_on_msg);
     }
 
     let cmd = ''
-    if (STATUS.zigbees[z_id] == 'off'){
+    if (zst == 'off'){
         console.log('current state: off');
         cmd = `zigbee {"target": "${z_id}", "command": "on"}`
         if (params){
             cmd = `zigbee {"target": "${z_id}", "command": "on ${params}"}`
         }
-    }else if (STATUS.zigbees[z_id] == 'on'){
+    }else if (zst == 'on'){
         console.log('current state: on');
         cmd = `zigbee {"target": "${z_id}", "command": "off"}`
     }
