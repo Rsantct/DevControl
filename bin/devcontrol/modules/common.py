@@ -226,7 +226,7 @@ def read_config():
     return config
 
 
-def read_status_from_disk():
+def status_read_from_disk():
 
     st = {}
 
@@ -247,7 +247,7 @@ def read_status_from_disk():
     return st
 
 
-def dump_status_to_disk():
+def status_dump_to_disk():
 
     tries = 3
     while tries:
@@ -261,7 +261,7 @@ def dump_status_to_disk():
             sleep(.2)
 
     if not tries:
-        print(f'{Fmt.RED}(common.dump_status_to_disk) ERROR{Fmt.END}')
+        print(f'{Fmt.RED}(common.status_dump_to_disk) ERROR{Fmt.END}')
         return False
 
     else:
@@ -269,8 +269,9 @@ def dump_status_to_disk():
         return True
 
 
-def refresh_all_status():
-    """ This takes a while
+def status_refresh_all():
+    """ This is blocking and it takes a while,
+        so be careful with the modules responses bahavoir
     """
 
     global STATUS
@@ -281,31 +282,34 @@ def refresh_all_status():
     scripts_keys        = CONFIG.get("scripts", {}).keys()
     status_daemons_keys = CONFIG.get('status_daemons', {}).keys()
 
-    st = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {}, 'status_daemons':{} }
 
+    print(f'{Fmt.GRAY}(common) refresh wol ...{Fmt.END}')
     for wol_id in wol_keys:
         ans = wol.manage_wol( {"target": wol_id, "command": "ping"} )
-        st["wol"][wol_id] = ans
+        STATUS["wol"][wol_id] = {'state': ans, 'timestamp': get_now_iso()}
 
+    print(f'{Fmt.GRAY}(common) refresh plugs ...{Fmt.END}')
     for plug_id in plug_keys:
         ans = plugs.manage_plug( {"target": plug_id, "command": "status"} )
-        st["plugs"][plug_id] = ans
+        STATUS["plugs"][plug_id] = {'state': ans, 'timestamp': get_now_iso()}
 
+    print(f'{Fmt.GRAY}(common) refresh scripts ...{Fmt.END}')
     for script_id in scripts_keys:
         ans = scripts.manage_script( {"target": script_id, "command": "status"} )
-        st["scripts"][script_id] = ans
+        STATUS["scripts"][script_id] = {'state': ans, 'timestamp': get_now_iso()}
 
+    print(f'{Fmt.GRAY}(common) refresh zigbees ...{Fmt.END}')
     for z_id in zigbees_keys:
         ans = zigbees.manage_zigbee( {"target": z_id, "command": "status"} )
-        st["zigbees"][z_id] = ans
+        STATUS["zigbees"][z_id] = {'state': ans, 'timestamp': get_now_iso()}
 
+    print(f'{Fmt.GRAY}(common) refresh status_daemons ...{Fmt.END}')
     for d_id in status_daemons_keys:
         ans = status_daemons.read_status_deaemon(d_id)
-        st["status_daemons"][d_id] = ans
+        STATUS["status_daemons"][d_id] = {'state': ans, 'timestamp': get_now_iso()}
 
-    st["timestamp"] = get_now_iso()
-
-    STATUS = st
+    print(f'{Fmt.GRAY}(common) getting timestamp ...{Fmt.END}')
+    STATUS["timestamp"] = get_now_iso()
 
 
 def dump_zigbees_schedule_to_crontab(simulate=True):
