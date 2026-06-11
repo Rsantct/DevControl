@@ -39,8 +39,9 @@ def init():
     def loop_refresh_and_dump_all_status():
         pause = cm.CONFIG["refresh"]["backend_update_interval"]
         while True:
-            cm.refresh_all_status()
-            cm.dump_status_to_disk()
+            cm.status_refresh_all()
+            # dumping to disk has not use, its is only informative
+            cm.status_dump_to_disk()
             sleep(pause)
 
     # Common needs to prepare CONFIG and other tasks
@@ -160,7 +161,7 @@ def do( cmd_phrase ):
 
         cm.STATUS[section][args['target']] = result
 
-        cm.dump_status_to_disk()
+        cm.status_dump_to_disk()
 
 
     # Select what to log
