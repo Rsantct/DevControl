@@ -90,7 +90,7 @@ function wol_refresh(){
 
         const btn = document.getElementById('bt_' + wol_id);
 
-        const ping = STATUS.wol[wol_id];
+        const ping = STATUS.wol[wol_id]["state"];
 
         if (!ping){
             continue;
@@ -169,7 +169,7 @@ function plugs_refresh(){
         const btn = document.getElementById('bt_' + plug_id);
 
         // Button color
-        const onoff = STATUS.plugs[plug_id];
+        const onoff = STATUS.plugs[plug_id]["state"];
         mc.btn_color(btn, onoff);
     }
 }
@@ -209,7 +209,7 @@ function scripts_refresh(){
         const btn = document.getElementById('bt_' + script_id);
 
         // Button color
-        const onoff = STATUS.scripts[script_id];
+        const onoff = STATUS.scripts[script_id]["state"];
 
         if (!onoff){
             continue
@@ -272,7 +272,7 @@ function zigbees_refresh(){
         const btn = document.getElementById('bt_' + z_id);
 
         // Button color
-        const onoff = STATUS.zigbees[z_id];
+        const onoff = STATUS.zigbees[z_id]["state"];
 
         if (!onoff){
             continue
@@ -311,7 +311,7 @@ function st_daemons_refresh(){
 
         const alerts = ST_DAEMONS[sd_id]["alerts"];
 
-        const st = STATUS["status_daemons"][sd_id];
+        const st = STATUS["status_daemons"][sd_id]["state"];
         // Example:
         // "QNAP TS-228"
         // {cpu_temp: 61, hdd_temp: 42, hdd_state: "active", time: "20260521T221502"}
