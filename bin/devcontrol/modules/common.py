@@ -261,7 +261,9 @@ def status_dump_to_disk():
             sleep(.2)
 
     if not tries:
-        print(f'{Fmt.RED}(common.status_dump_to_disk) ERROR{Fmt.END}')
+        msg = '(common.status_dump_to_disk) ERROR'
+        print(f'{Fmt.RED}{msg}{Fmt.END}')
+        do_log(msg)
         return False
 
     else:
@@ -285,28 +287,43 @@ def status_refresh_all():
 
     print(f'{Fmt.GRAY}(common) refresh wol ...{Fmt.END}')
     for wol_id in wol_keys:
-        ans = wol.manage_wol( {"target": wol_id, "command": "ping"} )
-        STATUS["wol"][wol_id] = {'state': ans, 'timestamp': get_now_iso()}
+        try:
+            ans = wol.manage_wol( {"target": wol_id, "command": "ping"} )
+            STATUS["wol"][wol_id] = {'state': ans, 'timestamp': get_now_iso()}
+        except Exception as e:
+            do_log(f'{wol_id} / ping exception: {e}')
 
     print(f'{Fmt.GRAY}(common) refresh plugs ...{Fmt.END}')
     for plug_id in plug_keys:
-        ans = plugs.manage_plug( {"target": plug_id, "command": "status"} )
-        STATUS["plugs"][plug_id] = {'state': ans, 'timestamp': get_now_iso()}
+        try:
+            ans = plugs.manage_plug( {"target": plug_id, "command": "status"} )
+            STATUS["plugs"][plug_id] = {'state': ans, 'timestamp': get_now_iso()}
+        except Exception as e:
+            do_log(f'{plug_id} / plug status exception: {e}')
 
     print(f'{Fmt.GRAY}(common) refresh scripts ...{Fmt.END}')
     for script_id in scripts_keys:
-        ans = scripts.manage_script( {"target": script_id, "command": "status"} )
-        STATUS["scripts"][script_id] = {'state': ans, 'timestamp': get_now_iso()}
+        try:
+            ans = scripts.manage_script( {"target": script_id, "command": "status"} )
+            STATUS["scripts"][script_id] = {'state': ans, 'timestamp': get_now_iso()}
+        except Exception as e:
+            do_log(f'{script_id} / script status exception: {e}')
 
     print(f'{Fmt.GRAY}(common) refresh zigbees ...{Fmt.END}')
     for z_id in zigbees_keys:
-        ans = zigbees.manage_zigbee( {"target": z_id, "command": "status"} )
-        STATUS["zigbees"][z_id] = {'state': ans, 'timestamp': get_now_iso()}
+        try:
+            ans = zigbees.manage_zigbee( {"target": z_id, "command": "status"} )
+            STATUS["zigbees"][z_id] = {'state': ans, 'timestamp': get_now_iso()}
+        except Exception as e:
+            do_log(f'{z_id} / zigbee status exception: {e}')
 
     print(f'{Fmt.GRAY}(common) refresh status_daemons ...{Fmt.END}')
     for d_id in status_daemons_keys:
-        ans = status_daemons.read_status_deaemon(d_id)
-        STATUS["status_daemons"][d_id] = {'state': ans, 'timestamp': get_now_iso()}
+        try:
+            ans = status_daemons.read_status_deaemon(d_id)
+            STATUS["status_daemons"][d_id] = {'state': ans, 'timestamp': get_now_iso()}
+        except Exception as e:
+            do_log(f'{d_id} daemon status exception: {e}')
 
     print(f'{Fmt.GRAY}(common) getting timestamp ...{Fmt.END}')
     STATUS["timestamp"] = get_now_iso()
