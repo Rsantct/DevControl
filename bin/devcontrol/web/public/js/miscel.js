@@ -79,7 +79,7 @@ export function display_warning_and_hide_sections(yes=false, msg=null, isTimeout
         console.log(msg);
 
         warningDiv.style.display = 'block';
-        sections.forEach(id => document.getElementById(id).style.display = 'none');
+        //sections.forEach(id => document.getElementById(id).style.display = 'none');
 
         warningDiv.className = 'warning_box_error';
 
