@@ -40,7 +40,7 @@ def init():
         pause = cm.CONFIG["refresh"]["backend_update_interval"]
         while True:
             cm.status_refresh_all()
-            # dumping to disk has not use, its is only informative
+            # dumping to disk has not use, it is only informative
             cm.status_dump_to_disk()
             sleep(pause)
 

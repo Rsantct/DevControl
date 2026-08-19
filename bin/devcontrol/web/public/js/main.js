@@ -328,7 +328,7 @@ function st_daemons_refresh(){
         if (outdated) {
             document.getElementById('info_' + sd_id).innerHTML = '--';
             mc.btn_color(btn, 'gray');
-            console.log(sd_id, 'OUTDATED timestamp', st.time);
+            console.log(sd_id + ' OUTDATED timestamp: ' + st.time);
             return
         }
 
