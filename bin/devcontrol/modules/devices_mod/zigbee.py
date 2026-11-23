@@ -4,6 +4,7 @@ import  paho.mqtt.client as mqtt
 import  json
 import  time
 from    fmt import Fmt
+from    z2m_classifier import obtener_rol_dispositivos
 
 MQTT_HOST = "localhost"
 MQTT_PORT = 1883
@@ -35,6 +36,14 @@ ZNAME           = ''
 verbose         = False
 estado          = {}
 
+# Devices por rol (bombillas, enchufes, sensores), ejemplo:
+#   {'estudio_billy_1': 'bombilla',
+#    'Lampara_pie_b2': 'bombilla',
+#    'Lampara_pie_b1': 'bombilla',
+#    'salon_libreria_izq': 'bombilla',
+#    'salon_libreria_der': 'bombilla',
+#    'sonoff_1': 'enchufe'}
+DEVICES_POR_ROL = obtener_rol_dispositivos()
 
 def _init():
     actualizar_devices_y_grupos()
