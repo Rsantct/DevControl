@@ -83,23 +83,24 @@ def construir_mapa_dispositivos(devices: list[dict], incluir_coordinador: bool =
 
 
 def obtener_rol_dispositivos(
-    """
-    Devices por rol (bombillas, enchufes, sensores), ejemplo:
-     {'estudio_billy_1': 'bombilla',
-      'Lampara_pie_b2': 'bombilla',
-      'Lampara_pie_b1': 'bombilla',
-      'salon_libreria_izq': 'bombilla',
-      'salon_libreria_der': 'bombilla',
-      'sonoff_1': 'enchufe'}
-    """
-
     broker: str = "127.0.0.1",
     port: int = 1883,
     base_topic: str = "zigbee2mqtt",
     timeout: float = 5.0,
     incluir_coordinador: bool = False,
 ) -> dict[str, str]:
-    """Consulta zigbee2mqtt/bridge/devices por MQTT y devuelve {friendly_name: tipo}."""
+    """ Consulta zigbee2mqtt/bridge/devices por MQTT y devuelve devices por rol
+            {friendly_name: tipo}
+
+        Ejemplo:
+         {'estudio_billy_1': 'bombilla',
+          'Lampara_pie_b2': 'bombilla',
+          'Lampara_pie_b1': 'bombilla',
+          'salon_libreria_izq': 'bombilla',
+          'salon_libreria_der': 'bombilla',
+          'sonoff_1': 'enchufe'}
+    """
+
     resultado: dict[str, str] = {}
     evento_recibido = threading.Event()
     error_conexion: list[str] = []
