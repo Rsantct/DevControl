@@ -1,6 +1,6 @@
 # Zigbee devices
 
-This is intended to manage Zigbeee smart lights, here we we use IKEA TRADFRI devices.
+This is intended to manage Zigbeee smart lights, here we use IKEA TRADFRI devices.
 
 ## General view of needed componentes:
 
