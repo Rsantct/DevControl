@@ -348,13 +348,19 @@ function st_daemons_refresh(){
 
         const alerts = ST_DAEMONS[sd_id]["alerts"];
 
-        const st = STATUS["status_daemons"][sd_id]["state"];
-        // Example:
-        // "QNAP TS-228"
-        // {cpu_temp: 61, hdd_temp: 42, hdd_state: "active", time: "20260521T221502"}
+        let st = {};
+        try {
+            st = STATUS["status_daemons"][sd_id]["state"];
+            // Example:
+            // sd_id: "QNAP TS-228"
+            // state: {cpu_temp: 61, hdd_temp: 42, hdd_state: "active", time: "20260521T221502"}
+        }catch (error) {
+            console.error(sd_id, STATUS["status_daemons"][sd_id], "Error getting key 'state':", error);
+            continue;
+        }
 
-        if (!st){
-            continue
+        if ( ! mc.isPlainObject(st) ){
+            continue;
         }
 
         document.getElementById('info_' + sd_id).innerHTML = '';
