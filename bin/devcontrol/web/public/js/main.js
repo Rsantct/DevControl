@@ -86,11 +86,17 @@ async function fill_in_wol_buttons(wol_devices) {
 
 function wol_refresh(){
 
-    for (const wol_id in DEVICES.wol) {
+    for (const dev_id in DEVICES.wol) {
 
-        const btn = document.getElementById('bt_' + wol_id);
+        const btn = document.getElementById('bt_' + dev_id);
 
-        const ping = STATUS.wol[wol_id]["state"];
+        let ping = '';
+        try {
+            ping = STATUS.wol[dev_id]["state"].toLowerCase();
+        } catch (error) {
+            console.error(dev_id, STATUS.wol[dev_id], "Error getting key 'state':", error);
+            continue;
+        }
 
         if (!ping){
             continue;
@@ -107,14 +113,14 @@ function wol_refresh(){
 
         // Info cell
         //console.log(WOL_REFRESH_COUNT);
-        if ( WOL_REFRESH_COUNT[wol_id] <= 0 || is_Up ){
-            const info_cell = document.getElementById('info_' + wol_id);
+        if ( WOL_REFRESH_COUNT[dev_id] <= 0 || is_Up ){
+            const info_cell = document.getElementById('info_' + dev_id);
             info_cell.innerHTML = ping;
-            WOL_REFRESH_COUNT[wol_id] = 0;
+            WOL_REFRESH_COUNT[dev_id] = 0;
 
         // Still `waiting for response` do not change info cell
         }else{
-            WOL_REFRESH_COUNT[wol_id] -= ( WAIT_4_WOL / REFRESH_INTERVAL );
+            WOL_REFRESH_COUNT[dev_id] -= ( WAIT_4_WOL / REFRESH_INTERVAL );
         }
     }
 }
@@ -164,12 +170,23 @@ async function fill_in_plug_buttons(plugs_data) {
 
 function plugs_refresh(){
 
-    for (const plug_id in DEVICES.plugs) {
+    for (const dev_id in DEVICES.plugs) {
 
-        const btn = document.getElementById('bt_' + plug_id);
+        const btn = document.getElementById('bt_' + dev_id);
 
         // Button color
-        const onoff = STATUS.plugs[plug_id]["state"];
+        let onoff = '';
+        try {
+            onoff = STATUS.plugs[dev_id]["state"].toLowerCase();
+        } catch (error) {
+            console.error(dev_id, STATUS.plugs[dev_id], "Error getting key 'state':", error);
+            continue;
+        }
+
+        if (!onoff){
+            continue
+        }
+
         mc.btn_color(btn, onoff);
     }
 }
@@ -204,12 +221,18 @@ async function fill_in_scripts_buttons(scripts_data) {
 
 function scripts_refresh(){
 
-    for (const script_id in SCRIPTS) {
+    for (const dev_id in SCRIPTS) {
 
-        const btn = document.getElementById('bt_' + script_id);
+        const btn = document.getElementById('bt_' + dev_id);
 
         // Button color
-        const onoff = STATUS.scripts[script_id]["state"];
+        let onoff = '';
+        try {
+            onoff = STATUS.scripts[dev_id]["state"].toLowerCase();
+        } catch (error) {
+            console.error(dev_id, STATUS.scripts[dev_id], "Error getting key 'state':", error);
+            continue;
+        }
 
         if (!onoff){
             continue
@@ -233,7 +256,13 @@ async function do_zigbee(event){
 
     let params = null;
 
-    const zst = STATUS.zigbees[z_id]["state"]
+    let zst = '';
+    try {
+        zst = STATUS.zigbees[z_id]["state"].toLowerCase();
+    } catch (error) {
+        console.error(z_id, STATUS.zigbees[z_id], "(do_zigbee) Error getting key 'state':", error);
+        return
+    }
 
     if ( zst == 'off' ){
         params = prompt(zigbee_on_msg);
@@ -269,12 +298,18 @@ async function fill_in_zigbee_buttons(zigbees_data) {
 
 function zigbees_refresh(){
 
-    for (const z_id in DEVICES.zigbees) {
+    for (const dev_id in DEVICES.zigbees) {
 
-        const btn = document.getElementById('bt_' + z_id);
+        const btn = document.getElementById('bt_' + dev_id);
 
         // Button color
-        const onoff = STATUS.zigbees[z_id]["state"];
+        let onoff = '';
+        try {
+            onoff = STATUS.zigbees[dev_id]["state"].toLowerCase();
+        } catch (error) {
+            console.error(dev_id, STATUS.zigbees[dev_id], "Error getting key 'state':", error);
+            continue;
+        }
 
         if (!onoff){
             continue
@@ -283,9 +318,9 @@ function zigbees_refresh(){
         mc.btn_color(btn, onoff);
 
         // Info cell
-        const timer = STATUS.zigbees[z_id]['timer'];
+        const timer = STATUS.zigbees[dev_id]['timer'];
         if (timer){
-            document.getElementById('info_' + z_id).innerHTML += '<br>' + timer;
+            document.getElementById('info_' + dev_id).innerHTML += '<br>' + timer;
         }
     }
 }
