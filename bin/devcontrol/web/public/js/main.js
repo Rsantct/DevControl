@@ -24,7 +24,7 @@ var UI_INITIALIZED = false;
 
 
 // Prompt message when switching on a Zigbee:
-const zigbee_on_msg =`
+const zigbee_on_msg_EN =`
 Brightness:  1...10
     Leave blank for default brightness
 
@@ -38,11 +38,25 @@ You can enter one or both parameters, for example
 for brighness 3 and timer 1/2 h:
 
     3  -0.5h`;
+const zigbee_on_msg_ES =`
+Brillo:  1...10
+    Dejar en blanco para brillo por defecto
+
+Temporizador:
+    -Ns\t  (N segundos)
+    -Nm\t  (N minutos)
+    -N \t  (N minutos)
+    -Nh\t  (N horas)
+
+Puedes entrar uno o ambos parámetros, ejemplo
+para brillo 3 y temporizador 1/2 h:
+
+    3  -0.5h`;
 
 // WOL PCs
 async function do_wol(event){
 
-    if ( ! confirm('Please CONFIRM to send WOL packet') ){
+    if ( ! confirm('CONFIRMAR el envío de paquete WOL') ){
             return;
     }
 
@@ -137,13 +151,13 @@ async function do_plug_toggle(event){
     // confirm switching
     if ( btn.style.color != 'darkgray' ) {
 
-        if ( ! confirm('Please CONFIRM to switch') ){
+        if ( ! confirm('CONFIRMAR el cambio') ){
                 return;
         }
 
     }else{
 
-        alert('The plug is NOT responding');
+        alert('El enchufe NO responde');
         return;
     }
 
@@ -195,7 +209,7 @@ function plugs_refresh(){
 // SCRIPTS
 async function do_script(event){
 
-    if ( ! confirm('Please CONFIRM to RUN the script') ){
+    if ( ! confirm('CONFIRMAR la ejecución del script') ){
         return;
     }
 
@@ -250,10 +264,6 @@ async function do_zigbee(event){
     const btn = event.target;
     const z_id = btn.id.slice(3,);
 
-    if ( ! confirm('Please CONFIRM to TOGGLE') ){
-        return;
-    }
-
     let params = null;
 
     let zst = '';
@@ -265,19 +275,39 @@ async function do_zigbee(event){
     }
 
     if ( zst == 'off' ){
-        params = prompt(zigbee_on_msg);
+        params = prompt(zigbee_on_msg_ES);
     }
 
     let cmd = ''
+
+    // off --> on
     if (zst == 'off'){
+
         console.log('current state: off');
+
         cmd = `zigbee {"target": "${z_id}", "command": "on"}`
         if (params){
             cmd = `zigbee {"target": "${z_id}", "command": "on ${params}"}`
         }
+
+    // on --> ...?
     }else if (zst == 'on'){
+
         console.log('current state: on');
-        cmd = `zigbee {"target": "${z_id}", "command": "off"}`
+
+        const do_apagar = confirm('REAJUSTAR [Cancelar] o APAGAR [Aceptar]?');
+
+        // on --> off
+        if (do_apagar){
+            cmd = `zigbee {"target": "${z_id}", "command": "off"}`
+
+        // on --> reajuste
+        }else{
+            params = prompt(zigbee_on_msg_ES);
+            if (params){
+                cmd = `zigbee {"target": "${z_id}", "command": "on ${params}"}`
+            }
+        }
     }
 
     if (cmd){
