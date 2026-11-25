@@ -113,6 +113,7 @@ export function btn_color(btn, color=null){
     //  'off'   / 'red'         red         white   gray
     //  'alert' / 'red-red'     red         white   red
 
+    color = color.toLowerCase();
 
     if (color == 'on' || color == 'green') {
         btn.style = 'initial';
