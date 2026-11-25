@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+# Path para poder probar el módulo suelto
 import  os
 import  sys
 UHOME = os.path.expanduser('~')
