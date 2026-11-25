@@ -121,8 +121,6 @@ def do_command(zlabel, zname, command='state', brightness=0, timer=0):
     # on / off
     else:
 
-        scene_on, scene_off = get_scene_on_off(zlabel)
-
         if command == 'on':
 
             # Use brightness if given
@@ -132,32 +130,27 @@ def do_command(zlabel, zname, command='state', brightness=0, timer=0):
 
             else:
 
-                # Use scene if defined
-                if  scene_on:
-                    z.enviar_mensaje(zname, {'scene_recall': scene_on['id']})
-                    print(f'{Fmt.BLUE}{zname}: recall scene <on>{Fmt.END}')
+                device_rol = z.DEVICES_POR_ROL.get(zname, '')
+
+                if  device_rol == 'bombilla':
+
+                    # Use config default_brightness if defined, or 5/10 as default
+                    default_brightness = cm.CONFIG.get('devices', {}).get('zigbees', {}) \
+                                 .get(zlabel, {}).get('default_brightness', 5)
+
+                    brightness = arg_to_brightness(default_brightness);
+
+                    z.enviar_mensaje(zname, {'brightness': brightness})
+                    print(f'{Fmt.BLUE}{zname}: using default brightness {default_brightness}/10{Fmt.END}')
+
+                elif device_rol == 'enchufe':
+
+                    z.enviar_mensaje(zname, {'state': 'on'})
 
                 else:
 
-                    device_rol = z.DEVICES_POR_ROL.get(zname, '')
-
-                    if  device_rol == 'bombilla':
-
-                        # Use config default_brightness if defined, or 5/10 as default
-                        default_brightness = cm.CONFIG.get('devices', {}).get('zigbees', {}) \
-                                     .get(zlabel, {}).get('default_brightness', 5)
-
-                        brightness = arg_to_brightness(default_brightness);
-
-                        z.enviar_mensaje(zname, {'brightness': brightness})
-                        print(f'{Fmt.BLUE}{zname}: using default brightness {default_brightness}/10{Fmt.END}')
-
-                    elif device_rol == 'enchufe':
-
-                        z.enviar_mensaje(zname, {'state': 'on'})
-
-                    else:
-                        print(f'{Fmt.RED}{zname}: el rol del device es desconocido{Fmt.END}')
+                    z.enviar_mensaje(zname, {'state': 'on'})
+                    print(f'{Fmt.RED}{zname}: el rol "{device_rol}" del device es desconocido{Fmt.END}')
 
             if timer:
                 cm.sleep(.5)
@@ -168,13 +161,7 @@ def do_command(zlabel, zname, command='state', brightness=0, timer=0):
 
         elif command == 'off':
 
-            if scene_off:
-
-                z.enviar_mensaje(zname, {'scene_recall': scene_off['id']})
-                print(f'{Fmt.BLUE}{zname}: recall scene <off>{Fmt.END}')
-
-            elif command == 'off':
-                z.enviar_mensaje(zname, {'state': 'off'})
+            z.enviar_mensaje(zname, {'state': 'off'})
 
             result = 'off'
 
