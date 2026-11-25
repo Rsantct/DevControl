@@ -285,6 +285,8 @@ def status_refresh_all():
     status_daemons_keys = CONFIG.get('status_daemons', {}).keys()
 
 
+    print(f'{Fmt.GRAY}{Fmt.BOLD}(common) ---------------- refresh ALL) ---------------- {Fmt.END}')
+
     print(f'{Fmt.GRAY}(common) refresh wol ...{Fmt.END}')
     for wol_id in wol_keys:
         try:
@@ -327,6 +329,20 @@ def status_refresh_all():
 
     print(f'{Fmt.GRAY}(common) getting timestamp ...{Fmt.END}')
     STATUS["timestamp"] = get_now_iso()
+
+    printa_STATUS()
+
+
+def printa_STATUS():
+
+    print(f'{Fmt.BLUE}(common) all devices STATUS:')
+
+    for k1, v1 in STATUS.items():
+        if type(v1) == dict:
+            for k2, v2 in v1.items():
+                print(k2.ljust(30), v2)
+
+    print(f'{Fmt.END}')
 
 
 def dump_zigbees_schedule_to_crontab(simulate=True):
