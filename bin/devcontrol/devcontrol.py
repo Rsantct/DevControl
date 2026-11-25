@@ -159,7 +159,7 @@ def do( cmd_phrase ):
             'zigbee':   'zigbees'
         }.get(prefix)
 
-        cm.STATUS[section][args['target']] = result
+        cm.STATUS[section][ args["target"] ]["state"] = result
 
         cm.status_dump_to_disk()
 
