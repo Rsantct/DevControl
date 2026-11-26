@@ -56,7 +56,7 @@ para brillo 3 y temporizador 1/2 h:
 // WOL PCs
 async function do_wol(event){
 
-    if ( ! confirm('CONFIRMAR el envío de paquete WOL') ){
+    if ( ! confirm('CONFIRMAR el envío de señal para despertar (Wake on LAN)') ){
             return;
     }
 
