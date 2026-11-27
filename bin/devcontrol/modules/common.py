@@ -26,8 +26,8 @@ _MY_DIR      = os.path.dirname(__file__)
 
 LOGDIR      = f'{_MY_DIR}/../log'
 LOGPATH     = f'{LOGDIR}/devcontrol.log'
-CFGPATH     = f'{_MY_DIR}/../devcontrol.yml'
-STATUSPATH  = f'{_MY_DIR}/../.devcontrol'
+CFGPATH     = f'{_MY_DIR}/../config.yml'
+STATUSPATH  = f'{_MY_DIR}/../.status'
 CONFIG      = {}
 
 
@@ -187,7 +187,7 @@ def read_config():
 
 
     except Exception as e:
-        print(f'(devcontrol) ERROR reading devcontrol.yml: {str(e)}')
+        print(f'(devcontrol) ERROR reading {CFGPATH}: {str(e)}')
 
     # Refactor the Zegbbe items
     refactor_zegbee_items()
@@ -420,7 +420,7 @@ def dump_zigbees_schedule_to_crontab(simulate=True):
     results = []
 
 
-    ## First off all let's remove any job for each Zigbee under config.yml
+    ## First off all let's remove any job for each Zigbee under CONFIG
     for zlabel, zparams in CONFIG['devices']['zigbees'].items():
         zname     = zparams.get('friendly_name', '')
         crontool.remove_jobs( cron=my_cron, patterns=(zname,) )
