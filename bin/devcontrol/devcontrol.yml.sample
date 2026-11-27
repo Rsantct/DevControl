@@ -25,11 +25,13 @@ comms:
 
 devices:
 
-    # PCs to sent wake on lan magic packets
+    # PCs and its MAC addresses to sent Wake on LAN magic packets
     wol:
-        # button label   mac address
-        Media PC:        90:2b:34:5c:12:34
-        Audio PC:        90:2b:34:5c:56:78
+        # button label
+        Media PC:
+            mac:    90:2b:34:5c:12:34
+        Audio PC:
+            mac     90:2b:34:5c:56:78
 
     # Smart plugs to switch on/off
     plugs:
