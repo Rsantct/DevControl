@@ -84,8 +84,8 @@ if __name__ == "__main__":
             CONFIG = yaml.safe_load(f)
             addr = CONFIG["server_addr"]
             port = CONFIG["server_port"]
-    except:
-        print(f'(devcontrol) UNABLE to read devcontrol.yml')
+    except Exception as e:
+        print(f'(devcontrol) UNABLE to read config.yml: {e}')
         sys.exit()
 
     # Optional -v for verbose printing out (debug)
