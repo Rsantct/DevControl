@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     # Loading configured machines
     try:
-        with open(f'{MY_DIR}/devcontrol/devcontrol.yml', 'r') as f:
+        with open(f'{MY_DIR}/devcontrol/config.yml', 'r') as f:
             CONFIG = yaml.safe_load(f)
             addr = CONFIG["server_addr"]
             port = CONFIG["server_port"]
