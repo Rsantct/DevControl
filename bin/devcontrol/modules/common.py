@@ -90,8 +90,8 @@ def get_section(section):
         res = CONFIG.get(section, {})
 
     elif section == 'refresh':
-        # web frontend resfres intervel
-        res['polling_interval'] = CONFIG.get('refresh').get('web_polling_interval', 3)
+        # web frontend resfres interval
+        res['web_polling_interval'] = CONFIG.get('refresh').get('web_polling_interval', 3)
 
     return res
 
