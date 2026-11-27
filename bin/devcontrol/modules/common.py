@@ -49,6 +49,9 @@ def init():
 
     CONFIG = read_config()
 
+    print(f'{Fmt.BOLD}{Fmt.BLUE}\n------------ CONFIG:{Fmt.END}')
+    print(f'{Fmt.BLUE}{ json.dumps(CONFIG, indent=2) }\n{Fmt.END}')
+
     STATUS = { 'wol': {}, 'plugs': {}, 'scripts': {}, 'zigbees': {}, 'status_daemons': {} }
 
 
