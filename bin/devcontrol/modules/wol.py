@@ -126,18 +126,17 @@ def manage_wol(args):
 
     result = ''
 
-    if 'target' not in args:
-        return 'NACK'
-
     if 'target' not in args or 'command' not in args:
         return 'NACK'
 
     wol_id = args["target"]
 
-    if wol_id not in cm.CONFIG["devices"]["wol"]:
+    if wol_id not in cm.CONFIG["devices"].get('wol', {}):
         return f'\'{wol_id}\' not configured'
 
-    mac = cm.CONFIG["devices"]["wol"][ wol_id ]
+    mac = cm.CONFIG["devices"]["wol"][wol_id]["mac"]
+    if not mac:
+        return ('MAC not found')
 
     if args["command"] == 'send':
         result = send_wol(mac)
